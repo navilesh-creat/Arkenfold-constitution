@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dominion of Arkenfold</title>
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body { font-family: 'Playfair Display', serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0f 50%, #0d0d0d 100%); color: #d4af37; line-height: 1.8; overflow-x: hidden; }
+		body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.03) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(139, 0, 0, 0.02) 0%, transparent 50%); z-index: -1; }
+		
+		header { background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(212, 175, 55, 0.3); position: fixed; width: 100%; top: 0; z-index: 1000; padding: 20px 0; }
+		.header-content { max-width: 1200px; margin: 0 auto; padding: 0 30px; }
+		.logo { font-family: 'Cinzel', serif; font-size: 2.2em; font-weight: 700; color: #d4af37; letter-spacing: 0.05em; text-transform: uppercase; }
+		
+		/* Homepage Styles */
+		.page { 
+			min-height: 100vh; 
+			display: none; 
+			flex-direction: column; 
+			align-items: center; 
+			justify-content: flex-start; 
+			text-align: center; 
+			padding: 150px 30px 200px; 
+			position: relative;
+		}
+		.page.active { display: flex; }
+		.vista-valley { font-family: 'Cinzel', serif; font-size: 1.5rem; color: #b8a07e; margin-bottom: 20px; letter-spacing: 0.1em; text-transform: uppercase; }
+		.arkenfold-con { font-family: 'Cinzel', serif; font-size: clamp(4rem, 10vw, 8rem); color: #d4af37; margin-bottom: 60px; letter-spacing: 0.1em; text-shadow: 0 4px 20px rgba(212, 175, 55, 0.3); text-transform: uppercase; }
+		
+		/* Enhanced Leader & Assistants Styling */
+		.leadership-container { 
+			background: rgba(15, 15, 15, 0.9); 
+			backdrop-filter: blur(25px); 
+			border: 2px solid rgba(212, 175, 55, 0.3); 
+			border-radius: 15px; 
+			padding: 40px; 
+			margin: 40px 0; 
+			box-shadow: 0 20px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(212, 175, 55, 0.1);
+			position: relative;
+			overflow: hidden;
+		}
+		.leadership-container::before {
+			content: '';
+			position: absolute;
+			top: -50%;
+			left: -50%;
+			width: 200%;
+			height: 200%;
+			background: linear-gradient(45deg, transparent 30%, rgba(212, 175, 55, 0.03) 50%, transparent 70%);
+			animation: shimmer 3s infinite;
+			pointer-events: none;
+		}
+		@keyframes shimmer {
+			0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+			100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+		}
+		
+		.leader-name { 
+			font-family: 'Cinzel', serif; 
+			font-size: clamp(2.2em, 5vw, 3em); 
+			color: #d4af37; 
+			font-weight: 700; 
+			margin-bottom: 30px; 
+			letter-spacing: 0.08em; 
+			text-shadow: 0 0 30px rgba(212, 175, 55, 0.6), 0 4px 20px rgba(0,0,0,0.8);
+			text-transform: uppercase;
+			position: relative;
+			background: linear-gradient(45deg, #d4af37, #f4d03f, #d4af37);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		.leader-name::after {
+			content: '✦ SUPREME ARCHON ✦';
+			display: block;
+			font-family: 'Cinzel', serif;
+			font-size: 0.6em;
+			color: rgba(212, 175, 55, 0.6);
+			letter-spacing: 0.2em;
+			margin-top: 10px;
+			text-transform: uppercase;
+		}
+		
+		.assistants-name { 
+			font-family: 'Cinzel', serif; 
+			font-size: 1.6em; 
+			color: #b8a07e; 
+			font-weight: 600; 
+			margin: 30px 0; 
+			letter-spacing: 0.05em; 
+			text-shadow: 0 2px 10px rgba(184, 160, 126, 0.5);
+			text-transform: uppercase;
+			position: relative;
+		}
+		.assistants-name::before {
+			content: '⚔️';
+			margin-right: 15px;
+			font-size: 1.2em;
+		}
+		.assistants-list {
+			display: inline-block;
+			font-family: 'Playfair Display', serif;
+			font-size: 1.2em;
+			color: #e8e3d4;
+			background: rgba(212, 175, 55, 0.05);
+			padding: 20px 30px;
+			border-radius: 10px;
+			border-left: 4px solid rgba(212, 175, 55, 0.4);
+			margin-top: 15px;
+		}
+		.assistants-list span {
+			color: #d4af37;
+			font-weight: 600;
+			font-family: 'Cinzel', serif;
+		}
+		
+		.members-list { background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 40px; margin: 30px 0; max-height: 300px; overflow-y: auto; list-style: none; display: inline-block; text-align: left; }
+		.members-list li { font-family: 'Playfair Display', serif; font-size: 1.1em; color: #e8e3d4; padding: 8px 0; border-bottom: 1px solid rgba(212, 175, 55, 0.1); transition: all 0.3s ease; }
+		.members-list li:hover { color: #d4af37; padding-left: 20px; background: rgba(212, 175, 55, 0.05); }
+		.constitution-btn { display: inline-block; font-family: 'Cinzel', serif; font-size: 1.6em; font-weight: 600; color: #d4af37; background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(20px); border: 2px solid rgba(212, 175, 55, 0.4); padding: 20px 50px; border-radius: 8px; text-decoration: none; letter-spacing: 0.05em; text-transform: uppercase; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); box-shadow: 0 15px 30px rgba(0,0,0,0.6); cursor: pointer; margin-bottom: 40px; }
+		.constitution-btn:hover { transform: translateY(-5px) scale(1.05); border-color: #d4af37; box-shadow: 0 25px 50px rgba(212, 175, 55, 0.3); }
+		
+		/* Designer Credit Styling - Positioned at VERY BOTTOM */
+		.designer-credit {
+			position: absolute;
+			bottom: 30px;
+			left: 50%;
+			transform: translateX(-50%);
+			font-family: 'Cinzel', serif;
+			font-size: 1em;
+			color: rgba(212, 175, 55, 0.5);
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			background: rgba(15, 15, 15, 0.7);
+			backdrop-filter: blur(20px);
+			padding: 12px 25px;
+			border: 1px solid rgba(212, 175, 55, 0.15);
+			border-radius: 20px;
+			box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+			transition: all 0.4s ease;
+			opacity: 0.8;
+			z-index: 10;
+		}
+		.designer-credit:hover {
+			color: #d4af37;
+			border-color: rgba(212, 175, 55, 0.4);
+			box-shadow: 0 12px 35px rgba(212, 175, 55, 0.15);
+			transform: translateX(-50%) translateY(-3px);
+			opacity: 1;
+		}
+		.designer-credit span {
+			color: #d4af37;
+			font-weight: 700;
+			background: linear-gradient(45deg, #d4af37, #f4d03f, #d4af37);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			font-size: 1.1em;
+		}
+		
+		/* Constitution Styles */
+		.constitution-content { max-width: 900px; margin: 100px auto; padding: 0 30px; opacity: 0; transform: translateY(50px); transition: all 0.8s ease; }
+		.constitution-content.active { opacity: 1; transform: translateY(0); }
+		.section-title { font-family: 'Cinzel', serif; font-size: 2.8em; text-align: center; color: #d4af37; margin-bottom: 60px; letter-spacing: 0.05em; position: relative; }
+		.section-title::after { content: ''; display: block; width: 80px; height: 2px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 20px auto; }
+		.constitution-text { background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(212, 175, 55, 0.1); margin-bottom: 40px; }
+		.constitution-text h1 { font-family: 'Cinzel', serif; font-size: 2.4em; color: #d4af37; text-align: center; margin-bottom: 40px; letter-spacing: 0.03em; font-weight: 600; }
+		.constitution-text .preamble { font-style: italic; color: #b8a07e; text-align: center; margin-bottom: 50px; font-size: 1.1em; }
+		.constitution-text h2 { font-family: 'Cinzel', serif; font-size: 1.6em; color: #d4af37; margin: 40px 0 20px 0; font-weight: 500; position: relative; padding-left: 30px; }
+		.constitution-text h2::before { content: '§'; position: absolute; left: 0; color: rgba(212, 175, 55, 0.6); font-size: 1.2em; }
+		.constitution-text p, .constitution-text li { margin-bottom: 18px; color: #e8e3d4; font-size: 1.05em; }
+		.constitution-text ul { padding-left: 30px; margin: 15px 0; }
+		.back-btn { font-family: 'Cinzel', serif; font-size: 1.2em; color: #d4af37; background: rgba(15, 15, 15, 0.9); border: 2px solid rgba(212, 175, 55, 0.4); padding: 15px 30px; border-radius: 8px; text-decoration: none; margin-top: 40px; display: inline-block; transition: all 0.3s ease; }
+		.back-btn:hover { background: rgba(212, 175, 55, 0.1); transform: translateY(-2px); }
+		
+		footer { background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-top: 1px solid rgba(212, 175, 55, 0.2); padding: 40px 0; text-align: center; color: #8a7a5e; font-size: 0.95em; margin-top: auto; width: 100%; }
+		
+		@media (max-width: 768px) { 
+			.page { padding: 150px 20px 250px; }
+			.constitution-text { padding: 40px 30px; margin: 20px; }
+			.leadership-container { padding: 30px 20px; margin: 20px 0; }
+			.designer-credit { bottom: 20px; font-size: 0.9em; padding: 10px 20px; }
+		}
+		::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(15,15,15,0.5); } ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.4); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
+	</style>
+</head>
+<body>
+	<header>
+		<div class="header-content">
+			<div class="logo">ARKENFOLD</div>
+		</div>
+	</header>
+
+	<!-- Homepage -->
+	<section class="page active" id="home">
+		<div class="vista-valley">VISTA VALLEY</div>
+		<h1 class="arkenfold-con">Arkenfold Con</h1>
+		
+		<div class="leadership-container">
+			<div class="leader-name">Gamer_sam612</div>
+			<div class="assistants-name">Respected Assistants</div>
+			<div class="assistants-list">
+				<span>_navi_49</span> • <span>Lordwolf2203</span>
+			</div>
+		</div>
+		
+		<ul class="members-list">
+			<li>Retryant</li><li>thereal43213222</li><li>kaiLordXD</li><li>tomabrato</li><li>.ZingyParty6068</li>
+			<li>poisedsole35967</li><li>RicardoDono</li><li>golfista222</li><li>Acc200</li><li>Amfound</li>
+			<li>Onpowerg</li><li>.RadTerror202</li><li>Deadsoul888</li><li>LordAspect888</li><li>SKYKING4000</li>
+			<li>leafy02leafeon</li><li>Alein2203</li><li>KhioALT</li><li>LordAspect777</li><li>7youngstunna7</li>
+		</ul>
+		<button class="constitution-btn" onclick="showConstitution()">The Constitution of the Arkenfold</button>
+		
+		<div class="designer-credit">
+			✦ Designed and Developed by <span>_navi_49</span> ✦
+		</div>
+	</section>
+
+	<!-- Constitution Page -->
+	<section class="page" id="constitution">
+		<div class="constitution-content" id="const-content">
+			<h2 class="section-title">THE CONSTITUTION</h2>
+			<div class="constitution-text">
+				<h1>THE CONSTITUTION OF THE DOMINION OF ARKENFOLD</h1>
+				<p class="preamble">Ratified to Establish Absolute Order, Enduring Strength, and Unchallenged Authority.</p>
+				<h2>PREAMBLE</h2><p>We, the People of Arkenfold, united by will and bound by purpose, establish this Dominion to secure order, strength, and survival in a world of conflict and chaos.<br>Through unwavering authority, disciplined unity, and resolute command, we shall endure, expand, and prevail.</p>
+			<h2>ARTICLE I – THE DOMINION</h2><p>The Dominion of Arkenfold is a sovereign state founded upon absolute authority, unity of command, and total national strength.</p><p>All institutions, offices, and forces serve the Dominion and its Supreme Archon.</p><p>The Dominion exists to ensure survival, dominance, and the perpetual stability of its people.</p>
+					<h2>ARTICLE II – THE SUPREME ARCHON</h2><p>The Supreme Archon is the highest authority of the Dominion.</p><p>The Supreme Archon holds ultimate command over law, military, governance, and national policy.</p><p>The word of the Supreme Archon carries the force of law and requires no approval or ratification.</p>
+					<h2>ARTICLE III – THE HIGH COMMAND COUNCIL</h2><p>The Supreme Archon shall be advised by the High Command Council.</p><p>The Council shall consist of:</p><ul><li>The Grand Marshal</li><li>The High Chancellor</li><li>The Minister of Dominion</li><li>The Overseer of Unity</li></ul><p>The Council advises but does not limit the authority of the Supreme Archon.</p>
+					<h2>ARTICLE IV – LAW AND ORDER</h2><p>Order is the highest principle of the Dominion.</p><p>All citizens are bound to obey the laws of the Dominion and the commands of its authorities.</p><p>Acts of treason, rebellion, sabotage, or defiance shall be met with decisive punishment.</p>
+					<h2>ARTICLE V – THE MILITARY</h2><p>The military of the Dominion shall be known as the Arkenfold Iron Legion.</p><p>The Iron Legion exists to defend the Dominion, enforce its will, and expand its influence.</p><p>The Grand Marshal commands all military forces under the authority of the Supreme Archon.</p>
+					<h2>ARTICLE VI – UNITY AND LOYALTY</h2><p>Loyalty to the Dominion and the Supreme Archon is the highest civic duty.</p><p>All citizens shall contribute to the strength and stability of the state through labor, service, or obedience.</p><p>Dissent that threatens unity shall be suppressed in defense of national survival.</p>
+					<h2>ARTICLE VII – EXPANSION AND SECURITY</h2><p>The Dominion reserves the right to expand its influence, territory, and control in the interest of stability and security.</p><p>Foreign entities that threaten Arkenfold may be neutralized through political, economic, or military means.</p>
+					<h2>ARTICLE VIII – AMENDMENTS</h2><p>This Constitution may be amended only by the will of the Supreme Archon.</p><p>No amendment may weaken the authority of the Dominion or its Supreme Archon.</p>
+					<h2>ARTICLE IX – FOUNDING SEAL</h2><p>Let this Constitution stand as the unbreakable foundation of the Dominion —<br>A testament to strength,<br>A fortress of order,<br>And the eternal command of Arkenfold.</p>
+					<div style="text-align: right; margin-top: 70px; padding-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.3); font-size: 1.2em;">
+						<strong>SIGNED AND ENACTED BY:</strong><br><em>Supreme Archon Imperius</em><br><small>Ruler of the Dominion of Arkenfold</small>
+					</div>
+					<a href="#" class="back-btn" onclick="showHome()">← Back to Home</a>
+				</div>
+			</div>
+		</section>
+            
+		<footer>
+			<p>&copy; Dominion of Arkenfold. Eternal Command.</p>
+		</footer>
+
+		<script>
+			function showConstitution() {
+				document.getElementById('home').classList.remove('active');
+				document.getElementById('constitution').classList.add('active');
+				window.scrollTo(0,0);
+				setTimeout(() => document.getElementById('const-content').classList.add('active'), 100);
+			}
+			function showHome() {
+				document.getElementById('constitution').classList.remove('active');
+				document.getElementById('home').classList.add('active');
+				document.getElementById('const-content').classList.remove('active');
+			}
+		</script>
+	</body>
+	</html>
