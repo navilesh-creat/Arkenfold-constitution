@@ -258,8 +258,9 @@
 		<div class="auth-modal-box">
 			<button class="auth-modal-close" onclick="closeAuthModal()">&times;</button>
 			<h2 id="auth-modal-title">Login</h2>
-			<input type="email" id="auth-email" placeholder="Email" />
-			<input type="password" id="auth-password" placeholder="Password" />
+<input type="text" id="auth-username" placeholder="Username" style="display:none;" />
+<input type="email" id="auth-email" placeholder="Email" />
+<input type="password" id="auth-password" placeholder="Password" />
 			<div id="auth-error" class="auth-error"></div>
 			<button id="auth-submit-btn" onclick="submitAuth()">Login</button>
 			<p class="auth-toggle-text">
@@ -347,9 +348,10 @@
 			getAuth,
 			createUserWithEmailAndPassword,
 			signInWithEmailAndPassword,
-			signOut,
-			onAuthStateChanged
-		} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+signOut,
+updateProfile,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 		const firebaseConfig = {
 			apiKey: "AIzaSyDsXlCyLS4WodBRnwtqM6TbgbW8SighNOI",
@@ -370,43 +372,50 @@
 			document.getElementById("auth-modal").style.display = "flex";
 		};
 		window.closeAuthModal = function () {
-			document.getElementById("auth-modal").style.display = "none";
-			document.getElementById("auth-error").textContent = "";
-			document.getElementById("auth-email").value = "";
-			document.getElementById("auth-password").value = "";
-		};
+    document.getElementById("auth-modal").style.display = "none";
+    document.getElementById("auth-error").textContent = "";
+    document.getElementById("auth-username").value = "";
+    document.getElementById("auth-email").value = "";
+    document.getElementById("auth-password").value = "";
+};
 		window.toggleAuthMode = function (e) {
-			e.preventDefault();
-			mode = mode === "login" ? "signup" : "login";
-			document.getElementById("auth-modal-title").textContent = mode === "login" ? "Login" : "Sign Up";
-			document.getElementById("auth-submit-btn").textContent = mode === "login" ? "Login" : "Create Account";
-			document.getElementById("auth-toggle-label").textContent = mode === "login" ? "Don't have an account?" : "Already have an account?";
-			document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
-			document.getElementById("auth-error").textContent = "";
-		};
+    e.preventDefault();
+    mode = mode === "login" ? "signup" : "login";
+    document.getElementById("auth-modal-title").textContent = mode === "login" ? "Login" : "Sign Up";
+    document.getElementById("auth-submit-btn").textContent = mode === "login" ? "Login" : "Create Account";
+    document.getElementById("auth-toggle-label").textContent = mode === "login" ? "Don't have an account?" : "Already have an account?";
+    document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
+    document.getElementById("auth-username").style.display = mode === "signup" ? "block" : "none";
+    document.getElementById("auth-error").textContent = "";
+};
 
 		window.submitAuth = function () {
-			const email = document.getElementById("auth-email").value.trim();
-			const password = document.getElementById("auth-password").value;
-			const errorBox = document.getElementById("auth-error");
-			errorBox.textContent = "";
+    const username = document.getElementById("auth-username").value.trim();
+    const email = document.getElementById("auth-email").value.trim();
+    const password = document.getElementById("auth-password").value;
+    const errorBox = document.getElementById("auth-error");
+    errorBox.textContent = "";
 
-			if (!email || !password) {
-				errorBox.textContent = "Please fill in both fields.";
-				return;
-			}
+    if (!email || !password) {
+        errorBox.textContent = "Please fill in both fields.";
+        return;
+    }
+    if (mode === "signup" && !username) {
+        errorBox.textContent = "Please choose a username.";
+        return;
+    }
 
-			const action = mode === "login"
-				? signInWithEmailAndPassword(auth, email, password)
-				: createUserWithEmailAndPassword(auth, email, password);
-
-			action
-				.then(() => window.closeAuthModal())
-				.catch((err) => {
-					errorBox.textContent = err.message.replace("Firebase: ", "");
-				});
-		};
-
+    if (mode === "login") {
+        signInWithEmailAndPassword(auth, email, password)
+            .then(() => window.closeAuthModal())
+            .catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+    } else {
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((cred) => updateProfile(cred.user, { displayName: username }))
+            .then(() => window.closeAuthModal())
+            .catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+    }
+};
 		window.logout = function () {
 			signOut(auth);
 		};
@@ -421,7 +430,7 @@
 				loginBtn.style.display = "none";
 				logoutBtn.style.display = "inline-block";
 				greeting.style.display = "inline-block";
-				greeting.textContent = "Welcome, " + user.email.split("@")[0];
+				greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
 				if (membersSection) membersSection.style.display = "block";
 			} else {
 				loginBtn.style.display = "inline-block";
