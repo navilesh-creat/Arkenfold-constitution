@@ -430,7 +430,7 @@ onAuthStateChanged
 				loginBtn.style.display = "none";
 				logoutBtn.style.display = "inline-block";
 				greeting.style.display = "inline-block";
-				greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
+				greeting.textContent = "Welcome, " + user.displayName;
 				if (membersSection) membersSection.style.display = "block";
 			} else {
 				loginBtn.style.display = "inline-block";
