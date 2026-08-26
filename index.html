@@ -253,23 +253,6 @@
 		</div>
 	</header>
 
-	<!-- Login/Signup Modal -->
-	<div id="auth-modal" class="auth-modal-overlay" style="display:none;">
-		<div class="auth-modal-box">
-			<button class="auth-modal-close" onclick="closeAuthModal()">&times;</button>
-			<h2 id="auth-modal-title">Login</h2>
-			<input type="text" id="auth-username" placeholder="Username" style="display:none;" />
-			<input type="email" id="auth-email" placeholder="Email" />
-			<input type="password" id="auth-password" placeholder="Password" />
-			<div id="auth-error" class="auth-error"></div>
-			<button id="auth-submit-btn" onclick="submitAuth()">Login</button>
-			<p class="auth-toggle-text">
-				<span id="auth-toggle-label">Don't have an account?</span>
-				<a href="#" id="auth-toggle-link" onclick="toggleAuthMode(event)">Sign up</a>
-			</p>
-		</div>
-	</div>
-
 	<!-- Homepage -->
 	<section class="page active" id="home">
 		<div class="vista-valley">VISTA VALLEY</div>
@@ -290,11 +273,7 @@
 			<li>leafy02leafeon</li><li>Alein2203</li><li>KhioALT</li><li>LordAspect777</li><li>7youngstunna7</li>
 		</ul>
 		<button class="constitution-btn" onclick="showConstitution()">The Constitution of the Arkenfold</button>
-
-		<div id="members-only" style="display:none;">
-			<div class="designer-credit">✦ Welcome back, citizen. This section is visible only to logged-in members. ✦</div>
-		</div>
-
+		
 		<div class="designer-credit">
 			✦ Designed and Developed by <span>_navi_49</span> ✦
 		</div>
@@ -342,104 +321,5 @@
 				document.getElementById('const-content').classList.remove('active');
 			}
 		</script>
-	<script type="module">
-		import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-		import {
-			getAuth,
-			createUserWithEmailAndPassword,
-			signInWithEmailAndPassword,
-			signOut,
-			updateProfile,
-			onAuthStateChanged
-		} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-
-		const firebaseConfig = {
-			apiKey: "AIzaSyDsXlCyLS4WodBRnwtqM6TbgbW8SighNOI",
-			authDomain: "dominion-of-arkenfold.firebaseapp.com",
-			projectId: "dominion-of-arkenfold",
-			storageBucket: "dominion-of-arkenfold.firebasestorage.app",
-			messagingSenderId: "189228678030",
-			appId: "1:189228678030:web:e07ca03f6dfba9d14a02df",
-			measurementId: "G-XM8T002XYP"
-		};
-
-		const app = initializeApp(firebaseConfig);
-		const auth = getAuth(app);
-
-		let mode = "login"; // or "signup"
-
-		window.openAuthModal = function () {
-			document.getElementById("auth-modal").style.display = "flex";
-		};
-		window.closeAuthModal = function () {
-			document.getElementById("auth-modal").style.display = "none";
-			document.getElementById("auth-error").textContent = "";
-			document.getElementById("auth-username").value = "";
-			document.getElementById("auth-email").value = "";
-			document.getElementById("auth-password").value = "";
-		};
-		window.toggleAuthMode = function (e) {
-			e.preventDefault();
-			mode = mode === "login" ? "signup" : "login";
-			document.getElementById("auth-modal-title").textContent = mode === "login" ? "Login" : "Sign Up";
-			document.getElementById("auth-submit-btn").textContent = mode === "login" ? "Login" : "Create Account";
-			document.getElementById("auth-toggle-label").textContent = mode === "login" ? "Don't have an account?" : "Already have an account?";
-			document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
-			document.getElementById("auth-username").style.display = mode === "signup" ? "block" : "none";
-			document.getElementById("auth-error").textContent = "";
-		};
-
-		window.submitAuth = function () {
-			const username = document.getElementById("auth-username").value.trim();
-			const email = document.getElementById("auth-email").value.trim();
-			const password = document.getElementById("auth-password").value;
-			const errorBox = document.getElementById("auth-error");
-			errorBox.textContent = "";
-
-			if (!email || !password) {
-				errorBox.textContent = "Please fill in both fields.";
-				return;
-			}
-			if (mode === "signup" && !username) {
-				errorBox.textContent = "Please choose a username.";
-				return;
-			}
-
-			if (mode === "login") {
-				signInWithEmailAndPassword(auth, email, password)
-					.then(() => window.closeAuthModal())
-					.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
-			} else {
-				createUserWithEmailAndPassword(auth, email, password)
-					.then((cred) => updateProfile(cred.user, { displayName: username }))
-					.then(() => window.closeAuthModal())
-					.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
-			}
-		};
-
-		window.logout = function () {
-			signOut(auth);
-		};
-
-		onAuthStateChanged(auth, (user) => {
-			const loginBtn = document.getElementById("login-btn");
-			const logoutBtn = document.getElementById("logout-btn");
-			const greeting = document.getElementById("user-greeting");
-			const membersSection = document.getElementById("members-only");
-
-			if (user) {
-				loginBtn.style.display = "none";
-				logoutBtn.style.display = "inline-block";
-				greeting.style.display = "inline-block";
-				greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
-				if (membersSection) membersSection.style.display = "block";
-			} else {
-				loginBtn.style.display = "inline-block";
-				logoutBtn.style.display = "none";
-				greeting.style.display = "none";
-				if (membersSection) membersSection.style.display = "none";
-			}
-		});
-	</script>
 	</body>
 	</html>
