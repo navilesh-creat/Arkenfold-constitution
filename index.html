@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="google-site-verification" content="4gU_eOHe27ZPYZuNf_ULA7Gvy8s3DM9elrkpXgKPGmY" />
-	<title>Dominion of Arkenfold</title><link rel="icon" type="image/png" href="./favicon.png">
+	<link rel="icon" type="image/png" href="./favicon.png">
 	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 	<style>
 		* { margin: 0; padding: 0; box-sizing: border-box; }
@@ -167,7 +167,7 @@
 		.section-title { font-family: 'Cinzel', serif; font-size: 2.8em; text-align: center; color: #d4af37; margin-bottom: 60px; letter-spacing: 0.05em; position: relative; }
 		.section-title::after { content: ''; display: block; width: 80px; height: 2px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 20px auto; }
 		.constitution-text { background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(212, 175, 55, 0.1); margin-bottom: 40px; }
-		.constitution-text h1 { font-family: 'Cinzel', serif; font-size: 2.4em; color: #d4af37; text-align: center; margin-bottom: 40px; letter-spacing: 0.03em; font-weight: 600; }
+		.constitution-text h1, .constitution-text .doc-title { font-family: 'Cinzel', serif; font-size: 2.4em; color: #d4af37; text-align: center; margin-bottom: 40px; letter-spacing: 0.03em; font-weight: 600; }
 		.constitution-text .preamble { font-style: italic; color: #b8a07e; text-align: center; margin-bottom: 50px; font-size: 1.1em; }
 		.constitution-text h2 { font-family: 'Cinzel', serif; font-size: 1.6em; color: #d4af37; margin: 40px 0 20px 0; font-weight: 500; position: relative; padding-left: 30px; }
 		.constitution-text h2::before { content: '§'; position: absolute; left: 0; color: rgba(212, 175, 55, 0.6); font-size: 1.2em; }
@@ -185,6 +185,26 @@
 			.designer-credit { bottom: 20px; font-size: 0.9em; padding: 10px 20px; }
 		}
 		::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(15,15,15,0.5); } ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.4); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
+
+		#auth-area { position: absolute; top: 20px; right: 30px; display: flex; align-items: center; gap: 12px; z-index: 50; }
+		#login-btn, #logout-btn { background: transparent; border: 1px solid #d4af37; color: #d4af37; padding: 8px 18px; border-radius: 4px; font-family: 'Cinzel', serif; font-size: 0.85em; letter-spacing: 0.05em; cursor: pointer; transition: all 0.25s ease; }
+		#login-btn:hover, #logout-btn:hover { background: #d4af37; color: #0a0a0a; }
+		#user-greeting { color: #d4af37; font-family: 'Cinzel', serif; font-size: 0.9em; }
+
+		.auth-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 200; }
+		.auth-modal-box { background: #141414; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 8px; padding: 40px; width: 90%; max-width: 380px; position: relative; text-align: center; }
+		.auth-modal-box h2 { font-family: 'Cinzel', serif; color: #d4af37; margin-bottom: 24px; letter-spacing: 0.04em; }
+		.auth-modal-box input { width: 100%; box-sizing: border-box; background: #0a0a0a; border: 1px solid rgba(212,175,55,0.3); color: #eee; padding: 12px 14px; margin-bottom: 14px; border-radius: 4px; font-size: 0.95em; }
+		.auth-modal-box input:focus { outline: none; border-color: #d4af37; }
+		#auth-submit-btn { width: 100%; background: #d4af37; color: #0a0a0a; border: none; padding: 12px; border-radius: 4px; font-family: 'Cinzel', serif; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; margin-top: 6px; }
+		#auth-submit-btn:hover { background: #e8c655; }
+		.auth-modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #8a7a5e; font-size: 1.4em; cursor: pointer; }
+		.auth-modal-close:hover { color: #d4af37; }
+		.auth-error { color: #e05a5a; font-size: 0.85em; min-height: 18px; margin-bottom: 6px; }
+		.auth-toggle-text { color: #8a7a5e; font-size: 0.85em; margin-top: 16px; }
+		.auth-toggle-text a { color: #d4af37; text-decoration: none; }
+		.auth-toggle-text a:hover { text-decoration: underline; }
+		@media (max-width: 768px) { #auth-area { position: static; justify-content: center; margin-top: 15px; } }
 	</style>
 	<title>Dominion of Arkenfold | Official Constitution</title>
 
@@ -202,19 +222,53 @@
 <meta property="og:title" content="Dominion of Arkenfold">
 <meta property="og:description" content="Read the official Constitution of the Dominion of Arkenfold.">
 <meta property="og:url" content="https://navilesh-creat.github.io/Arkenfold-constitution/">
+<meta property="og:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dominion of Arkenfold">
 <meta name="twitter:description" content="Official Constitution of the Dominion of Arkenfold.">
+<meta name="twitter:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
 
 <link rel="icon" href="favicon.ico">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Dominion of Arkenfold",
+  "url": "https://navilesh-creat.github.io/Arkenfold-constitution/",
+  "description": "The official Constitution of the Dominion of Arkenfold."
+}
+</script>
 </head>
 <body>
 	<header>
 		<div class="header-content">
 			<div class="logo">ARKENFOLD</div>
+			<div id="auth-area">
+				<button id="login-btn" onclick="openAuthModal()">Login / Sign Up</button>
+				<span id="user-greeting" style="display:none;"></span>
+				<button id="logout-btn" onclick="logout()" style="display:none;">Logout</button>
+			</div>
 		</div>
 	</header>
+
+	<!-- Login/Signup Modal -->
+	<div id="auth-modal" class="auth-modal-overlay" style="display:none;">
+		<div class="auth-modal-box">
+			<button class="auth-modal-close" onclick="closeAuthModal()">&times;</button>
+			<h2 id="auth-modal-title">Login</h2>
+			<input type="text" id="auth-username" placeholder="Username" style="display:none;" />
+			<input type="email" id="auth-email" placeholder="Email" />
+			<input type="password" id="auth-password" placeholder="Password" />
+			<div id="auth-error" class="auth-error"></div>
+			<button id="auth-submit-btn" onclick="submitAuth()">Login</button>
+			<p class="auth-toggle-text">
+				<span id="auth-toggle-label">Don't have an account?</span>
+				<a href="#" id="auth-toggle-link" onclick="toggleAuthMode(event)">Sign up</a>
+			</p>
+		</div>
+	</div>
 
 	<!-- Homepage -->
 	<section class="page active" id="home">
@@ -236,7 +290,11 @@
 			<li>leafy02leafeon</li><li>Alein2203</li><li>KhioALT</li><li>LordAspect777</li><li>7youngstunna7</li>
 		</ul>
 		<button class="constitution-btn" onclick="showConstitution()">The Constitution of the Arkenfold</button>
-		
+
+		<div id="members-only" style="display:none;">
+			<div class="designer-credit">✦ Welcome back, citizen. This section is visible only to logged-in members. ✦</div>
+		</div>
+
 		<div class="designer-credit">
 			✦ Designed and Developed by <span>_navi_49</span> ✦
 		</div>
@@ -247,7 +305,7 @@
 		<div class="constitution-content" id="const-content">
 			<h2 class="section-title">THE CONSTITUTION</h2>
 			<div class="constitution-text">
-				<h1>THE CONSTITUTION OF THE DOMINION OF ARKENFOLD</h1>
+				<div class="doc-title">THE CONSTITUTION OF THE DOMINION OF ARKENFOLD</div>
 				<p class="preamble">Ratified to Establish Absolute Order, Enduring Strength, and Unchallenged Authority.</p>
 				<h2>PREAMBLE</h2><p>We, the People of Arkenfold, united by will and bound by purpose, establish this Dominion to secure order, strength, and survival in a world of conflict and chaos.<br>Through unwavering authority, disciplined unity, and resolute command, we shall endure, expand, and prevail.</p>
 			<h2>ARTICLE I – THE DOMINION</h2><p>The Dominion of Arkenfold is a sovereign state founded upon absolute authority, unity of command, and total national strength.</p><p>All institutions, offices, and forces serve the Dominion and its Supreme Archon.</p><p>The Dominion exists to ensure survival, dominance, and the perpetual stability of its people.</p>
@@ -284,5 +342,104 @@
 				document.getElementById('const-content').classList.remove('active');
 			}
 		</script>
+	<script type="module">
+		import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+		import {
+			getAuth,
+			createUserWithEmailAndPassword,
+			signInWithEmailAndPassword,
+			signOut,
+			updateProfile,
+			onAuthStateChanged
+		} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+		const firebaseConfig = {
+			apiKey: "AIzaSyDsXlCyLS4WodBRnwtqM6TbgbW8SighNOI",
+			authDomain: "dominion-of-arkenfold.firebaseapp.com",
+			projectId: "dominion-of-arkenfold",
+			storageBucket: "dominion-of-arkenfold.firebasestorage.app",
+			messagingSenderId: "189228678030",
+			appId: "1:189228678030:web:e07ca03f6dfba9d14a02df",
+			measurementId: "G-XM8T002XYP"
+		};
+
+		const app = initializeApp(firebaseConfig);
+		const auth = getAuth(app);
+
+		let mode = "login"; // or "signup"
+
+		window.openAuthModal = function () {
+			document.getElementById("auth-modal").style.display = "flex";
+		};
+		window.closeAuthModal = function () {
+			document.getElementById("auth-modal").style.display = "none";
+			document.getElementById("auth-error").textContent = "";
+			document.getElementById("auth-username").value = "";
+			document.getElementById("auth-email").value = "";
+			document.getElementById("auth-password").value = "";
+		};
+		window.toggleAuthMode = function (e) {
+			e.preventDefault();
+			mode = mode === "login" ? "signup" : "login";
+			document.getElementById("auth-modal-title").textContent = mode === "login" ? "Login" : "Sign Up";
+			document.getElementById("auth-submit-btn").textContent = mode === "login" ? "Login" : "Create Account";
+			document.getElementById("auth-toggle-label").textContent = mode === "login" ? "Don't have an account?" : "Already have an account?";
+			document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
+			document.getElementById("auth-username").style.display = mode === "signup" ? "block" : "none";
+			document.getElementById("auth-error").textContent = "";
+		};
+
+		window.submitAuth = function () {
+			const username = document.getElementById("auth-username").value.trim();
+			const email = document.getElementById("auth-email").value.trim();
+			const password = document.getElementById("auth-password").value;
+			const errorBox = document.getElementById("auth-error");
+			errorBox.textContent = "";
+
+			if (!email || !password) {
+				errorBox.textContent = "Please fill in both fields.";
+				return;
+			}
+			if (mode === "signup" && !username) {
+				errorBox.textContent = "Please choose a username.";
+				return;
+			}
+
+			if (mode === "login") {
+				signInWithEmailAndPassword(auth, email, password)
+					.then(() => window.closeAuthModal())
+					.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+			} else {
+				createUserWithEmailAndPassword(auth, email, password)
+					.then((cred) => updateProfile(cred.user, { displayName: username }))
+					.then(() => window.closeAuthModal())
+					.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+			}
+		};
+
+		window.logout = function () {
+			signOut(auth);
+		};
+
+		onAuthStateChanged(auth, (user) => {
+			const loginBtn = document.getElementById("login-btn");
+			const logoutBtn = document.getElementById("logout-btn");
+			const greeting = document.getElementById("user-greeting");
+			const membersSection = document.getElementById("members-only");
+
+			if (user) {
+				loginBtn.style.display = "none";
+				logoutBtn.style.display = "inline-block";
+				greeting.style.display = "inline-block";
+				greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
+				if (membersSection) membersSection.style.display = "block";
+			} else {
+				loginBtn.style.display = "inline-block";
+				logoutBtn.style.display = "none";
+				greeting.style.display = "none";
+				if (membersSection) membersSection.style.display = "none";
+			}
+		});
+	</script>
 	</body>
 	</html>
