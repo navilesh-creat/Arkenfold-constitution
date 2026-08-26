@@ -411,9 +411,12 @@
 					.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
 			} else {
 				createUserWithEmailAndPassword(auth, email, password)
-					.then((cred) => updateProfile(cred.user, { displayName: username }))
-					.then(() => window.closeAuthModal())
-					.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+    .then((cred) => updateProfile(cred.user, { displayName: username }).then(() => cred.user))
+    .then((user) => {
+        document.getElementById("user-greeting").textContent = "Welcome, " + user.displayName;
+        window.closeAuthModal();
+    })
+    .catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
 			}
 		};
 
