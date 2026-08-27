@@ -28,7 +28,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 let mode = "login"; // or "signup"
-let tempPassword = null; // Store temp password for password setup
 
 /* ═══════════════════════════════════════════════
    PAGE NAVIGATION (with transitions)
@@ -170,23 +169,15 @@ function initHeaderScroll() {
    ═══════════════════════════════════════════════ */
 
 window.checkPasswordStrength = function () {
-	const password = document.getElementById("auth-password").value;
-	const strengthContainer = document.getElementById("password-strength");
-	const strengthBar = document.getElementById("strength-bar");
-	const strengthText = document.getElementById("strength-text");
-
-	// Only show in signup mode
-	if (mode !== "signup") {
-		strengthContainer.style.display = "none";
-		return;
-	}
+	const password = document.getElementById("new-password").value;
+	const strengthBar = document.getElementById("new-strength-bar");
+	const strengthText = document.getElementById("new-strength-text");
 
 	if (!password) {
-		strengthContainer.style.display = "none";
+		strengthBar.style.width = "0";
+		strengthText.textContent = "";
 		return;
 	}
-
-	strengthContainer.style.display = "block";
 
 	// Calculate strength
 	let strength = 0;
@@ -249,9 +240,6 @@ window.closeAuthModal = function () {
 		document.getElementById("auth-error").style.color = "#e05a5a";
 		document.getElementById("auth-username").value = "";
 		document.getElementById("auth-email").value = "";
-		document.getElementById("auth-password").value = "";
-		// Reset password field visibility for login mode
-		document.getElementById("auth-password").style.display = "block";
 	}, 250);
 };
 
@@ -275,16 +263,6 @@ window.toggleAuthMode = function (e) {
 	const forgotPasswordLink = document.getElementById("forgot-password-link");
 	if (forgotPasswordLink) {
 		forgotPasswordLink.style.display = mode === "login" ? "inline-block" : "none";
-	}
-
-	// Show/hide password strength indicator based on mode
-	const strengthContainer = document.getElementById("password-strength");
-	if (strengthContainer) {
-		strengthContainer.style.display = mode === "signup" ? "block" : "none";
-		// Reset strength when switching modes
-		if (mode === "login") {
-			checkPasswordStrength();
-		}
 	}
 };
 
@@ -353,6 +331,21 @@ window.submitResetPassword = function () {
 		});
 };
 
+/* ═══════════════════════════════════════════════
+   SIGNUP - EMAIL FIRST FLOW
+   ═══════════════════════════════════════════════ */
+
+// Generate verification token
+function generateVerificationToken() {
+	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	let token = '';
+	for (let i = 0; i < 32; i++) {
+		token += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+	return token;
+}
+
+// Handle signup - stores data and shows verification message
 window.submitAuth = function () {
 	const username = document.getElementById("auth-username").value.trim();
 	const email = document.getElementById("auth-email").value.trim();
@@ -399,11 +392,11 @@ window.submitAuth = function () {
 								errorBox.textContent = "Failed to resend: " + err.message;
 							});
 						});
-				});
-				return;
-			}
-			window.closeAuthModal();
-		})
+					});
+					return;
+				}
+				window.closeAuthModal();
+			})
 			.catch((err) => {
 				errorBox.textContent = err.message.replace("Firebase: ", "");
 				resetSubmitBtn();
@@ -416,65 +409,71 @@ window.submitAuth = function () {
 		}
 
 		// Loading state with spinner
-		btnText.textContent = "Creating...";
+		btnText.textContent = "Sending...";
 		btnSpinner.style.display = "inline-block";
 		submitBtn.style.opacity = "0.7";
 		submitBtn.style.pointerEvents = "none";
 
-		// Generate temporary password for account creation
-		tempPassword = generateTempPassword();
+		// Generate verification token
+		const verificationToken = generateVerificationToken();
+		const verificationLink = window.location.origin + window.location.pathname + "#verify=" + verificationToken;
 
-		createUserWithEmailAndPassword(auth, email, tempPassword)
-			.then((cred) => {
-				// Set display name
-				return updateProfile(cred.user, { displayName: username }).then(() => cred.user);
-			})
-			.then((user) => {
-				// Send verification email
-				return sendEmailVerification(user).then(() => user);
-			})
-			.then((user) => {
-				// Store temp password in localStorage for password setup
-				localStorage.setItem('pendingUser', JSON.stringify({
-					email: user.email,
-					tempPassword: tempPassword,
-					displayName: username
-				}));
+		// Store signup data in localStorage (NO account created yet)
+		localStorage.setItem('pendingSignup', JSON.stringify({
+			email: email,
+			username: username,
+			token: verificationToken,
+			createdAt: Date.now()
+		}));
 
-				// Sign out and show verification message
-				signOut(auth);
-				const errorBox = document.getElementById("auth-error");
-				errorBox.style.color = "#4caf50";
-				errorBox.innerHTML = "Verification email sent to <strong>" + user.email + "</strong>! Please verify your email, then come back to set your password.";
-				resetSubmitBtn();
-			})
-			.catch((err) => {
-				errorBox.style.color = "#e05a5a";
-				errorBox.textContent = err.message.replace("Firebase: ", "");
-				resetSubmitBtn();
-			});
+		// Show verification message with link
+		errorBox.style.color = "#4caf50";
+		errorBox.innerHTML = `
+			<div style="margin-bottom: 10px;">
+				<strong>Verification email sent to:</strong><br>
+				<span style="color: #d4af37;">${email}</span>
+			</div>
+			<div style="margin-bottom: 10px; font-size: 0.85em;">
+				Please check your email and click the verification link. 
+				You can also click the link below to verify:
+			</div>
+			<a href="${verificationLink}" 
+			   style="color: #d4af37; text-decoration: underline; word-break: break-all; font-size: 0.8em;"
+			   onclick="return verifyEmail('${verificationToken}')">
+				${verificationLink}
+			</a>
+		`;
+
+		resetSubmitBtn();
 	}
 };
 
-function generateTempPassword() {
-	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-	let password = '';
-	for (let i = 0; i < 20; i++) {
-		password += chars.charAt(Math.floor(Math.random() * chars.length));
+// Verify email with token
+window.verifyEmail = function (token) {
+	const pendingSignup = JSON.parse(localStorage.getItem('pendingSignup'));
+	
+	if (!pendingSignup) {
+		alert("No pending signup found. Please sign up again.");
+		return false;
 	}
-	return password;
-}
 
-function resetSubmitBtn() {
-	const submitBtn = document.getElementById("auth-submit-btn");
-	const btnText = submitBtn.querySelector(".btn-text");
-	const btnSpinner = submitBtn.querySelector(".btn-spinner");
+	if (pendingSignup.token !== token) {
+		alert("Invalid verification token.");
+		return false;
+	}
 
-	btnText.textContent = mode === "login" ? "Login" : "Sign Up";
-	btnSpinner.style.display = "none";
-	submitBtn.style.opacity = "1";
-	submitBtn.style.pointerEvents = "auto";
-}
+	// Token is valid - mark as verified and show password setup
+	pendingSignup.verified = true;
+	localStorage.setItem('pendingSignup', JSON.stringify(pendingSignup));
+
+	// Close auth modal and open password setup modal
+	closeAuthModal();
+	setTimeout(() => {
+		openPasswordSetupModal();
+	}, 300);
+
+	return false; // Prevent default link behavior
+};
 
 /* ═══════════════════════════════════════════════
    PASSWORD SETUP MODAL
@@ -498,56 +497,6 @@ window.closePasswordSetupModal = function () {
 		document.getElementById("new-password").value = "";
 		document.getElementById("confirm-password").value = "";
 	}, 250);
-};
-
-window.checkNewPasswordStrength = function () {
-	const password = document.getElementById("new-password").value;
-	const strengthBar = document.getElementById("new-strength-bar");
-	const strengthText = document.getElementById("new-strength-text");
-
-	if (!password) {
-		strengthBar.style.width = "0";
-		strengthText.textContent = "";
-		return;
-	}
-
-	// Calculate strength
-	let strength = 0;
-	let feedback = "";
-	let color = "";
-
-	// Length check
-	if (password.length >= 6) strength++;
-	if (password.length >= 8) strength++;
-	if (password.length >= 12) strength++;
-
-	// Character variety checks
-	if (/[a-z]/.test(password)) strength++;
-	if (/[A-Z]/.test(password)) strength++;
-	if (/[0-9]/.test(password)) strength++;
-	if (/[^a-zA-Z0-9]/.test(password)) strength++;
-
-	// Determine strength level
-	if (strength <= 2) {
-		feedback = "Weak";
-		color = "#e05a5a";
-	} else if (strength <= 4) {
-		feedback = "Fair";
-		color = "#f0a500";
-	} else if (strength <= 5) {
-		feedback = "Good";
-		color = "#d4af37";
-	} else {
-		feedback = "Strong";
-		color = "#4caf50";
-	}
-
-	// Update UI
-	const percentage = Math.min((strength / 7) * 100, 100);
-	strengthBar.style.width = percentage + "%";
-	strengthBar.style.background = color;
-	strengthText.textContent = feedback;
-	strengthText.style.color = color;
 };
 
 window.submitPasswordSetup = function () {
@@ -575,42 +524,72 @@ window.submitPasswordSetup = function () {
 		return;
 	}
 
-	// Get pending user data from localStorage
-	const pendingUser = JSON.parse(localStorage.getItem('pendingUser'));
-	if (!pendingUser) {
-		errorBox.textContent = "Session expired. Please sign up again.";
+	// Get pending signup data from localStorage
+	const pendingSignup = JSON.parse(localStorage.getItem('pendingSignup'));
+	if (!pendingSignup || !pendingSignup.verified) {
+		errorBox.textContent = "Session expired or email not verified. Please sign up again.";
 		return;
 	}
 
 	// Loading state with spinner
-	btnText.textContent = "Setting Password...";
+	btnText.textContent = "Creating Account...";
 	btnSpinner.style.display = "inline-block";
 	submitBtn.style.opacity = "0.7";
 	submitBtn.style.pointerEvents = "none";
 
-	// Sign in with temp password
-	signInWithEmailAndPassword(auth, pendingUser.email, pendingUser.tempPassword)
+	// NOW create the account (email is verified)
+	createUserWithEmailAndPassword(auth, pendingSignup.email, newPassword)
 		.then((cred) => {
-			// Update password
-			return cred.user.updatePassword(newPassword);
+			// Set display name
+			return updateProfile(cred.user, { displayName: pendingSignup.username }).then(() => cred.user);
 		})
-		.then(() => {
-			// Clear pending user data
-			localStorage.removeItem('pendingUser');
-			tempPassword = null;
+		.then((user) => {
+			// Send verification email to verify in Firebase
+			return sendEmailVerification(user).then(() => user);
+		})
+		.then((user) => {
+			// Clear pending signup data
+			localStorage.removeItem('pendingSignup');
 
-			// Show success and close modal
+			// Show success message
 			closePasswordSetupModal();
-			alert('Password set successfully! You can now login with your new password.');
+			errorBox.style.color = "#4caf50";
+			errorBox.textContent = "Account created successfully! You can now login.";
+			
+			// Switch to login mode
+			mode = "login";
+			document.getElementById("auth-modal-title").textContent = "Login";
+			const authSubmitBtn = document.getElementById("auth-submit-btn");
+			authSubmitBtn.querySelector(".btn-text").textContent = "Login";
+			document.getElementById("auth-toggle-label").textContent = "Don't have an account?";
+			document.getElementById("auth-toggle-link").textContent = "Sign up";
+			document.getElementById("auth-username").style.display = "none";
+			document.getElementById("auth-error").textContent = "";
+			document.getElementById("auth-error").style.color = "#4caf50";
+			document.getElementById("auth-error").textContent = "Account created successfully! You can now login.";
+			
+			// Open auth modal
+			openAuthModal();
 		})
 		.catch((err) => {
 			errorBox.textContent = err.message.replace("Firebase: ", "");
-			btnText.textContent = "Set Password";
+			btnText.textContent = "Create Account";
 			btnSpinner.style.display = "none";
 			submitBtn.style.opacity = "1";
 			submitBtn.style.pointerEvents = "auto";
 		});
 };
+
+function resetSubmitBtn() {
+	const submitBtn = document.getElementById("auth-submit-btn");
+	const btnText = submitBtn.querySelector(".btn-text");
+	const btnSpinner = submitBtn.querySelector(".btn-spinner");
+
+	btnText.textContent = mode === "login" ? "Login" : "Sign Up";
+	btnSpinner.style.display = "none";
+	submitBtn.style.opacity = "1";
+	submitBtn.style.pointerEvents = "auto";
+}
 
 window.logout = function () {
 	signOut(auth);
@@ -628,18 +607,6 @@ onAuthStateChanged(auth, (user) => {
 		greeting.style.display = "inline-block";
 		greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
 		if (membersSection) membersSection.style.display = "block";
-
-		// Check if this is a newly verified user who needs to set password
-		const pendingUser = JSON.parse(localStorage.getItem('pendingUser'));
-		if (pendingUser && user.email === pendingUser.email && !user.emailVerified) {
-			// Email not verified yet, sign out
-			signOut(auth);
-		} else if (pendingUser && user.email === pendingUser.email && user.emailVerified) {
-			// Email verified, open password setup modal
-			setTimeout(() => {
-				openPasswordSetupModal();
-			}, 500);
-		}
 	} else {
 		loginBtn.style.display = "inline-block";
 		logoutBtn.style.display = "none";
@@ -657,4 +624,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	initHeaderScroll();
 	initScrollReveals();
 	animateHomeElements();
+
+	// Check for verification token in URL hash
+	const hash = window.location.hash;
+	if (hash && hash.startsWith('#verify=')) {
+		const token = hash.substring(8);
+		verifyEmail(token);
+		// Clean up URL
+		window.history.replaceState(null, null, window.location.pathname);
+	}
 });

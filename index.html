@@ -64,7 +64,7 @@
 			<h2 id="auth-modal-title">Login</h2>
 			<input type="text" id="auth-username" placeholder="Username" style="display:none;" />
 			<input type="email" id="auth-email" placeholder="Email" />
-			<input type="password" id="auth-password" placeholder="Password" style="display:none;" />
+			<input type="password" id="auth-password" placeholder="Password" />
 			<div id="password-strength" class="password-strength" style="display:none;">
 				<div class="strength-bar-container">
 					<div class="strength-bar" id="strength-bar"></div>
@@ -90,9 +90,9 @@
 	<div id="password-setup-modal" class="auth-modal-overlay" style="display:none;">
 		<div class="auth-modal-box">
 			<button class="auth-modal-close" onclick="closePasswordSetupModal()">&times;</button>
-			<h2>Set Your Password</h2>
-			<p class="reset-description">Your email has been verified! Please set your password to complete your account.</p>
-			<input type="password" id="new-password" placeholder="New Password" oninput="checkNewPasswordStrength()" />
+			<h2>Create Your Password</h2>
+			<p class="reset-description">Your email has been verified! Now create your password to complete your account.</p>
+			<input type="password" id="new-password" placeholder="Password" oninput="checkPasswordStrength()" />
 			<div id="new-password-strength" class="password-strength">
 				<div class="strength-bar-container">
 					<div class="strength-bar" id="new-strength-bar"></div>
@@ -102,7 +102,7 @@
 			<input type="password" id="confirm-password" placeholder="Confirm Password" />
 			<div id="setup-error" class="auth-error"></div>
 			<button id="setup-submit-btn" onclick="submitPasswordSetup()">
-				<span class="btn-text">Set Password</span>
+				<span class="btn-text">Create Account</span>
 				<span class="btn-spinner" style="display:none;"></span>
 			</button>
 		</div>
