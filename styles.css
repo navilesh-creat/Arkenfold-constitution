@@ -892,6 +892,45 @@ footer {
 	border-bottom-color: #d4af37;
 }
 
+/* ── Forgot Password Link ── */
+.auth-forgot-text {
+	margin-top: 12px;
+	margin-bottom: 0;
+	text-align: right;
+}
+
+.auth-forgot-text a {
+	color: rgba(212, 175, 55, 0.6);
+	text-decoration: none;
+	font-size: 0.82em;
+	transition: all 0.3s ease;
+	border-bottom: 1px solid transparent;
+}
+
+.auth-forgot-text a:hover {
+	color: #d4af37;
+	border-bottom-color: #d4af37;
+}
+
+/* ── Reset Password Description ── */
+.reset-description {
+	color: #8a7a5e;
+	font-size: 0.88em;
+	line-height: 1.5;
+	margin-bottom: 20px;
+	text-align: center;
+}
+
+/* ── Reset Success Message ── */
+.auth-success {
+	color: #4caf50;
+	font-size: 0.85em;
+	min-height: 18px;
+	margin-bottom: 6px;
+	text-align: left;
+	padding-left: 2px;
+}
+
 /* ═══════════════════════════════════════════════════════
    SCROLL REVEAL ANIMATIONS
    ═══════════════════════════════════════════════════════ */

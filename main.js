@@ -6,7 +6,8 @@ import {
 	signOut,
 	updateProfile,
 	onAuthStateChanged,
-	sendEmailVerification
+	sendEmailVerification,
+	sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 /* ═══════════════════════════════════════════════
@@ -198,6 +199,72 @@ window.toggleAuthMode = function (e) {
 	document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
 	document.getElementById("auth-username").style.display = mode === "signup" ? "block" : "none";
 	document.getElementById("auth-error").textContent = "";
+
+	// Show/hide forgot password link based on mode
+	const forgotPasswordLink = document.getElementById("forgot-password-link");
+	if (forgotPasswordLink) {
+		forgotPasswordLink.style.display = mode === "login" ? "inline-block" : "none";
+	}
+};
+
+window.openResetPasswordModal = function () {
+	const authModal = document.getElementById("auth-modal");
+	const resetModal = document.getElementById("reset-password-modal");
+
+	// Close auth modal
+	authModal.style.display = "none";
+
+	// Open reset modal
+	resetModal.style.display = "flex";
+};
+
+window.closeResetPasswordModal = function () {
+	const modal = document.getElementById("reset-password-modal");
+	const box = modal.querySelector('.auth-modal-box');
+
+	// Animate out
+	box.style.animation = 'modalBoxOut 0.25s ease forwards';
+	setTimeout(() => {
+		modal.style.display = "none";
+		box.style.animation = '';
+		document.getElementById("reset-error").textContent = "";
+		document.getElementById("reset-success").textContent = "";
+		document.getElementById("reset-email").value = "";
+	}, 250);
+};
+
+window.submitResetPassword = function () {
+	const email = document.getElementById("reset-email").value.trim();
+	const errorBox = document.getElementById("reset-error");
+	const successBox = document.getElementById("reset-success");
+	const submitBtn = document.getElementById("reset-submit-btn");
+
+	errorBox.textContent = "";
+	successBox.textContent = "";
+
+	if (!email) {
+		errorBox.textContent = "Please enter your email address.";
+		return;
+	}
+
+	// Loading state
+	submitBtn.textContent = "Sending...";
+	submitBtn.style.opacity = "0.7";
+	submitBtn.style.pointerEvents = "none";
+
+	sendPasswordResetEmail(auth, email)
+		.then(() => {
+			successBox.textContent = "Password reset email sent! Check your inbox.";
+			submitBtn.textContent = "Send Reset Link";
+			submitBtn.style.opacity = "1";
+			submitBtn.style.pointerEvents = "auto";
+		})
+		.catch((err) => {
+			errorBox.textContent = err.message.replace("Firebase: ", "");
+			submitBtn.textContent = "Send Reset Link";
+			submitBtn.style.opacity = "1";
+			submitBtn.style.pointerEvents = "auto";
+		});
 };
 
 window.submitAuth = function () {
