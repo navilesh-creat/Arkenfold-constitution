@@ -5,7 +5,8 @@ import {
 	signInWithEmailAndPassword,
 	signOut,
 	updateProfile,
-	onAuthStateChanged
+	onAuthStateChanged,
+	sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 /* ═══════════════════════════════════════════════
@@ -181,6 +182,7 @@ window.closeAuthModal = function () {
 		modal.style.display = "none";
 		box.style.animation = '';
 		document.getElementById("auth-error").textContent = "";
+		document.getElementById("auth-error").style.color = "#e05a5a";
 		document.getElementById("auth-username").value = "";
 		document.getElementById("auth-email").value = "";
 		document.getElementById("auth-password").value = "";
@@ -223,19 +225,55 @@ window.submitAuth = function () {
 
 	if (mode === "login") {
 		signInWithEmailAndPassword(auth, email, password)
-			.then(() => window.closeAuthModal())
+			.then((cred) => {
+				// Check if email is verified
+				if (!cred.user.emailVerified) {
+					// Save user reference for resend
+					const unverifiedUser = cred.user;
+					// Sign out the user since email is not verified
+					signOut(auth).then(() => {
+						errorBox.style.color = "#e05a5a";
+						errorBox.innerHTML = "Please verify your email first. Check your inbox for the verification link. <a href='#' id='resend-verification' style='color: #d4af37; text-decoration: underline; cursor: pointer;'>Resend verification email</a>";
+						resetSubmitBtn();
+						// Add resend functionality
+						document.getElementById('resend-verification').addEventListener('click', (e) => {
+							e.preventDefault();
+							sendEmailVerification(unverifiedUser).then(() => {
+								errorBox.style.color = "#4caf50";
+								errorBox.textContent = "Verification email resent! Please check your inbox.";
+							}).catch((err) => {
+								errorBox.style.color = "#e05a5a";
+								errorBox.textContent = "Failed to resend: " + err.message;
+							});
+						});
+				});
+				return;
+			}
+			window.closeAuthModal();
+		})
 			.catch((err) => {
 				errorBox.textContent = err.message.replace("Firebase: ", "");
 				resetSubmitBtn();
 			});
 	} else {
 		createUserWithEmailAndPassword(auth, email, password)
-			.then((cred) => updateProfile(cred.user, { displayName: username }).then(() => cred.user))
+			.then((cred) => {
+				// Set display name
+				return updateProfile(cred.user, { displayName: username }).then(() => cred.user);
+			})
 			.then((user) => {
-				document.getElementById("user-greeting").textContent = "Welcome, " + user.displayName;
-				window.closeAuthModal();
+				// Send verification email
+				return sendEmailVerification(user).then(() => user);
+			})
+			.then((user) => {				// Sign out and show verification message
+			signOut(auth);
+			const errorBox = document.getElementById("auth-error");
+			errorBox.style.color = "#4caf50";
+			errorBox.innerHTML = "Account created! A verification link has been sent to <strong>" + user.email + "</strong>. Please verify your email before logging in.";
+			resetSubmitBtn();
 			})
 			.catch((err) => {
+				errorBox.style.color = "#e05a5a";
 				errorBox.textContent = err.message.replace("Firebase: ", "");
 				resetSubmitBtn();
 			});
