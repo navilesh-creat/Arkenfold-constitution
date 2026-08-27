@@ -64,17 +64,49 @@
 			<h2 id="auth-modal-title">Login</h2>
 			<input type="text" id="auth-username" placeholder="Username" style="display:none;" />
 			<input type="email" id="auth-email" placeholder="Email" />
-			<input type="password" id="auth-password" placeholder="Password" />				<div id="auth-error" class="auth-error"></div>
-				<button id="auth-submit-btn" onclick="submitAuth()">Login</button>
-				<p class="auth-forgot-text">
-					<a href="#" id="forgot-password-link" onclick="openResetPasswordModal()" style="display:inline-block;">Forgot password?</a>
-				</p>
-				<p class="auth-toggle-text">
-					<span id="auth-toggle-label">Don't have an account?</span>
-					<a href="#" id="auth-toggle-link" onclick="toggleAuthMode(event)">Sign up</a>
-				</p>
+			<input type="password" id="auth-password" placeholder="Password" style="display:none;" />
+			<div id="password-strength" class="password-strength" style="display:none;">
+				<div class="strength-bar-container">
+					<div class="strength-bar" id="strength-bar"></div>
+				</div>
+				<span class="strength-text" id="strength-text"></span>
 			</div>
+			<div id="auth-error" class="auth-error"></div>
+			<button id="auth-submit-btn" onclick="submitAuth()">
+				<span class="btn-text">Login</span>
+				<span class="btn-spinner" style="display:none;"></span>
+			</button>
+			<p class="auth-forgot-text">
+				<a href="#" id="forgot-password-link" onclick="openResetPasswordModal()" style="display:inline-block;">Forgot password?</a>
+			</p>
+			<p class="auth-toggle-text">
+				<span id="auth-toggle-label">Don't have an account?</span>
+				<a href="#" id="auth-toggle-link" onclick="toggleAuthMode(event)">Sign up</a>
+			</p>
 		</div>
+	</div>
+
+	<!-- Password Setup Modal (after email verification) -->
+	<div id="password-setup-modal" class="auth-modal-overlay" style="display:none;">
+		<div class="auth-modal-box">
+			<button class="auth-modal-close" onclick="closePasswordSetupModal()">&times;</button>
+			<h2>Set Your Password</h2>
+			<p class="reset-description">Your email has been verified! Please set your password to complete your account.</p>
+			<input type="password" id="new-password" placeholder="New Password" oninput="checkNewPasswordStrength()" />
+			<div id="new-password-strength" class="password-strength">
+				<div class="strength-bar-container">
+					<div class="strength-bar" id="new-strength-bar"></div>
+				</div>
+				<span class="strength-text" id="new-strength-text"></span>
+			</div>
+			<input type="password" id="confirm-password" placeholder="Confirm Password" />
+			<div id="setup-error" class="auth-error"></div>
+			<button id="setup-submit-btn" onclick="submitPasswordSetup()">
+				<span class="btn-text">Set Password</span>
+				<span class="btn-spinner" style="display:none;"></span>
+			</button>
+		</div>
+	</div>
 
 		<!-- Forgot Password Modal -->
 		<div id="reset-password-modal" class="auth-modal-overlay" style="display:none;">
@@ -85,7 +117,10 @@
 				<input type="email" id="reset-email" placeholder="Email" />
 				<div id="reset-error" class="auth-error"></div>
 				<div id="reset-success" class="auth-success"></div>
-				<button id="reset-submit-btn" onclick="submitResetPassword()">Send Reset Link</button>
+				<button id="reset-submit-btn" onclick="submitResetPassword()">
+					<span class="btn-text">Send Reset Link</span>
+					<span class="btn-spinner" style="display:none;"></span>
+				</button>
 				<p class="auth-toggle-text">
 					<a href="#" onclick="closeResetPasswordModal()" style="color:#d4af37; text-decoration:none;">← Back to Login</a>
 				</p>

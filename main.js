@@ -28,6 +28,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 let mode = "login"; // or "signup"
+let tempPassword = null; // Store temp password for password setup
 
 /* ═══════════════════════════════════════════════
    PAGE NAVIGATION (with transitions)
@@ -165,6 +166,68 @@ function initHeaderScroll() {
 }
 
 /* ═══════════════════════════════════════════════
+   PASSWORD STRENGTH INDICATOR
+   ═══════════════════════════════════════════════ */
+
+window.checkPasswordStrength = function () {
+	const password = document.getElementById("auth-password").value;
+	const strengthContainer = document.getElementById("password-strength");
+	const strengthBar = document.getElementById("strength-bar");
+	const strengthText = document.getElementById("strength-text");
+
+	// Only show in signup mode
+	if (mode !== "signup") {
+		strengthContainer.style.display = "none";
+		return;
+	}
+
+	if (!password) {
+		strengthContainer.style.display = "none";
+		return;
+	}
+
+	strengthContainer.style.display = "block";
+
+	// Calculate strength
+	let strength = 0;
+	let feedback = "";
+	let color = "";
+
+	// Length check
+	if (password.length >= 6) strength++;
+	if (password.length >= 8) strength++;
+	if (password.length >= 12) strength++;
+
+	// Character variety checks
+	if (/[a-z]/.test(password)) strength++;
+	if (/[A-Z]/.test(password)) strength++;
+	if (/[0-9]/.test(password)) strength++;
+	if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+	// Determine strength level
+	if (strength <= 2) {
+		feedback = "Weak";
+		color = "#e05a5a";
+	} else if (strength <= 4) {
+		feedback = "Fair";
+		color = "#f0a500";
+	} else if (strength <= 5) {
+		feedback = "Good";
+		color = "#d4af37";
+	} else {
+		feedback = "Strong";
+		color = "#4caf50";
+	}
+
+	// Update UI
+	const percentage = Math.min((strength / 7) * 100, 100);
+	strengthBar.style.width = percentage + "%";
+	strengthBar.style.background = color;
+	strengthText.textContent = feedback;
+	strengthText.style.color = color;
+};
+
+/* ═══════════════════════════════════════════════
    AUTH MODAL
    ═══════════════════════════════════════════════ */
 
@@ -187,6 +250,8 @@ window.closeAuthModal = function () {
 		document.getElementById("auth-username").value = "";
 		document.getElementById("auth-email").value = "";
 		document.getElementById("auth-password").value = "";
+		// Reset password field visibility for login mode
+		document.getElementById("auth-password").style.display = "block";
 	}, 250);
 };
 
@@ -194,16 +259,32 @@ window.toggleAuthMode = function (e) {
 	e.preventDefault();
 	mode = mode === "login" ? "signup" : "login";
 	document.getElementById("auth-modal-title").textContent = mode === "login" ? "Login" : "Sign Up";
-	document.getElementById("auth-submit-btn").textContent = mode === "login" ? "Login" : "Create Account";
+
+	// Update button text using btn-text span
+	const submitBtn = document.getElementById("auth-submit-btn");
+	const btnText = submitBtn.querySelector(".btn-text");
+	btnText.textContent = mode === "login" ? "Login" : "Sign Up";
+
 	document.getElementById("auth-toggle-label").textContent = mode === "login" ? "Don't have an account?" : "Already have an account?";
 	document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
 	document.getElementById("auth-username").style.display = mode === "signup" ? "block" : "none";
+	document.getElementById("auth-password").style.display = mode === "login" ? "block" : "none";
 	document.getElementById("auth-error").textContent = "";
 
 	// Show/hide forgot password link based on mode
 	const forgotPasswordLink = document.getElementById("forgot-password-link");
 	if (forgotPasswordLink) {
 		forgotPasswordLink.style.display = mode === "login" ? "inline-block" : "none";
+	}
+
+	// Show/hide password strength indicator based on mode
+	const strengthContainer = document.getElementById("password-strength");
+	if (strengthContainer) {
+		strengthContainer.style.display = mode === "signup" ? "block" : "none";
+		// Reset strength when switching modes
+		if (mode === "login") {
+			checkPasswordStrength();
+		}
 	}
 };
 
@@ -238,6 +319,8 @@ window.submitResetPassword = function () {
 	const errorBox = document.getElementById("reset-error");
 	const successBox = document.getElementById("reset-success");
 	const submitBtn = document.getElementById("reset-submit-btn");
+	const btnText = submitBtn.querySelector(".btn-text");
+	const btnSpinner = submitBtn.querySelector(".btn-spinner");
 
 	errorBox.textContent = "";
 	successBox.textContent = "";
@@ -247,21 +330,24 @@ window.submitResetPassword = function () {
 		return;
 	}
 
-	// Loading state
-	submitBtn.textContent = "Sending...";
+	// Loading state with spinner
+	btnText.textContent = "Sending...";
+	btnSpinner.style.display = "inline-block";
 	submitBtn.style.opacity = "0.7";
 	submitBtn.style.pointerEvents = "none";
 
 	sendPasswordResetEmail(auth, email)
 		.then(() => {
 			successBox.textContent = "Password reset email sent! Check your inbox.";
-			submitBtn.textContent = "Send Reset Link";
+			btnText.textContent = "Send Reset Link";
+			btnSpinner.style.display = "none";
 			submitBtn.style.opacity = "1";
 			submitBtn.style.pointerEvents = "auto";
 		})
 		.catch((err) => {
 			errorBox.textContent = err.message.replace("Firebase: ", "");
-			submitBtn.textContent = "Send Reset Link";
+			btnText.textContent = "Send Reset Link";
+			btnSpinner.style.display = "none";
 			submitBtn.style.opacity = "1";
 			submitBtn.style.pointerEvents = "auto";
 		});
@@ -273,24 +359,24 @@ window.submitAuth = function () {
 	const password = document.getElementById("auth-password").value;
 	const errorBox = document.getElementById("auth-error");
 	const submitBtn = document.getElementById("auth-submit-btn");
+	const btnText = submitBtn.querySelector(".btn-text");
+	const btnSpinner = submitBtn.querySelector(".btn-spinner");
 
 	errorBox.textContent = "";
 
-	if (!email || !password) {
-		errorBox.textContent = "Please fill in both fields.";
-		return;
-	}
-	if (mode === "signup" && !username) {
-		errorBox.textContent = "Please choose a username.";
-		return;
-	}
-
-	// Loading state
-	submitBtn.textContent = mode === "login" ? "Logging in..." : "Creating...";
-	submitBtn.style.opacity = "0.7";
-	submitBtn.style.pointerEvents = "none";
-
 	if (mode === "login") {
+		// Login mode - require email and password
+		if (!email || !password) {
+			errorBox.textContent = "Please fill in both fields.";
+			return;
+		}
+
+		// Loading state with spinner
+		btnText.textContent = "Logging in...";
+		btnSpinner.style.display = "inline-block";
+		submitBtn.style.opacity = "0.7";
+		submitBtn.style.pointerEvents = "none";
+
 		signInWithEmailAndPassword(auth, email, password)
 			.then((cred) => {
 				// Check if email is verified
@@ -323,7 +409,22 @@ window.submitAuth = function () {
 				resetSubmitBtn();
 			});
 	} else {
-		createUserWithEmailAndPassword(auth, email, password)
+		// Signup mode - require username and email only
+		if (!username || !email) {
+			errorBox.textContent = "Please fill in username and email.";
+			return;
+		}
+
+		// Loading state with spinner
+		btnText.textContent = "Creating...";
+		btnSpinner.style.display = "inline-block";
+		submitBtn.style.opacity = "0.7";
+		submitBtn.style.pointerEvents = "none";
+
+		// Generate temporary password for account creation
+		tempPassword = generateTempPassword();
+
+		createUserWithEmailAndPassword(auth, email, tempPassword)
 			.then((cred) => {
 				// Set display name
 				return updateProfile(cred.user, { displayName: username }).then(() => cred.user);
@@ -332,12 +433,20 @@ window.submitAuth = function () {
 				// Send verification email
 				return sendEmailVerification(user).then(() => user);
 			})
-			.then((user) => {				// Sign out and show verification message
-			signOut(auth);
-			const errorBox = document.getElementById("auth-error");
-			errorBox.style.color = "#4caf50";
-			errorBox.innerHTML = "Account created! A verification link has been sent to <strong>" + user.email + "</strong>. Please verify your email before logging in.";
-			resetSubmitBtn();
+			.then((user) => {
+				// Store temp password in localStorage for password setup
+				localStorage.setItem('pendingUser', JSON.stringify({
+					email: user.email,
+					tempPassword: tempPassword,
+					displayName: username
+				}));
+
+				// Sign out and show verification message
+				signOut(auth);
+				const errorBox = document.getElementById("auth-error");
+				errorBox.style.color = "#4caf50";
+				errorBox.innerHTML = "Verification email sent to <strong>" + user.email + "</strong>! Please verify your email, then come back to set your password.";
+				resetSubmitBtn();
 			})
 			.catch((err) => {
 				errorBox.style.color = "#e05a5a";
@@ -347,12 +456,161 @@ window.submitAuth = function () {
 	}
 };
 
+function generateTempPassword() {
+	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+	let password = '';
+	for (let i = 0; i < 20; i++) {
+		password += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+	return password;
+}
+
 function resetSubmitBtn() {
 	const submitBtn = document.getElementById("auth-submit-btn");
-	submitBtn.textContent = mode === "login" ? "Login" : "Create Account";
+	const btnText = submitBtn.querySelector(".btn-text");
+	const btnSpinner = submitBtn.querySelector(".btn-spinner");
+
+	btnText.textContent = mode === "login" ? "Login" : "Sign Up";
+	btnSpinner.style.display = "none";
 	submitBtn.style.opacity = "1";
 	submitBtn.style.pointerEvents = "auto";
 }
+
+/* ═══════════════════════════════════════════════
+   PASSWORD SETUP MODAL
+   ═══════════════════════════════════════════════ */
+
+window.openPasswordSetupModal = function () {
+	const modal = document.getElementById("password-setup-modal");
+	modal.style.display = "flex";
+};
+
+window.closePasswordSetupModal = function () {
+	const modal = document.getElementById("password-setup-modal");
+	const box = modal.querySelector('.auth-modal-box');
+
+	// Animate out
+	box.style.animation = 'modalBoxOut 0.25s ease forwards';
+	setTimeout(() => {
+		modal.style.display = "none";
+		box.style.animation = '';
+		document.getElementById("setup-error").textContent = "";
+		document.getElementById("new-password").value = "";
+		document.getElementById("confirm-password").value = "";
+	}, 250);
+};
+
+window.checkNewPasswordStrength = function () {
+	const password = document.getElementById("new-password").value;
+	const strengthBar = document.getElementById("new-strength-bar");
+	const strengthText = document.getElementById("new-strength-text");
+
+	if (!password) {
+		strengthBar.style.width = "0";
+		strengthText.textContent = "";
+		return;
+	}
+
+	// Calculate strength
+	let strength = 0;
+	let feedback = "";
+	let color = "";
+
+	// Length check
+	if (password.length >= 6) strength++;
+	if (password.length >= 8) strength++;
+	if (password.length >= 12) strength++;
+
+	// Character variety checks
+	if (/[a-z]/.test(password)) strength++;
+	if (/[A-Z]/.test(password)) strength++;
+	if (/[0-9]/.test(password)) strength++;
+	if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+	// Determine strength level
+	if (strength <= 2) {
+		feedback = "Weak";
+		color = "#e05a5a";
+	} else if (strength <= 4) {
+		feedback = "Fair";
+		color = "#f0a500";
+	} else if (strength <= 5) {
+		feedback = "Good";
+		color = "#d4af37";
+	} else {
+		feedback = "Strong";
+		color = "#4caf50";
+	}
+
+	// Update UI
+	const percentage = Math.min((strength / 7) * 100, 100);
+	strengthBar.style.width = percentage + "%";
+	strengthBar.style.background = color;
+	strengthText.textContent = feedback;
+	strengthText.style.color = color;
+};
+
+window.submitPasswordSetup = function () {
+	const newPassword = document.getElementById("new-password").value;
+	const confirmPassword = document.getElementById("confirm-password").value;
+	const errorBox = document.getElementById("setup-error");
+	const submitBtn = document.getElementById("setup-submit-btn");
+	const btnText = submitBtn.querySelector(".btn-text");
+	const btnSpinner = submitBtn.querySelector(".btn-spinner");
+
+	errorBox.textContent = "";
+
+	if (!newPassword || !confirmPassword) {
+		errorBox.textContent = "Please fill in both fields.";
+		return;
+	}
+
+	if (newPassword.length < 6) {
+		errorBox.textContent = "Password must be at least 6 characters.";
+		return;
+	}
+
+	if (newPassword !== confirmPassword) {
+		errorBox.textContent = "Passwords do not match.";
+		return;
+	}
+
+	// Get pending user data from localStorage
+	const pendingUser = JSON.parse(localStorage.getItem('pendingUser'));
+	if (!pendingUser) {
+		errorBox.textContent = "Session expired. Please sign up again.";
+		return;
+	}
+
+	// Loading state with spinner
+	btnText.textContent = "Setting Password...";
+	btnSpinner.style.display = "inline-block";
+	submitBtn.style.opacity = "0.7";
+	submitBtn.style.pointerEvents = "none";
+
+	// Sign in with temp password
+	signInWithEmailAndPassword(auth, pendingUser.email, pendingUser.tempPassword)
+		.then((cred) => {
+			// Update password
+			return cred.user.updatePassword(newPassword);
+		})
+		.then(() => {
+			// Clear pending user data
+			localStorage.removeItem('pendingUser');
+			tempPassword = null;
+
+			// Show success and close modal
+			closePasswordSetupModal();
+			alert('Password set successfully! You can now login with your new password.');
+		})
+		.catch((err) => {
+			errorBox.textContent = err.message.replace("Firebase: ", "");
+			btnText.textContent = "Set Password";
+			btnSpinner.style.display = "none";
+			submitBtn.style.opacity = "1";
+			submitBtn.style.pointerEvents = "auto";
+		});
+};
 
 window.logout = function () {
 	signOut(auth);
@@ -370,6 +628,18 @@ onAuthStateChanged(auth, (user) => {
 		greeting.style.display = "inline-block";
 		greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
 		if (membersSection) membersSection.style.display = "block";
+
+		// Check if this is a newly verified user who needs to set password
+		const pendingUser = JSON.parse(localStorage.getItem('pendingUser'));
+		if (pendingUser && user.email === pendingUser.email && !user.emailVerified) {
+			// Email not verified yet, sign out
+			signOut(auth);
+		} else if (pendingUser && user.email === pendingUser.email && user.emailVerified) {
+			// Email verified, open password setup modal
+			setTimeout(() => {
+				openPasswordSetupModal();
+			}, 500);
+		}
 	} else {
 		loginBtn.style.display = "inline-block";
 		logoutBtn.style.display = "none";
