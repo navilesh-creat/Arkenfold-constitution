@@ -223,6 +223,19 @@ window.checkPasswordStrength = function () {
    ═══════════════════════════════════════════════ */
 
 window.openAuthModal = function () {
+	// Always reset to login mode when opening
+	mode = "login";
+	document.getElementById("auth-modal-title").textContent = "Login";
+	const submitBtn = document.getElementById("auth-submit-btn");
+	submitBtn.querySelector(".btn-text").textContent = "Login";
+	document.getElementById("auth-username").style.display = "none";
+	document.getElementById("auth-password").style.display = "block";
+	document.getElementById("auth-toggle-label").textContent = "Don't have an account?";
+	document.getElementById("auth-toggle-link").textContent = "Sign up";
+	document.getElementById("auth-error").textContent = "";
+	const forgotPasswordLink = document.getElementById("forgot-password-link");
+	if (forgotPasswordLink) forgotPasswordLink.style.display = "inline-block";
+
 	const modal = document.getElementById("auth-modal");
 	modal.style.display = "flex";
 };
@@ -544,32 +557,11 @@ window.submitPasswordSetup = function () {
 			return updateProfile(cred.user, { displayName: pendingSignup.username }).then(() => cred.user);
 		})
 		.then((user) => {
-			// Send verification email to verify in Firebase
-			return sendEmailVerification(user).then(() => user);
-		})
-		.then((user) => {
 			// Clear pending signup data
 			localStorage.removeItem('pendingSignup');
 
-			// Show success message
+			// Account created and user is signed in - close modal and show greeting
 			closePasswordSetupModal();
-			errorBox.style.color = "#4caf50";
-			errorBox.textContent = "Account created successfully! You can now login.";
-			
-			// Switch to login mode
-			mode = "login";
-			document.getElementById("auth-modal-title").textContent = "Login";
-			const authSubmitBtn = document.getElementById("auth-submit-btn");
-			authSubmitBtn.querySelector(".btn-text").textContent = "Login";
-			document.getElementById("auth-toggle-label").textContent = "Don't have an account?";
-			document.getElementById("auth-toggle-link").textContent = "Sign up";
-			document.getElementById("auth-username").style.display = "none";
-			document.getElementById("auth-error").textContent = "";
-			document.getElementById("auth-error").style.color = "#4caf50";
-			document.getElementById("auth-error").textContent = "Account created successfully! You can now login.";
-			
-			// Open auth modal
-			openAuthModal();
 		})
 		.catch((err) => {
 			errorBox.textContent = err.message.replace("Firebase: ", "");
