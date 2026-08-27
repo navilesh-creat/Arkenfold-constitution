@@ -8,6 +8,10 @@ import {
 	onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
+/* ═══════════════════════════════════════════════
+   FIREBASE CONFIG
+   ═══════════════════════════════════════════════ */
+
 const firebaseConfig = {
 	apiKey: "AIzaSyDsXlCyLS4WodBRnwtqM6TbgbW8SighNOI",
 	authDomain: "dominion-of-arkenfold.firebaseapp.com",
@@ -23,31 +27,164 @@ const auth = getAuth(app);
 
 let mode = "login"; // or "signup"
 
-// Page navigation
+/* ═══════════════════════════════════════════════
+   PAGE NAVIGATION (with transitions)
+   ═══════════════════════════════════════════════ */
+
 window.showConstitution = function () {
-	document.getElementById('home').classList.remove('active');
-	document.getElementById('constitution').classList.add('active');
-	window.scrollTo(0, 0);
-	setTimeout(() => document.getElementById('const-content').classList.add('active'), 100);
+	const home = document.getElementById('home');
+	const constitution = document.getElementById('constitution');
+
+	// Fade out home
+	home.style.opacity = '0';
+	home.style.transform = 'translateY(-20px)';
+
+	setTimeout(() => {
+		home.classList.remove('active');
+		home.style.opacity = '';
+		home.style.transform = '';
+
+		constitution.classList.add('active');
+		window.scrollTo({ top: 0, behavior: 'instant' });
+
+		// Trigger constitution reveal
+		setTimeout(() => {
+			document.getElementById('const-content').classList.add('active');
+			initScrollReveals();
+		}, 50);
+	}, 400);
 };
 
 window.showHome = function () {
-	document.getElementById('constitution').classList.remove('active');
-	document.getElementById('home').classList.add('active');
-	document.getElementById('const-content').classList.remove('active');
+	const home = document.getElementById('home');
+	const constitution = document.getElementById('constitution');
+	const constContent = document.getElementById('const-content');
+
+	// Fade out constitution
+	constContent.classList.remove('active');
+	constitution.style.opacity = '0';
+	constitution.style.transform = 'translateY(20px)';
+
+	setTimeout(() => {
+		constitution.classList.remove('active');
+		constitution.style.opacity = '';
+		constitution.style.transform = '';
+
+		home.classList.add('active');
+		window.scrollTo({ top: 0, behavior: 'instant' });
+
+		// Re-animate home elements
+		animateHomeElements();
+	}, 400);
 };
 
-// Auth modal
+function animateHomeElements() {
+	const elements = document.querySelectorAll('#home .reveal');
+	elements.forEach((el, i) => {
+		el.classList.remove('visible');
+		setTimeout(() => el.classList.add('visible'), 100 + i * 80);
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   FLOATING PARTICLES
+   ═══════════════════════════════════════════════ */
+
+function createParticles() {
+	const container = document.getElementById('particles');
+	if (!container) return;
+
+	const particleCount = window.innerWidth < 768 ? 15 : 25;
+
+	for (let i = 0; i < particleCount; i++) {
+		const particle = document.createElement('div');
+		particle.classList.add('particle');
+
+		const size = Math.random() * 3 + 1;
+		const left = Math.random() * 100;
+		const duration = Math.random() * 15 + 10;
+		const delay = Math.random() * 20;
+		const opacity = Math.random() * 0.4 + 0.1;
+
+		particle.style.cssText = `
+			width: ${size}px;
+			height: ${size}px;
+			left: ${left}%;
+			animation-duration: ${duration}s;
+			animation-delay: -${delay}s;
+			opacity: ${opacity};
+		`;
+
+		container.appendChild(particle);
+	}
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLL REVEAL
+   ═══════════════════════════════════════════════ */
+
+function initScrollReveals() {
+	const reveals = document.querySelectorAll('.reveal:not(.visible)');
+
+	const observer = new IntersectionObserver((entries) => {
+		entries.forEach(entry => {
+			if (entry.isIntersecting) {
+				entry.target.classList.add('visible');
+				observer.unobserve(entry.target);
+			}
+		});
+	}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+	reveals.forEach(el => observer.observe(el));
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER SCROLL EFFECT
+   ═══════════════════════════════════════════════ */
+
+function initHeaderScroll() {
+	const header = document.querySelector('header');
+	if (!header) return;
+
+	let ticking = false;
+	window.addEventListener('scroll', () => {
+		if (!ticking) {
+			requestAnimationFrame(() => {
+				if (window.scrollY > 50) {
+					header.classList.add('scrolled');
+				} else {
+					header.classList.remove('scrolled');
+				}
+				ticking = false;
+			});
+			ticking = true;
+		}
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH MODAL
+   ═══════════════════════════════════════════════ */
+
 window.openAuthModal = function () {
-	document.getElementById("auth-modal").style.display = "flex";
+	const modal = document.getElementById("auth-modal");
+	modal.style.display = "flex";
 };
 
 window.closeAuthModal = function () {
-	document.getElementById("auth-modal").style.display = "none";
-	document.getElementById("auth-error").textContent = "";
-	document.getElementById("auth-username").value = "";
-	document.getElementById("auth-email").value = "";
-	document.getElementById("auth-password").value = "";
+	const modal = document.getElementById("auth-modal");
+	const box = modal.querySelector('.auth-modal-box');
+
+	// Animate out
+	box.style.animation = 'modalBoxOut 0.25s ease forwards';
+	setTimeout(() => {
+		modal.style.display = "none";
+		box.style.animation = '';
+		document.getElementById("auth-error").textContent = "";
+		document.getElementById("auth-username").value = "";
+		document.getElementById("auth-email").value = "";
+		document.getElementById("auth-password").value = "";
+	}, 250);
 };
 
 window.toggleAuthMode = function (e) {
@@ -66,6 +203,8 @@ window.submitAuth = function () {
 	const email = document.getElementById("auth-email").value.trim();
 	const password = document.getElementById("auth-password").value;
 	const errorBox = document.getElementById("auth-error");
+	const submitBtn = document.getElementById("auth-submit-btn");
+
 	errorBox.textContent = "";
 
 	if (!email || !password) {
@@ -77,10 +216,18 @@ window.submitAuth = function () {
 		return;
 	}
 
+	// Loading state
+	submitBtn.textContent = mode === "login" ? "Logging in..." : "Creating...";
+	submitBtn.style.opacity = "0.7";
+	submitBtn.style.pointerEvents = "none";
+
 	if (mode === "login") {
 		signInWithEmailAndPassword(auth, email, password)
 			.then(() => window.closeAuthModal())
-			.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+			.catch((err) => {
+				errorBox.textContent = err.message.replace("Firebase: ", "");
+				resetSubmitBtn();
+			});
 	} else {
 		createUserWithEmailAndPassword(auth, email, password)
 			.then((cred) => updateProfile(cred.user, { displayName: username }).then(() => cred.user))
@@ -88,9 +235,19 @@ window.submitAuth = function () {
 				document.getElementById("user-greeting").textContent = "Welcome, " + user.displayName;
 				window.closeAuthModal();
 			})
-			.catch((err) => { errorBox.textContent = err.message.replace("Firebase: ", ""); });
+			.catch((err) => {
+				errorBox.textContent = err.message.replace("Firebase: ", "");
+				resetSubmitBtn();
+			});
 	}
 };
+
+function resetSubmitBtn() {
+	const submitBtn = document.getElementById("auth-submit-btn");
+	submitBtn.textContent = mode === "login" ? "Login" : "Create Account";
+	submitBtn.style.opacity = "1";
+	submitBtn.style.pointerEvents = "auto";
+}
 
 window.logout = function () {
 	signOut(auth);
@@ -114,4 +271,15 @@ onAuthStateChanged(auth, (user) => {
 		greeting.style.display = "none";
 		if (membersSection) membersSection.style.display = "none";
 	}
+});
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+	createParticles();
+	initHeaderScroll();
+	initScrollReveals();
+	animateHomeElements();
 });

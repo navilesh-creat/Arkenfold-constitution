@@ -43,6 +43,9 @@
 </script>
 </head>
 <body>
+	<!-- Floating Particles -->
+	<div id="particles"></div>
+
 	<header>
 		<div class="header-content">
 			<div class="logo">ARKENFOLD</div>
@@ -75,22 +78,40 @@
 	<section class="page active" id="home">
 		<div class="vista-valley">VISTA VALLEY</div>
 		<h1 class="arkenfold-con">Arkenfold Con</h1>
-		
-		<div class="leadership-container">
+		<div class="title-divider"></div>
+
+		<div class="leadership-container reveal">
 			<div class="leader-name">Gamer_sam612</div>
 			<div class="assistants-name">Respected Assistants</div>
 			<div class="assistants-list">
-				<span>_navi_49</span> • <span>Lordwolf2203</span>
+				<span>_navi_49</span> &bull; <span>Lordwolf2203</span>
 			</div>
 		</div>
-		
-		<ul class="members-list">
-			<li>Retryant</li><li>thereal43213222</li><li>kaiLordXD</li><li>tomabrato</li><li>.ZingyParty6068</li>
-			<li>poisedsole35967</li><li>RicardoDono</li><li>golfista222</li><li>Acc200</li><li>Amfound</li>
-			<li>Onpowerg</li><li>.RadTerror202</li><li>Deadsoul888</li><li>LordAspect888</li><li>SKYKING4000</li>
-			<li>leafy02leafeon</li><li>Alein2203</li><li>KhioALT</li><li>LordAspect777</li><li>7youngstunna7</li>
+
+		<ul class="members-list reveal">
+			<li>Retryant</li>
+			<li>thereal43213222</li>
+			<li>kaiLordXD</li>
+			<li>tomabrato</li>
+			<li>.ZingyParty6068</li>
+			<li>poisedsole35967</li>
+			<li>RicardoDono</li>
+			<li>golfista222</li>
+			<li>Acc200</li>
+			<li>Amfound</li>
+			<li>Onpowerg</li>
+			<li>.RadTerror202</li>
+			<li>Deadsoul888</li>
+			<li>LordAspect888</li>
+			<li>SKYKING4000</li>
+			<li>leafy02leafeon</li>
+			<li>Alein2203</li>
+			<li>KhioALT</li>
+			<li>LordAspect777</li>
+			<li>7youngstunna7</li>
 		</ul>
-		<button class="constitution-btn" onclick="showConstitution()">The Constitution of the Arkenfold</button>
+
+		<button class="constitution-btn reveal" onclick="showConstitution()">The Constitution of the Arkenfold</button>
 
 		<div id="members-only" style="display:none;">
 			<div class="designer-credit">✦ Welcome back, citizen. This section is visible only to logged-in members. ✦</div>
@@ -108,28 +129,70 @@
 			<div class="constitution-text">
 				<div class="doc-title">THE CONSTITUTION OF THE DOMINION OF ARKENFOLD</div>
 				<p class="preamble">Ratified to Establish Absolute Order, Enduring Strength, and Unchallenged Authority.</p>
-				<h2>PREAMBLE</h2><p>We, the People of Arkenfold, united by will and bound by purpose, establish this Dominion to secure order, strength, and survival in a world of conflict and chaos.<br>Through unwavering authority, disciplined unity, and resolute command, we shall endure, expand, and prevail.</p>
-			<h2>ARTICLE I – THE DOMINION</h2><p>The Dominion of Arkenfold is a sovereign state founded upon absolute authority, unity of command, and total national strength.</p><p>All institutions, offices, and forces serve the Dominion and its Supreme Archon.</p><p>The Dominion exists to ensure survival, dominance, and the perpetual stability of its people.</p>
-				<h2>ARTICLE II – THE SUPREME ARCHON</h2><p>The Supreme Archon is the highest authority of the Dominion.</p><p>The Supreme Archon holds ultimate command over law, military, governance, and national policy.</p><p>The word of the Supreme Archon carries the force of law and requires no approval or ratification.</p>
-				<h2>ARTICLE III – THE HIGH COMMAND COUNCIL</h2><p>The Supreme Archon shall be advised by the High Command Council.</p><p>The Council shall consist of:</p><ul><li>The Grand Marshal</li><li>The High Chancellor</li><li>The Minister of Dominion</li><li>The Overseer of Unity</li></ul><p>The Council advises but does not limit the authority of the Supreme Archon.</p>
-				<h2>ARTICLE IV – LAW AND ORDER</h2><p>Order is the highest principle of the Dominion.</p><p>All citizens are bound to obey the laws of the Dominion and the commands of its authorities.</p><p>Acts of treason, rebellion, sabotage, or defiance shall be met with decisive punishment.</p>
-				<h2>ARTICLE V – THE MILITARY</h2><p>The military of the Dominion shall be known as the Arkenfold Iron Legion.</p><p>The Iron Legion exists to defend the Dominion, enforce its will, and expand its influence.</p><p>The Grand Marshal commands all military forces under the authority of the Supreme Archon.</p>
-				<h2>ARTICLE VI – UNITY AND LOYALTY</h2><p>Loyalty to the Dominion and the Supreme Archon is the highest civic duty.</p><p>All citizens shall contribute to the strength and stability of the state through labor, service, or obedience.</p><p>Dissent that threatens unity shall be suppressed in defense of national survival.</p>
-				<h2>ARTICLE VII – EXPANSION AND SECURITY</h2><p>The Dominion reserves the right to expand its influence, territory, and control in the interest of stability and security.</p><p>Foreign entities that threaten Arkenfold may be neutralized through political, economic, or military means.</p>
-				<h2>ARTICLE VIII – AMENDMENTS</h2><p>This Constitution may be amended only by the will of the Supreme Archon.</p><p>No amendment may weaken the authority of the Dominion or its Supreme Archon.</p>
-				<h2>ARTICLE IX – FOUNDING SEAL</h2><p>Let this Constitution stand as the unbreakable foundation of the Dominion —<br>A testament to strength,<br>A fortress of order,<br>And the eternal command of Arkenfold.</p>
-				<div style="text-align: right; margin-top: 70px; padding-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.3); font-size: 1.2em;">
-					<strong>SIGNED AND ENACTED BY:</strong><br><em>Supreme Archon Imperius</em><br><small>Ruler of the Dominion of Arkenfold</small>
+
+				<h2 class="reveal">PREAMBLE</h2>
+				<p class="reveal">We, the People of Arkenfold, united by will and bound by purpose, establish this Dominion to secure order, strength, and survival in a world of conflict and chaos.<br>Through unwavering authority, disciplined unity, and resolute command, we shall endure, expand, and prevail.</p>
+
+				<h2 class="reveal">ARTICLE I – THE DOMINION</h2>
+				<p class="reveal">The Dominion of Arkenfold is a sovereign state founded upon absolute authority, unity of command, and total national strength.</p>
+				<p class="reveal">All institutions, offices, and forces serve the Dominion and its Supreme Archon.</p>
+				<p class="reveal">The Dominion exists to ensure survival, dominance, and the perpetual stability of its people.</p>
+
+				<h2 class="reveal">ARTICLE II – THE SUPREME ARCHON</h2>
+				<p class="reveal">The Supreme Archon is the highest authority of the Dominion.</p>
+				<p class="reveal">The Supreme Archon holds ultimate command over law, military, governance, and national policy.</p>
+				<p class="reveal">The word of the Supreme Archon carries the force of law and requires no approval or ratification.</p>
+
+				<h2 class="reveal">ARTICLE III – THE HIGH COMMAND COUNCIL</h2>
+				<p class="reveal">The Supreme Archon shall be advised by the High Command Council.</p>
+				<p class="reveal">The Council shall consist of:</p>
+				<ul class="reveal">
+					<li>The Grand Marshal</li>
+					<li>The High Chancellor</li>
+					<li>The Minister of Dominion</li>
+					<li>The Overseer of Unity</li>
+				</ul>
+				<p class="reveal">The Council advises but does not limit the authority of the Supreme Archon.</p>
+
+				<h2 class="reveal">ARTICLE IV – LAW AND ORDER</h2>
+				<p class="reveal">Order is the highest principle of the Dominion.</p>
+				<p class="reveal">All citizens are bound to obey the laws of the Dominion and the commands of its authorities.</p>
+				<p class="reveal">Acts of treason, rebellion, sabotage, or defiance shall be met with decisive punishment.</p>
+
+				<h2 class="reveal">ARTICLE V – THE MILITARY</h2>
+				<p class="reveal">The military of the Dominion shall be known as the Arkenfold Iron Legion.</p>
+				<p class="reveal">The Iron Legion exists to defend the Dominion, enforce its will, and expand its influence.</p>
+				<p class="reveal">The Grand Marshal commands all military forces under the authority of the Supreme Archon.</p>
+
+				<h2 class="reveal">ARTICLE VI – UNITY AND LOYALTY</h2>
+				<p class="reveal">Loyalty to the Dominion and the Supreme Archon is the highest civic duty.</p>
+				<p class="reveal">All citizens shall contribute to the strength and stability of the state through labor, service, or obedience.</p>
+				<p class="reveal">Dissent that threatens unity shall be suppressed in defense of national survival.</p>
+
+				<h2 class="reveal">ARTICLE VII – EXPANSION AND SECURITY</h2>
+				<p class="reveal">The Dominion reserves the right to expand its influence, territory, and control in the interest of stability and security.</p>
+				<p class="reveal">Foreign entities that threaten Arkenfold may be neutralized through political, economic, or military means.</p>
+
+				<h2 class="reveal">ARTICLE VIII – AMENDMENTS</h2>
+				<p class="reveal">This Constitution may be amended only by the will of the Supreme Archon.</p>
+				<p class="reveal">No amendment may weaken the authority of the Dominion or its Supreme Archon.</p>
+
+				<h2 class="reveal">ARTICLE IX – FOUNDING SEAL</h2>
+				<p class="reveal">Let this Constitution stand as the unbreakable foundation of the Dominion —<br>A testament to strength,<br>A fortress of order,<br>And the eternal command of Arkenfold.</p>
+
+				<div class="reveal" style="text-align: right; margin-top: 70px; padding-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.15); font-size: 1.15em;">
+					<strong>SIGNED AND ENACTED BY:</strong><br><em>Supreme Archon Imperius</em><br><small style="color: #8a7a5e;">Ruler of the Dominion of Arkenfold</small>
 				</div>
-				<a href="#" class="back-btn" onclick="showHome()">← Back to Home</a>
+
+				<a href="#" class="back-btn reveal" onclick="showHome()">← Back to Home</a>
 			</div>
 		</div>
 	</section>
-            
-		<footer>
-			<p>&copy; Dominion of Arkenfold. Eternal Command.</p>
-		</footer>
 
-		<script type="module" src="main.js"></script>
-	</body>
-	</html>
+	<footer>
+		<p>&copy; Dominion of Arkenfold. Eternal Command.</p>
+	</footer>
+
+	<script type="module" src="main.js"></script>
+</body>
+</html>
