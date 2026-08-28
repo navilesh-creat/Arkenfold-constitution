@@ -10,45 +10,37 @@
 	<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
 	<link rel="preconnect" href="https://securetoken.googleapis.com">
 	<link rel="icon" type="image/png" href="./favicon.png">
-	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 	<link rel="preload" href="styles.css" as="style">
 	<link rel="stylesheet" href="styles.css">
-	<title>Dominion of Arkenfold | Official Constitution</title>
-
-<meta name="description" content="The official Constitution of the Dominion of Arkenfold. Explore the nation's principles, governance, leadership, and constitutional framework.">
-
-<meta name="keywords" content="Dominion of Arkenfold, Arkenfold, Constitution, Government, Nation, Fantasy Nation, Official Constitution">
-
-<meta name="author" content="Navi">
-
-<meta name="robots" content="index, follow">
-
-<link rel="canonical" href="https://navilesh-creat.github.io/Arkenfold-constitution/">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="Dominion of Arkenfold">
-<meta property="og:description" content="Read the official Constitution of the Dominion of Arkenfold.">
-<meta property="og:url" content="https://navilesh-creat.github.io/Arkenfold-constitution/">
-<meta property="og:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Dominion of Arkenfold">
-<meta name="twitter:description" content="Official Constitution of the Dominion of Arkenfold.">
-<meta name="twitter:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Dominion of Arkenfold",
-  "url": "https://navilesh-creat.github.io/Arkenfold-constitution/",
-  "description": "The official Constitution of the Dominion of Arkenfold."
-}
-</script>
+	<title>Dominion of Arkenfold | Official Constitution & Community</title>
+	<meta name="description" content="The official portal of the Dominion of Arkenfold. Read the Constitution, meet the Council, and join the community.">
+	<meta name="keywords" content="Dominion of Arkenfold, Arkenfold, Constitution, Council, Community, Fantasy Nation">
+	<meta name="author" content="Navi">
+	<meta name="robots" content="index, follow">
+	<link rel="canonical" href="https://navilesh-creat.github.io/Arkenfold-constitution/">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Dominion of Arkenfold">
+	<meta property="og:description" content="The official portal of the Dominion of Arkenfold. Constitution, Council, and Community.">
+	<meta property="og:url" content="https://navilesh-creat.github.io/Arkenfold-constitution/">
+	<meta property="og:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Dominion of Arkenfold">
+	<meta name="twitter:description" content="Official Constitution and community portal of the Dominion of Arkenfold.">
+	<meta name="twitter:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		"name": "Dominion of Arkenfold",
+		"url": "https://navilesh-creat.github.io/Arkenfold-constitution/",
+		"description": "The official portal of the Dominion of Arkenfold."
+	}
+	</script>
 </head>
 <body>
 	<!-- Splash Screen -->
-	<div id="splash-screen">
+	<div id="splash-screen" role="status" aria-label="Loading">
 		<div class="splash-emblem">✦</div>
 		<div class="splash-title">ARKENFOLD</div>
 		<div class="splash-subtitle">Dominion of Arkenfold</div>
@@ -58,59 +50,94 @@
 	</div>
 
 	<!-- Scroll Progress Bar -->
-	<div id="scroll-progress"></div>
+	<div id="scroll-progress" aria-hidden="true"></div>
 
 	<!-- Floating Particles -->
-	<div id="particles"></div>
+	<div id="particles" aria-hidden="true"></div>
 
-	<header>
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- STICKY HEADER / NAVIGATION                  -->
+	<!-- ═══════════════════════════════════════════ -->
+	<header role="banner">
 		<div class="header-content">
-			<div class="logo">ARKENFOLD</div>
-			<div id="auth-area">
-				<button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
-				<button id="login-btn" onclick="openAuthModal()">Login / Sign Up</button>
-				<div id="user-menu" class="user-menu" style="display:none;">
-					<div class="user-avatar" id="user-avatar">A</div>
-					<div class="user-dropdown">
-						<div class="dropdown-header">
-							<div class="dropdown-avatar" id="dropdown-avatar">A</div>
-							<div class="dropdown-name" id="dropdown-name">Citizen</div>
-							<div class="dropdown-email" id="dropdown-email">citizen@arkenfold.com</div>
+			<a href="#home" class="logo" aria-label="Dominion of Arkenfold home">ARKENFOLD</a>
+			<nav class="main-nav" aria-label="Main navigation">
+				<a href="#home" class="nav-link active" data-page="home">Home</a>
+				<a href="#constitution" class="nav-link" data-page="constitution">Constitution</a>
+				<a href="#council" class="nav-link" data-page="council">Council</a>
+				<a href="#updates" class="nav-link" data-page="updates">Updates</a>
+			</nav>
+			<div class="header-right">
+				<button id="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle theme">☀</button>
+				<div id="auth-area">
+					<button id="login-btn" onclick="openAuthModal()">Login / Sign Up</button>
+					<div id="user-menu" class="user-menu" style="display:none;">
+						<button class="user-avatar" id="user-avatar" aria-label="Account menu" aria-expanded="false" aria-haspopup="true">A</button>
+						<div class="user-dropdown" role="menu">
+							<div class="dropdown-header">
+								<div class="dropdown-avatar" id="dropdown-avatar">A</div>
+								<div class="dropdown-name" id="dropdown-name">Citizen</div>
+								<div class="dropdown-email" id="dropdown-email">citizen@arkenfold.com</div>
+							</div>
+							<div class="dropdown-divider"></div>
+							<button class="dropdown-item" role="menuitem" onclick="navigateTo('account')">
+								<span class="dropdown-icon" aria-hidden="true">👤</span> My Account
+							</button>
+							<button class="dropdown-item" role="menuitem" onclick="openChangePasswordModal()">
+								<span class="dropdown-icon" aria-hidden="true">🔐</span> Change Password
+							</button>
+							<div class="dropdown-divider"></div>
+							<button class="dropdown-item dropdown-logout" role="menuitem" onclick="logout()">
+								<span class="dropdown-icon" aria-hidden="true">⏻</span> Logout
+							</button>
 						</div>
-						<div class="dropdown-divider"></div>
-						<button class="dropdown-item" onclick="openChangePasswordModal()">
-							<span class="dropdown-icon">🔐</span> Change Password
-						</button>
-						<div class="dropdown-divider"></div>
-						<button class="dropdown-item dropdown-logout" onclick="logout()">
-							<span class="dropdown-icon">⏻</span> Logout
-						</button>
 					</div>
+				</div>
+				<button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Open navigation menu" aria-expanded="false">
+					<span class="hamburger-line"></span>
+					<span class="hamburger-line"></span>
+					<span class="hamburger-line"></span>
+				</button>
 			</div>
 		</div>
 	</header>
 
+	<!-- Mobile Navigation Overlay -->
+	<div class="mobile-nav-overlay" id="mobile-nav-overlay" role="dialog" aria-label="Mobile navigation" aria-modal="true">
+		<nav class="mobile-nav-content" aria-label="Mobile navigation">
+			<button class="mobile-nav-close" id="mobile-nav-close" aria-label="Close navigation menu">&times;</button>
+			<a href="#home" class="mobile-nav-link active" data-page="home">Home</a>
+			<a href="#constitution" class="mobile-nav-link" data-page="constitution">Constitution</a>
+			<a href="#council" class="mobile-nav-link" data-page="council">Council</a>
+			<a href="#updates" class="mobile-nav-link" data-page="updates">Updates</a>
+			<div class="mobile-nav-divider"></div>
+			<button class="mobile-nav-link" id="mobile-login-btn" onclick="openAuthModal(); closeMobileMenu();">Login / Sign Up</button>
+		</nav>
+	</div>
+
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- AUTH MODALS                                 -->
+	<!-- ═══════════════════════════════════════════ -->
+
 	<!-- Login/Signup Modal -->
-	<div id="auth-modal" class="auth-modal-overlay" style="display:none;">
-		<div class="auth-modal-box">
-			<button class="auth-modal-close" onclick="closeAuthModal()">&times;</button>
+	<div id="auth-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+		<div class="modal-box">
+			<button class="modal-close" onclick="closeAuthModal()" aria-label="Close">&times;</button>
 			<h2 id="auth-modal-title">Login</h2>
-			<input type="text" id="auth-username" placeholder="Username" style="display:none;" />
-			<input type="email" id="auth-email" placeholder="Email" />
-			<input type="password" id="auth-password" placeholder="Password" />
+			<input type="text" id="auth-username" placeholder="Username" style="display:none;" aria-label="Username" autocomplete="username" />
+			<input type="email" id="auth-email" placeholder="Email" aria-label="Email" autocomplete="email" />
+			<input type="password" id="auth-password" placeholder="Password" aria-label="Password" autocomplete="current-password" />
 			<div id="password-strength" class="password-strength" style="display:none;">
-				<div class="strength-bar-container">
-					<div class="strength-bar" id="strength-bar"></div>
-				</div>
+				<div class="strength-bar-container"><div class="strength-bar" id="strength-bar"></div></div>
 				<span class="strength-text" id="strength-text"></span>
 			</div>
-			<div id="auth-error" class="auth-error"></div>
+			<div id="auth-error" class="auth-error" role="alert"></div>
 			<button id="auth-submit-btn" onclick="submitAuth()">
 				<span class="btn-text">Login</span>
-				<span class="btn-spinner" style="display:none;"></span>
+				<span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
 			</button>
 			<p class="auth-forgot-text">
-				<a href="#" id="forgot-password-link" onclick="openResetPasswordModal()" style="display:inline-block;">Forgot password?</a>
+				<a href="#" id="forgot-password-link" onclick="openResetPasswordModal()">Forgot password?</a>
 			</p>
 			<p class="auth-toggle-text">
 				<span id="auth-toggle-label">Don't have an account?</span>
@@ -120,208 +147,630 @@
 	</div>
 
 	<!-- Email Confirmation Modal -->
-	<div id="email-confirm-modal" class="auth-modal-overlay" style="display:none;">
-		<div class="auth-modal-box">
-			<button class="auth-modal-close" onclick="closeEmailConfirmModal()">&times;</button>
+	<div id="email-confirm-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Confirm email">
+		<div class="modal-box">
+			<button class="modal-close" onclick="closeEmailConfirmModal()" aria-label="Close">&times;</button>
 			<h2>Confirm Your Email</h2>
-			<p class="reset-description">Please confirm that this is your email address. A verification link will be sent there.</p>
+			<p class="modal-description">A verification link will be sent to this address.</p>
 			<div id="confirm-email-display" class="confirm-email-display"></div>
-			<div id="confirm-error" class="auth-error"></div>
+			<div id="confirm-error" class="auth-error" role="alert"></div>
 			<button id="confirm-yes-btn" onclick="confirmEmailYes()">
 				<span class="btn-text">✓ Yes, this is my email</span>
-				<span class="btn-spinner" style="display:none;"></span>
+				<span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
 			</button>
 			<button class="confirm-edit-btn" onclick="closeEmailConfirmModal()">← Edit email</button>
 		</div>
 	</div>
 
-	<!-- Password Setup Modal (after email verification) -->
-	<div id="password-setup-modal" class="auth-modal-overlay" style="display:none;">
-		<div class="auth-modal-box">
-			<button class="auth-modal-close" onclick="closePasswordSetupModal()">&times;</button>
+	<!-- Password Setup Modal -->
+	<div id="password-setup-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Create password">
+		<div class="modal-box">
+			<button class="modal-close" onclick="closePasswordSetupModal()" aria-label="Close">&times;</button>
 			<h2>Create Your Password</h2>
-			<p class="reset-description">Your email has been verified! Now create your password to complete your account.</p>
-			<input type="password" id="new-password" placeholder="Password" oninput="checkPasswordStrength()" />
+			<p class="modal-description">Your email is verified! Create a password to finish your account.</p>
+			<input type="password" id="new-password" placeholder="Password" oninput="checkPasswordStrength()" aria-label="New password" autocomplete="new-password" />
 			<div id="new-password-strength" class="password-strength">
-				<div class="strength-bar-container">
-					<div class="strength-bar" id="new-strength-bar"></div>
-				</div>
+				<div class="strength-bar-container"><div class="strength-bar" id="new-strength-bar"></div></div>
 				<span class="strength-text" id="new-strength-text">Password strength</span>
 			</div>
-			<input type="password" id="confirm-password" placeholder="Confirm Password" />
-			<div id="setup-error" class="auth-error"></div>
+			<input type="password" id="confirm-password" placeholder="Confirm Password" aria-label="Confirm password" autocomplete="new-password" />
+			<div id="setup-error" class="auth-error" role="alert"></div>
 			<button id="setup-submit-btn" onclick="submitPasswordSetup()">
 				<span class="btn-text">Create Account</span>
-				<span class="btn-spinner" style="display:none;"></span>
+				<span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
 			</button>
 		</div>
 	</div>
 
-		<!-- Change Password Modal -->
-		<div id="change-password-modal" class="auth-modal-overlay" style="display:none;">
-			<div class="auth-modal-box">
-				<button class="auth-modal-close" onclick="closeChangePasswordModal()">&times;</button>
-				<h2>Change Password</h2>
-				<p class="reset-description">Verify your current password, then set a new one.</p>
-				<input type="password" id="change-old-password" placeholder="Current Password" />
-				<p class="change-forgot-text">
-					<a href="#" id="change-forgot-link" onclick="openChangePasswordResetModal()">Forgot current password?</a>
-				</p>
-				<input type="password" id="change-new-password" placeholder="New Password" oninput="checkChangePasswordStrength()" />
-				<div class="password-strength">
-					<div class="strength-bar-container">
-						<div class="strength-bar" id="change-strength-bar"></div>
-					</div>
-					<span class="strength-text" id="change-strength-text">Password strength</span>
-				</div>
-				<input type="password" id="change-confirm-password" placeholder="Confirm New Password" />
-				<div id="change-password-error" class="auth-error"></div>
-				<div id="change-password-success" class="auth-success"></div>
-				<button id="change-password-submit-btn" onclick="submitChangePassword()">
-					<span class="btn-text">Update Password</span>
-					<span class="btn-spinner" style="display:none;"></span>
-				</button>
+	<!-- Change Password Modal -->
+	<div id="change-password-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Change password">
+		<div class="modal-box">
+			<button class="modal-close" onclick="closeChangePasswordModal()" aria-label="Close">&times;</button>
+			<h2>Change Password</h2>
+			<p class="modal-description">Verify your current password, then set a new one.</p>
+			<input type="password" id="change-old-password" placeholder="Current Password" aria-label="Current password" autocomplete="current-password" />
+			<p class="change-forgot-text">
+				<a href="#" id="change-forgot-link" onclick="openChangePasswordResetModal()">Forgot current password?</a>
+			</p>
+			<input type="password" id="change-new-password" placeholder="New Password" oninput="checkChangePasswordStrength()" aria-label="New password" autocomplete="new-password" />
+			<div class="password-strength">
+				<div class="strength-bar-container"><div class="strength-bar" id="change-strength-bar"></div></div>
+				<span class="strength-text" id="change-strength-text">Password strength</span>
 			</div>
+			<input type="password" id="change-confirm-password" placeholder="Confirm New Password" aria-label="Confirm new password" autocomplete="new-password" />
+			<div id="change-password-error" class="auth-error" role="alert"></div>
+			<div id="change-password-success" class="auth-success" role="status"></div>
+			<button id="change-password-submit-btn" onclick="submitChangePassword()">
+				<span class="btn-text">Update Password</span>
+				<span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
+			</button>
 		</div>
+	</div>
 
-		<!-- Forgot Password Modal -->
-		<div id="reset-password-modal" class="auth-modal-overlay" style="display:none;">
-			<div class="auth-modal-box">
-				<button class="auth-modal-close" onclick="closeResetPasswordModal()">&times;</button>
-				<h2>Reset Password</h2>
-				<p class="reset-description">Enter your email address and we'll send you a link to reset your password.</p>
-				<input type="email" id="reset-email" placeholder="Email" />
-				<div id="reset-error" class="auth-error"></div>
-				<div id="reset-success" class="auth-success"></div>
-				<button id="reset-submit-btn" onclick="submitResetPassword()">
-					<span class="btn-text">Send Reset Link</span>
-					<span class="btn-spinner" style="display:none;"></span>
-				</button>
-				<p class="auth-toggle-text">
-					<a href="#" onclick="closeResetPasswordModal()" style="color:#d4af37; text-decoration:none;">← Back to Login</a>
-				</p>
-			</div>
+	<!-- Forgot Password Modal -->
+	<div id="reset-password-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Reset password">
+		<div class="modal-box">
+			<button class="modal-close" onclick="closeResetPasswordModal()" aria-label="Close">&times;</button>
+			<h2>Reset Password</h2>
+			<p class="modal-description">Enter your email and we'll send you a link to reset your password.</p>
+			<input type="email" id="reset-email" placeholder="Email" aria-label="Email for password reset" autocomplete="email" />
+			<div id="reset-error" class="auth-error" role="alert"></div>
+			<div id="reset-success" class="auth-success" role="status"></div>
+			<button id="reset-submit-btn" onclick="submitResetPassword()">
+				<span class="btn-text">Send Reset Link</span>
+				<span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
+			</button>
+			<p class="auth-toggle-text">
+				<a href="#" onclick="closeResetPasswordModal()">← Back to Login</a>
+			</p>
 		</div>
+	</div>
 
-	<!-- Homepage -->
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- PAGE: HOME                                 -->
+	<!-- ═══════════════════════════════════════════ -->
+	<main>
 	<section class="page active" id="home">
-		<div class="vista-valley">VISTA VALLEY</div>
-		<h1 class="arkenfold-con">Arkenfold Con</h1>
-		<div class="title-divider"></div>
-
-		<div class="leadership-container reveal">
-			<div class="leader-name">Gamer_sam612</div>
-			<div class="assistants-name">Respected Assistants</div>
-			<div class="assistants-list">
-				<span>_navi_49</span> &bull; <span>Lordwolf2203</span>
+		<!-- Hero -->
+		<div class="hero">
+			<div class="hero-badge">✦ Established by Will and Purpose ✦</div>
+			<h1 class="hero-title">Dominion of<br>Arkenfold</h1>
+			<div class="hero-divider"><span class="divider-diamond">◆</span></div>
+			<p class="hero-mission">A sovereign community forged through unwavering authority, disciplined unity, and resolute command. Read our Constitution, meet the Council, and join our ranks.</p>
+			<div class="hero-actions">
+				<a href="#constitution" class="hero-btn primary" data-page="constitution" onclick="navigateTo('constitution')">
+					<span class="btn-ripple"></span>
+					<span class="btn-label">Read the Constitution</span>
+				</a>
+				<a href="#council" class="hero-btn secondary" data-page="council" onclick="navigateTo('council')">
+					<span class="btn-label">Meet the Council</span>
+				</a>
+				<button class="hero-btn secondary" onclick="openAuthModal()">Join Arkenfold</button>
 			</div>
 		</div>
 
-		<ul class="members-list reveal">
-			<li>Retryant</li>
-			<li>thereal43213222</li>
-			<li>kaiLordXD</li>
-			<li>tomabrato</li>
-			<li>.ZingyParty6068</li>
-			<li>poisedsole35967</li>
-			<li>RicardoDono</li>
-			<li>golfista222</li>
-			<li>Acc200</li>
-			<li>Amfound</li>
-			<li>Onpowerg</li>
-			<li>.RadTerror202</li>
-			<li>Deadsoul888</li>
-			<li>LordAspect888</li>
-			<li>SKYKING4000</li>
-			<li>leafy02leafeon</li>
-			<li>Alein2203</li>
-			<li>KhioALT</li>
-			<li>LordAspect777</li>
-			<li>7youngstunna7</li>
-		</ul>
+		<!-- Featured Announcements -->
+		<section class="home-section" aria-labelledby="home-announcements-title">
+			<h2 id="home-announcements-title" class="section-heading">Latest Decrees</h2>
+			<div class="announcements-grid">
+				<div class="announcement-card">
+					<div class="announcement-badge pinned">Pinned</div>
+					<div class="announcement-date">August 28, 2026</div>
+					<h3>Constitution Ratified</h3>
+					<p>The foundational Constitution of the Dominion has been formally ratified and enacted by the Supreme Archon.</p>
+				</div>
+				<div class="announcement-card">
+					<div class="announcement-badge">Governance</div>
+					<div class="announcement-date">August 25, 2026</div>
+					<h3>Council Formed</h3>
+					<p>The High Command Council has been established. Four founding members have been appointed to their roles.</p>
+				</div>
+				<div class="announcement-card">
+					<div class="announcement-badge">Community</div>
+					<div class="announcement-date">August 20, 2026</div>
+					<h3>Arkenfold Opens</h3>
+					<p>The Dominion of Arkenfold officially opens its doors to citizens. All loyal subjects are welcome.</p>
+				</div>
+			</div>
+		</section>
 
-		<button class="constitution-btn reveal" onclick="showConstitution()">
-			<span class="btn-ripple"></span>
-			<span class="btn-label">The Constitution of the Arkenfold</span>
-		</button>
+		<!-- Council Hierarchy Preview -->
+		<section class="home-section" aria-labelledby="home-council-title">
+			<h2 id="home-council-title" class="section-heading">Council Hierarchy</h2>
+			<div class="hierarchy-preview">
+				<div class="hierarchy-tier tier-supreme">
+					<div class="tier-badge">Supreme Archon</div>
+					<div class="tier-name">Gamer_sam612</div>
+					<div class="tier-desc">Highest authority of the Dominion</div>
+				</div>
+				<div class="hierarchy-connector" aria-hidden="true">⋮</div>
+				<div class="hierarchy-tier tier-council">
+					<div class="tier-badge">High Command Council</div>
+					<div class="tier-names">
+						<span>_navi_49</span> · <span>Lordwolf2203</span>
+					</div>
+					<div class="tier-desc">Advisors and administrators of the Dominion</div>
+				</div>
+				<div class="hierarchy-connector" aria-hidden="true">⋮</div>
+				<div class="hierarchy-tier tier-citizens">
+					<div class="tier-badge">Citizens of Arkenfold</div>
+					<div class="tier-count" id="citizen-count">20 citizens</div>
+					<div class="tier-desc">The backbone of our Dominion</div>
+				</div>
+			</div>
+			<a href="#council" class="section-link" onclick="navigateTo('council')">View full directory →</a>
+		</section>
 
-		<div class="designer-credit">
-			✦ Designed and Developed by <span>Navi</span> ✦
-		</div>
+		<!-- Community Stats -->
+		<section class="home-section" aria-labelledby="home-stats-title">
+			<h2 id="home-stats-title" class="section-heading">The Dominion</h2>
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-number" id="stat-articles">9</div>
+					<div class="stat-label">Constitutional Articles</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number">4</div>
+					<div class="stat-label">Council Positions</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number" id="stat-citizens">20</div>
+					<div class="stat-label">Citizens</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number">I</div>
+					<div class="stat-label">Founding Era</div>
+				</div>
+			</div>
+		</section>
 	</section>
 
-	<!-- Constitution Page -->
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- PAGE: CONSTITUTION                         -->
+	<!-- ═══════════════════════════════════════════ -->
 	<section class="page" id="constitution">
-		<div class="constitution-content" id="const-content">
-			<h2 class="section-title">THE CONSTITUTION</h2>
-			<div class="constitution-text">
-				<div class="doc-title">THE CONSTITUTION OF THE DOMINION OF ARKENFOLD</div>
-				<p class="preamble">Ratified to Establish Absolute Order, Enduring Strength, and Unchallenged Authority.</p>
+		<div class="const-page-container">
+			<!-- Constitution Header -->
+			<div class="const-header">
+				<h1 class="const-title">The Constitution</h1>
+				<p class="const-subtitle">Of the Dominion of Arkenfold</p>
+				<div class="const-toolbar">
+					<div class="const-search-wrap">
+						<span class="search-icon" aria-hidden="true">⌕</span>
+						<input type="search" id="const-search" placeholder="Search the Constitution..." aria-label="Search the Constitution" />
+						<span class="search-count" id="search-count" aria-live="polite"></span>
+					</div>
+					<button class="const-tool-btn" id="const-print-btn" aria-label="Print Constitution" title="Print">⎙</button>
+					<button class="const-tool-btn" id="const-toc-toggle" aria-label="Toggle table of contents" title="Table of Contents">☰</button>
+				</div>
+			</div>
 
-				<h2 class="reveal">PREAMBLE</h2>
-				<p class="reveal">We, the People of Arkenfold, united by will and bound by purpose, establish this Dominion to secure order, strength, and survival in a world of conflict and chaos.<br>Through unwavering authority, disciplined unity, and resolute command, we shall endure, expand, and prevail.</p>
+			<!-- Reading Progress -->
+			<div class="const-progress-wrap" aria-hidden="true">
+				<div class="const-progress-bar" id="const-progress-bar"></div>
+			</div>
 
-				<h2 class="reveal">ARTICLE I – THE DOMINION</h2>
-				<p class="reveal">The Dominion of Arkenfold is a sovereign state founded upon absolute authority, unity of command, and total national strength.</p>
-				<p class="reveal">All institutions, offices, and forces serve the Dominion and its Supreme Archon.</p>
-				<p class="reveal">The Dominion exists to ensure survival, dominance, and the perpetual stability of its people.</p>
+			<!-- Table of Contents Sidebar -->
+			<aside class="const-toc" id="const-toc" aria-label="Table of Contents">
+				<div class="toc-header">Contents</div>
+				<nav aria-label="Constitution sections">
+					<a href="#preamble" class="toc-link">Preamble</a>
+					<a href="#article-1" class="toc-link">Art. I — The Dominion</a>
+					<a href="#article-2" class="toc-link">Art. II — The Supreme Archon</a>
+					<a href="#article-3" class="toc-link">Art. III — High Command Council</a>
+					<a href="#article-4" class="toc-link">Art. IV — Law and Order</a>
+					<a href="#article-5" class="toc-link">Art. V — The Military</a>
+					<a href="#article-6" class="toc-link">Art. VI — Unity and Loyalty</a>
+					<a href="#article-7" class="toc-link">Art. VII — Expansion and Security</a>
+					<a href="#article-8" class="toc-link">Art. VIII — Amendments</a>
+					<a href="#article-9" class="toc-link">Art. IX — Founding Seal</a>
+					<a href="#amendments" class="toc-link">Amendment History</a>
+				</nav>
+			</aside>
 
-				<h2 class="reveal">ARTICLE II – THE SUPREME ARCHON</h2>
-				<p class="reveal">The Supreme Archon is the highest authority of the Dominion.</p>
-				<p class="reveal">The Supreme Archon holds ultimate command over law, military, governance, and national policy.</p>
-				<p class="reveal">The word of the Supreme Archon carries the force of law and requires no approval or ratification.</p>
-
-				<h2 class="reveal">ARTICLE III – THE HIGH COMMAND COUNCIL</h2>
-				<p class="reveal">The Supreme Archon shall be advised by the High Command Council.</p>
-				<p class="reveal">The Council shall consist of:</p>
-				<ul class="reveal">
-					<li>The Grand Marshal</li>
-					<li>The High Chancellor</li>
-					<li>The Minister of Dominion</li>
-					<li>The Overseer of Unity</li>
-				</ul>
-				<p class="reveal">The Council advises but does not limit the authority of the Supreme Archon.</p>
-
-				<h2 class="reveal">ARTICLE IV – LAW AND ORDER</h2>
-				<p class="reveal">Order is the highest principle of the Dominion.</p>
-				<p class="reveal">All citizens are bound to obey the laws of the Dominion and the commands of its authorities.</p>
-				<p class="reveal">Acts of treason, rebellion, sabotage, or defiance shall be met with decisive punishment.</p>
-
-				<h2 class="reveal">ARTICLE V – THE MILITARY</h2>
-				<p class="reveal">The military of the Dominion shall be known as the Arkenfold Iron Legion.</p>
-				<p class="reveal">The Iron Legion exists to defend the Dominion, enforce its will, and expand its influence.</p>
-				<p class="reveal">The Grand Marshal commands all military forces under the authority of the Supreme Archon.</p>
-
-				<h2 class="reveal">ARTICLE VI – UNITY AND LOYALTY</h2>
-				<p class="reveal">Loyalty to the Dominion and the Supreme Archon is the highest civic duty.</p>
-				<p class="reveal">All citizens shall contribute to the strength and stability of the state through labor, service, or obedience.</p>
-				<p class="reveal">Dissent that threatens unity shall be suppressed in defense of national survival.</p>
-
-				<h2 class="reveal">ARTICLE VII – EXPANSION AND SECURITY</h2>
-				<p class="reveal">The Dominion reserves the right to expand its influence, territory, and control in the interest of stability and security.</p>
-				<p class="reveal">Foreign entities that threaten Arkenfold may be neutralized through political, economic, or military means.</p>
-
-				<h2 class="reveal">ARTICLE VIII – AMENDMENTS</h2>
-				<p class="reveal">This Constitution may be amended only by the will of the Supreme Archon.</p>
-				<p class="reveal">No amendment may weaken the authority of the Dominion or its Supreme Archon.</p>
-
-				<h2 class="reveal">ARTICLE IX – FOUNDING SEAL</h2>
-				<p class="reveal">Let this Constitution stand as the unbreakable foundation of the Dominion —<br>A testament to strength,<br>A fortress of order,<br>And the eternal command of Arkenfold.</p>
-
-				<div class="reveal" style="text-align: right; margin-top: 70px; padding-top: 40px; border-top: 1px solid rgba(212, 175, 55, 0.15); font-size: 1.15em;">
-					<strong>SIGNED AND ENACTED BY:</strong><br><em>Supreme Archon Imperius</em><br><small style="color: #8a7a5e;">Ruler of the Dominion of Arkenfold</small>
+			<!-- Constitution Body -->
+			<article class="const-body" id="const-body">
+				<div class="const-doc-header">
+					<div class="const-doc-seal">✦</div>
+					<h2 class="const-doc-title">THE CONSTITUTION OF THE DOMINION OF ARKENFOLD</h2>
+					<p class="const-doc-subtitle">Ratified to Establish Absolute Order, Enduring Strength, and Unchallenged Authority</p>
+					<div class="const-doc-meta">
+						<span>Enacted by Supreme Archon Imperius</span>
+						<span class="meta-sep">·</span>
+						<span>Founding Era</span>
+					</div>
 				</div>
 
-				<a href="#" class="back-btn reveal" onclick="showHome()">← Back to Home</a>
+				<!-- Preamble -->
+				<section id="preamble" class="const-section">
+					<h3 class="const-section-title">Preamble</h3>
+					<p class="const-text">We, the People of Arkenfold, united by will and bound by purpose, establish this Dominion to secure order, strength, and survival in a world of conflict and chaos.</p>
+					<p class="const-text">Through unwavering authority, disciplined unity, and resolute command, we shall endure, expand, and prevail.</p>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="preamble" aria-label="Copy link to Preamble" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article I -->
+				<section id="article-1" class="const-section">
+					<h3 class="const-section-title">Article I — The Dominion</h3>
+					<div class="const-clause">
+						<span class="clause-num">§1.1</span>
+						<p class="const-text">The Dominion of Arkenfold is a sovereign state founded upon absolute authority, unity of command, and total national strength.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§1.2</span>
+						<p class="const-text">All institutions, offices, and forces serve the Dominion and its Supreme Archon.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§1.3</span>
+						<p class="const-text">The Dominion exists to ensure survival, dominance, and the perpetual stability of its people.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-1" aria-label="Copy link to Article I" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article II -->
+				<section id="article-2" class="const-section">
+					<h3 class="const-section-title">Article II — The Supreme Archon</h3>
+					<div class="const-clause">
+						<span class="clause-num">§2.1</span>
+						<p class="const-text">The Supreme Archon is the highest authority of the Dominion.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§2.2</span>
+						<p class="const-text">The Supreme Archon holds ultimate command over law, military, governance, and national policy.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§2.3</span>
+						<p class="const-text">The word of the Supreme Archon carries the force of law and requires no approval or ratification.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-2" aria-label="Copy link to Article II" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article III -->
+				<section id="article-3" class="const-section">
+					<h3 class="const-section-title">Article III — The High Command Council</h3>
+					<div class="const-clause">
+						<span class="clause-num">§3.1</span>
+						<p class="const-text">The Supreme Archon shall be advised by the High Command Council.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§3.2</span>
+						<p class="const-text">The Council shall consist of the following appointed officers:</p>
+						<ul class="const-list">
+							<li><strong>The Grand Marshal</strong> — Commander of all military forces</li>
+							<li><strong>The High Chancellor</strong> — Chief administrator of domestic governance</li>
+							<li><strong>The Minister of Dominion</strong> — Overseer of diplomacy and expansion</li>
+							<li><strong>The Overseer of Unity</strong> — Guardian of loyalty and civic order</li>
+						</ul>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§3.3</span>
+						<p class="const-text">The Council advises but does not limit the authority of the Supreme Archon.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-3" aria-label="Copy link to Article III" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article IV -->
+				<section id="article-4" class="const-section">
+					<h3 class="const-section-title">Article IV — Law and Order</h3>
+					<div class="const-clause">
+						<span class="clause-num">§4.1</span>
+						<p class="const-text">Order is the highest principle of the Dominion.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§4.2</span>
+						<p class="const-text">All citizens are bound to obey the laws of the Dominion and the commands of its authorities.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§4.3</span>
+						<p class="const-text">Acts of treason, rebellion, sabotage, or defiance shall be met with decisive punishment.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-4" aria-label="Copy link to Article IV" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article V -->
+				<section id="article-5" class="const-section">
+					<h3 class="const-section-title">Article V — The Military</h3>
+					<div class="const-clause">
+						<span class="clause-num">§5.1</span>
+						<p class="const-text">The military of the Dominion shall be known as the <strong>Arkenfold Iron Legion</strong>.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§5.2</span>
+						<p class="const-text">The Iron Legion exists to defend the Dominion, enforce its will, and expand its influence.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§5.3</span>
+						<p class="const-text">The Grand Marshal commands all military forces under the authority of the Supreme Archon.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-5" aria-label="Copy link to Article V" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article VI -->
+				<section id="article-6" class="const-section">
+					<h3 class="const-section-title">Article VI — Unity and Loyalty</h3>
+					<div class="const-clause">
+						<span class="clause-num">§6.1</span>
+						<p class="const-text">Loyalty to the Dominion and the Supreme Archon is the highest civic duty.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§6.2</span>
+						<p class="const-text">All citizens shall contribute to the strength and stability of the state through labor, service, or obedience.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§6.3</span>
+						<p class="const-text">Dissent that threatens unity shall be suppressed in defense of national survival.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-6" aria-label="Copy link to Article VI" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article VII -->
+				<section id="article-7" class="const-section">
+					<h3 class="const-section-title">Article VII — Expansion and Security</h3>
+					<div class="const-clause">
+						<span class="clause-num">§7.1</span>
+						<p class="const-text">The Dominion reserves the right to expand its influence, territory, and control in the interest of stability and security.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§7.2</span>
+						<p class="const-text">Foreign entities that threaten Arkenfold may be neutralized through political, economic, or military means.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-7" aria-label="Copy link to Article VII" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article VIII -->
+				<section id="article-8" class="const-section">
+					<h3 class="const-section-title">Article VIII — Amendments</h3>
+					<div class="const-clause">
+						<span class="clause-num">§8.1</span>
+						<p class="const-text">This Constitution may be amended only by the will of the Supreme Archon.</p>
+					</div>
+					<div class="const-clause">
+						<span class="clause-num">§8.2</span>
+						<p class="const-text">No amendment may weaken the authority of the Dominion or its Supreme Archon.</p>
+					</div>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-8" aria-label="Copy link to Article VIII" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Article IX -->
+				<section id="article-9" class="const-section">
+					<h3 class="const-section-title">Article IX — Founding Seal</h3>
+					<p class="const-text const-seal-text">Let this Constitution stand as the unbreakable foundation of the Dominion —</p>
+					<p class="const-text">A testament to strength,</p>
+					<p class="const-text">A fortress of order,</p>
+					<p class="const-text">And the eternal command of Arkenfold.</p>
+					<div class="const-section-actions">
+						<button class="copy-link-btn" data-section="article-9" aria-label="Copy link to Article IX" title="Copy link to section">🔗</button>
+					</div>
+				</section>
+
+				<!-- Amendment History -->
+				<section id="amendments" class="const-section const-amendments">
+					<h3 class="const-section-title">Amendment History</h3>
+					<div class="amendment-entry">
+						<div class="amendment-badge">Founding</div>
+						<div class="amendment-info">
+							<strong>Original Ratification</strong>
+							<p>Constitution enacted by Supreme Archon Imperius in the Founding Era. All nine articles adopted as written.</p>
+						</div>
+					</div>
+					<p class="const-text" style="margin-top: 1.5em; opacity: 0.6; font-style: italic;">No amendments have been enacted since ratification.</p>
+				</section>
+
+				<!-- Enactment Signature -->
+				<div class="const-enactment">
+					<div class="const-enactment-seal">✦</div>
+					<p class="const-enactment-label">SIGNED AND ENACTED BY:</p>
+					<p class="const-enactment-name">Supreme Archon Imperius</p>
+					<p class="const-enactment-title">Ruler of the Dominion of Arkenfold</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- PAGE: COUNCIL & MEMBERS                    -->
+	<!-- ═══════════════════════════════════════════ -->
+	<section class="page" id="council">
+		<div class="page-inner">
+			<div class="page-header">
+				<h1 class="page-title">Council & Members</h1>
+				<p class="page-subtitle">The leaders and citizens of the Dominion</p>
+			</div>
+
+			<!-- Search / Filter -->
+			<div class="council-controls">
+				<div class="const-search-wrap">
+					<span class="search-icon" aria-hidden="true">⌕</span>
+					<input type="search" id="member-search" placeholder="Search members..." aria-label="Search members" />
+				</div>
+				<div class="filter-group" role="radiogroup" aria-label="Filter by role">
+					<button class="filter-btn active" data-role="all" role="radio" aria-checked="true">All</button>
+					<button class="filter-btn" data-role="archon" role="radio" aria-checked="false">Archon</button>
+					<button class="filter-btn" data-role="council" role="radio" aria-checked="false">Council</button>
+					<button class="filter-btn" data-role="citizen" role="radio" aria-checked="false">Citizens</button>
+				</div>
+			</div>
+
+			<!-- Supreme Archon -->
+			<div class="council-section">
+				<h2 class="council-section-title">
+					<span class="council-badge archon">Supreme Archon</span>
+				</h2>
+				<div class="member-cards" id="archon-cards">
+					<!-- populated by JS -->
+				</div>
+			</div>
+
+			<!-- High Command Council -->
+			<div class="council-section">
+				<h2 class="council-section-title">
+					<span class="council-badge council">High Command Council</span>
+				</h2>
+				<div class="member-cards" id="council-cards">
+					<!-- populated by JS -->
+				</div>
+			</div>
+
+			<!-- Citizens -->
+			<div class="council-section">
+				<h2 class="council-section-title">
+					<span class="council-badge citizen">Citizens of Arkenfold</span>
+					<span class="council-count" id="council-citizen-count"></span>
+				</h2>
+				<div class="member-cards" id="citizen-cards">
+					<!-- populated by JS -->
+				</div>
+				<div class="empty-state" id="council-empty" style="display:none;">
+					<p>No members match your search.</p>
+				</div>
 			</div>
 		</div>
 	</section>
 
-	<!-- Back to Top Button -->
-	<button id="back-to-top" title="Back to top">↑</button>
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- PAGE: UPDATES                              -->
+	<!-- ═══════════════════════════════════════════ -->
+	<section class="page" id="updates">
+		<div class="page-inner">
+			<div class="page-header">
+				<h1 class="page-title">Updates & Decrees</h1>
+				<p class="page-subtitle">Official announcements from the Dominion</p>
+			</div>
 
-	<footer>
-		<p>&copy; Dominion of Arkenfold. Eternal Command.</p>
+			<!-- Filter -->
+			<div class="updates-controls">
+				<div class="filter-group" role="radiogroup" aria-label="Filter updates">
+					<button class="filter-btn active" data-filter="all" role="radio" aria-checked="true">All</button>
+					<button class="filter-btn" data-filter="governance" role="radio" aria-checked="false">Governance</button>
+					<button class="filter-btn" data-filter="community" role="radio" aria-checked="false">Community</button>
+					<button class="filter-btn" data-filter="military" role="radio" aria-checked="false">Military</button>
+					<button class="filter-btn" data-filter="general" role="radio" aria-checked="false">General</button>
+				</div>
+			</div>
+
+			<!-- Timeline -->
+			<div class="updates-timeline" id="updates-timeline">
+				<!-- populated by JS -->
+			</div>
+			<div class="empty-state" id="updates-empty" style="display:none;">
+				<p>No updates match the selected filter.</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- PAGE: ACCOUNT                              -->
+	<!-- ═══════════════════════════════════════════ -->
+	<section class="page" id="account">
+		<div class="page-inner">
+			<div class="page-header">
+				<h1 class="page-title">My Account</h1>
+				<p class="page-subtitle">Manage your Dominion profile</p>
+			</div>
+
+			<!-- Not logged in -->
+			<div class="account-guest" id="account-guest">
+				<div class="account-guest-inner">
+					<div class="account-guest-icon">✦</div>
+					<h2>Welcome, Citizen</h2>
+					<p>Sign in to access your account details and manage your Dominion profile.</p>
+					<button class="hero-btn primary" onclick="openAuthModal()">Login / Sign Up</button>
+				</div>
+			</div>
+
+			<!-- Logged in -->
+			<div class="account-logged" id="account-logged" style="display:none;">
+				<div class="account-card">
+					<div class="account-avatar" id="account-avatar">A</div>
+					<div class="account-info">
+						<h2 id="account-name">Citizen</h2>
+						<p class="account-email" id="account-email">citizen@arkenfold.com</p>
+						<div class="account-role" id="account-role">Citizen</div>
+					</div>
+				</div>
+
+				<div class="account-details">
+					<h3 class="account-section-title">Account Details</h3>
+					<div class="account-detail-row">
+						<span class="detail-label">Display Name</span>
+						<span class="detail-value" id="detail-name">—</span>
+					</div>
+					<div class="account-detail-row">
+						<span class="detail-label">Email</span>
+						<span class="detail-value" id="detail-email">—</span>
+					</div>
+					<div class="account-detail-row">
+						<span class="detail-label">Email Verified</span>
+						<span class="detail-value" id="detail-verified">—</span>
+					</div>
+					<div class="account-detail-row">
+						<span class="detail-label">Member Since</span>
+						<span class="detail-value" id="detail-since">—</span>
+					</div>
+				</div>
+
+				<div class="account-actions">
+					<button class="account-action-btn" onclick="openChangePasswordModal()">
+						<span aria-hidden="true">🔐</span> Change Password
+					</button>
+					<button class="account-action-btn logout" onclick="logout()">
+						<span aria-hidden="true">⏻</span> Logout
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+	</main>
+
+	<!-- Back to Top -->
+	<button id="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
+
+	<!-- ═══════════════════════════════════════════ -->
+	<!-- FOOTER                                     -->
+	<!-- ═══════════════════════════════════════════ -->
+	<footer role="contentinfo">
+		<div class="footer-inner">
+			<div class="footer-grid">
+				<div class="footer-brand">
+					<div class="footer-logo">ARKENFOLD</div>
+					<p class="footer-tagline">Dominion of Arkenfold — Eternal Command</p>
+				</div>
+				<div class="footer-nav-group">
+					<h4 class="footer-nav-title">Navigate</h4>
+					<a href="#home" class="footer-link" onclick="navigateTo('home')">Home</a>
+					<a href="#constitution" class="footer-link" onclick="navigateTo('constitution')">Constitution</a>
+					<a href="#council" class="footer-link" onclick="navigateTo('council')">Council</a>
+					<a href="#updates" class="footer-link" onclick="navigateTo('updates')">Updates</a>
+				</div>
+				<div class="footer-nav-group">
+					<h4 class="footer-nav-title">Community</h4>
+					<a href="#account" class="footer-link" onclick="navigateTo('account')">My Account</a>
+					<a href="#" class="footer-link" onclick="openAuthModal(); return false;">Join Arkenfold</a>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p class="footer-copy">&copy; <span id="footer-year">2026</span> Dominion of Arkenfold. All rights reserved.</p>
+				<p class="footer-credit">Designed and Developed by <strong>Navi</strong></p>
+			</div>
+		</div>
 	</footer>
 
 	<script type="module" src="main.js"></script>

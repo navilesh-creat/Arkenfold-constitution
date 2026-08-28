@@ -1,1276 +1,906 @@
+// DOMINION OF ARKENFOLD — COMMUNITY PORTAL SCRIPT
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import {
-	getAuth,
-	signInWithEmailAndPassword,
-	signOut,
-	updateProfile,
-	updatePassword,
-	onAuthStateChanged,
-	sendPasswordResetEmail,
-	sendSignInLinkToEmail,
-	isSignInWithEmailLink,
-	signInWithEmailLink,
-	reauthenticateWithCredential,
-	EmailAuthProvider
+  getAuth, signInWithEmailAndPassword, signOut, updateProfile,
+  updatePassword, onAuthStateChanged, sendPasswordResetEmail,
+  sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
+  reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 /* ═══════════════════════════════════════════════
    FIREBASE CONFIG
    ═══════════════════════════════════════════════ */
-
 const firebaseConfig = {
-	apiKey: "AIzaSyDsXlCyLS4WodBRnwtqM6TbgbW8SighNOI",
-	authDomain: "dominion-of-arkenfold.firebaseapp.com",
-	projectId: "dominion-of-arkenfold",
-	storageBucket: "dominion-of-arkenfold.firebasestorage.app",
-	messagingSenderId: "189228678030",
-	appId: "1:189228678030:web:e07ca03f6dfba9d14a02df",
-	measurementId: "G-XM8T002XYP"
+  apiKey: "AIzaSyDsXlCyLS4WodBRnwtqM6TbgbW8SighNOI",
+  authDomain: "dominion-of-arkenfold.firebaseapp.com",
+  projectId: "dominion-of-arkenfold",
+  storageBucket: "dominion-of-arkenfold.firebasestorage.app",
+  messagingSenderId: "189228678030",
+  appId: "1:189228678030:web:e07ca03f6dfba9d14a02df",
+  measurementId: "G-XM8T002XYP"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-let mode = "login"; // or "signup"
+/* ═══════════════════════════════════════════════
+   DATA — Members, Council, Updates
+   ═══════════════════════════════════════════════ */
+const MEMBERS = [
+  { name: "Gamer_sam612", role: "archon", title: "Supreme Archon", desc: "Highest authority of the Dominion" },
+  { name: "_navi_49", role: "council", title: "High Command Council", desc: "Advisor and administrator of the Dominion" },
+  { name: "Lordwolf2203", role: "council", title: "High Command Council", desc: "Advisor and administrator of the Dominion" },
+  { name: "Retryant", role: "citizen" },
+  { name: "thereal43213222", role: "citizen" },
+  { name: "kaiLordXD", role: "citizen" },
+  { name: "tomabrato", role: "citizen" },
+  { name: ".ZingyParty6068", role: "citizen" },
+  { name: "poisedsole35967", role: "citizen" },
+  { name: "RicardoDono", role: "citizen" },
+  { name: "golfista222", role: "citizen" },
+  { name: "Acc200", role: "citizen" },
+  { name: "Amfound", role: "citizen" },
+  { name: "Onpowerg", role: "citizen" },
+  { name: ".RadTerror202", role: "citizen" },
+  { name: "Deadsoul888", role: "citizen" },
+  { name: "LordAspect888", role: "citizen" },
+  { name: "SKYKING4000", role: "citizen" },
+  { name: "leafy02leafeon", role: "citizen" },
+  { name: "Alein2203", role: "citizen" },
+  { name: "KhioALT", role: "citizen" },
+  { name: "LordAspect777", role: "citizen" },
+  { name: "7youngstunna7", role: "citizen" }
+];
+
+const UPDATES = [
+  { id: 1, title: "Constitution Ratified", body: "The foundational Constitution of the Dominion has been formally ratified and enacted by the Supreme Archon. All nine articles are now in effect.", date: "August 28, 2026", category: "governance", pinned: true },
+  { id: 2, title: "Council Formed", body: "The High Command Council has been established. Two founding members have been appointed to advise and assist the Supreme Archon.", date: "August 25, 2026", category: "governance", pinned: false },
+  { id: 3, title: "Arkenfold Opens", body: "The Dominion of Arkenfold officially opens its doors to citizens. All loyal subjects are welcome to join the ranks.", date: "August 20, 2026", category: "community", pinned: false },
+  { id: 4, title: "Community Portal Launched", body: "The official website and community portal of the Dominion is now live. Citizens can explore the Constitution, meet the Council, and stay updated.", date: "August 28, 2026", category: "community", pinned: false },
+  { id: 5, title: "Founding Era Declared", body: "The Supreme Archon has declared the beginning of the Founding Era — the first chapter in the history of the Dominion of Arkenfold.", date: "August 15, 2026", category: "general", pinned: false }
+];
 
 /* ═══════════════════════════════════════════════
-   SOUND ENGINE (Web Audio API)
-   Generates subtle, themed sound effects —
-   no external audio files needed.
+   THEME
    ═══════════════════════════════════════════════ */
-
-let audioCtx = null;
-let soundEnabled = localStorage.getItem('arkenfold-sound') !== 'off';
-
-function getAudioCtx() {
-	if (!audioCtx) {
-		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-	}
-	// Resume if suspended (browser autoplay policy)
-	if (audioCtx.state === 'suspended') audioCtx.resume();
-	return audioCtx;
-}
-
-/** Short, crisp "ting" for button clicks */
-function playClickSound() {
-	if (!soundEnabled) return;
-	try {
-		const ctx = getAudioCtx();
-		const now = ctx.currentTime;
-
-		const osc = ctx.createOscillator();
-		const gain = ctx.createGain();
-
-		osc.type = 'sine';
-		osc.frequency.setValueAtTime(880, now);
-		osc.frequency.exponentialRampToValueAtTime(1320, now + 0.05);
-
-		gain.gain.setValueAtTime(0.15, now);
-		gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
-		osc.connect(gain);
-		gain.connect(ctx.destination);
-		osc.start(now);
-		osc.stop(now + 0.12);
-	} catch (e) { /* silent fail */ }
-}
-
-/** Soft "whoosh" sweep for page transitions */
-function playTransitionSound() {
-	if (!soundEnabled) return;
-	try {
-		const ctx = getAudioCtx();
-		const now = ctx.currentTime;
-
-		// Filtered noise for whoosh
-		const bufferSize = ctx.sampleRate * 0.35;
-		const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-		const data = buffer.getChannelData(0);
-		for (let i = 0; i < bufferSize; i++) {
-			data[i] = (Math.random() * 2 - 1) * 0.5;
-		}
-
-		const noise = ctx.createBufferSource();
-		noise.buffer = buffer;
-
-		const filter = ctx.createBiquadFilter();
-		filter.type = 'bandpass';
-		filter.frequency.setValueAtTime(200, now);
-		filter.frequency.exponentialRampToValueAtTime(2000, now + 0.15);
-		filter.frequency.exponentialRampToValueAtTime(300, now + 0.35);
-		filter.Q.value = 1.5;
-
-		const gain = ctx.createGain();
-		gain.gain.setValueAtTime(0, now);
-		gain.gain.linearRampToValueAtTime(0.08, now + 0.05);
-		gain.gain.linearRampToValueAtTime(0, now + 0.35);
-
-		noise.connect(filter);
-		filter.connect(gain);
-		gain.connect(ctx.destination);
-		noise.start(now);
-		noise.stop(now + 0.35);
-
-		// Add a soft chime overlay
-		const osc = ctx.createOscillator();
-		const oscGain = ctx.createGain();
-		osc.type = 'sine';
-		osc.frequency.setValueAtTime(523, now); // C5
-		osc.frequency.setValueAtTime(659, now + 0.1); // E5
-		oscGain.gain.setValueAtTime(0, now);
-		oscGain.gain.linearRampToValueAtTime(0.06, now + 0.08);
-		oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-		osc.connect(oscGain);
-		oscGain.connect(ctx.destination);
-		osc.start(now);
-		osc.stop(now + 0.3);
-	} catch (e) { /* silent fail */ }
-}
-
-/** Two-note ascending chime for success moments */
-function playSuccessSound() {
-	if (!soundEnabled) return;
-	try {
-		const ctx = getAudioCtx();
-		const now = ctx.currentTime;
-
-		[523, 784].forEach((freq, i) => {
-			const osc = ctx.createOscillator();
-			const gain = ctx.createGain();
-			osc.type = 'sine';
-			osc.frequency.value = freq;
-			gain.gain.setValueAtTime(0, now + i * 0.12);
-			gain.gain.linearRampToValueAtTime(0.1, now + i * 0.12 + 0.02);
-			gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.25);
-			osc.connect(gain);
-			gain.connect(ctx.destination);
-			osc.start(now + i * 0.12);
-			osc.stop(now + i * 0.12 + 0.25);
-		});
-	} catch (e) { /* silent fail */ }
-}
-
-/** Soft low thud for modal open */
-function playModalOpenSound() {
-	if (!soundEnabled) return;
-	try {
-		const ctx = getAudioCtx();
-		const now = ctx.currentTime;
-
-		const osc = ctx.createOscillator();
-		const gain = ctx.createGain();
-		osc.type = 'sine';
-		osc.frequency.setValueAtTime(180, now);
-		osc.frequency.exponentialRampToValueAtTime(120, now + 0.1);
-		gain.gain.setValueAtTime(0.1, now);
-		gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-		osc.connect(gain);
-		gain.connect(ctx.destination);
-		osc.start(now);
-		osc.stop(now + 0.15);
-	} catch (e) { /* silent fail */ }
-}
-
-
-let pendingSignupData = null; // temporarily holds {username, email} before confirmation
-
-/* ═══════════════════════════════════════════════
-   THEME TOGGLE (Dark / Light)
-   ═══════════════════════════════════════════════ */
-
 let currentTheme = localStorage.getItem('arkenfold-theme') || 'dark';
-
 function applyTheme(theme) {
-	currentTheme = theme;
-	document.documentElement.setAttribute('data-theme', theme);
-	localStorage.setItem('arkenfold-theme', theme);
-	const btn = document.getElementById('theme-toggle');
-	if (btn) btn.textContent = theme === 'dark' ? '☀' : '☾';
+  currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('arkenfold-theme', theme);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀' : '☾';
 }
-
-window.toggleTheme = function () {
-	applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-};
-
-// Apply saved theme on load
+window.toggleTheme = () => applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
 applyTheme(currentTheme);
 
 /* ═══════════════════════════════════════════════
-   PAGE NAVIGATION (with transitions)
+   HASH ROUTING
    ═══════════════════════════════════════════════ */
+const PAGES = ['home', 'constitution', 'council', 'updates', 'account'];
+let currentPage = 'home';
 
-window.showConstitution = function () {
-	playTransitionSound();
-	const home = document.getElementById('home');
-	const constitution = document.getElementById('constitution');
-
-	// Apply exit animation
-	home.style.animation = 'pageSlideOut 0.4s ease forwards';
-
-	setTimeout(() => {
-		home.classList.remove('active');
-		home.style.animation = '';
-
-		constitution.classList.add('active');
-		window.scrollTo({ top: 0, behavior: 'instant' });
-
-		setTimeout(() => {
-			document.getElementById('const-content').classList.add('active');
-			initScrollReveals();
-		}, 50);
-	}, 400);
+window.navigateTo = function(page) {
+  if (!PAGES.includes(page)) page = 'home';
+  if (page === currentPage && document.getElementById(page)?.classList.contains('active')) return;
+  currentPage = page;
+  window.location.hash = page === 'home' ? '' : page;
+  renderPage(page);
+  closeMobileMenu();
 };
 
-window.showHome = function () {
-	playTransitionSound();
-	const home = document.getElementById('home');
-	const constitution = document.getElementById('constitution');
-	const constContent = document.getElementById('const-content');
-
-	constContent.classList.remove('active');
-	constitution.style.animation = 'pageSlideOut 0.4s ease forwards';
-
-	setTimeout(() => {
-		constitution.classList.remove('active');
-		constitution.style.animation = '';
-
-		home.classList.add('active');
-		window.scrollTo({ top: 0, behavior: 'instant' });
-
-		animateHomeElements();
-		animateMembersList();
-	}, 400);
-};
-
-function animateHomeElements() {
-	const elements = document.querySelectorAll('#home .reveal');
-	elements.forEach((el, i) => {
-		el.classList.remove('visible');
-		setTimeout(() => el.classList.add('visible'), 100 + i * 80);
-	});
+function renderPage(page) {
+  PAGES.forEach(p => {
+    const el = document.getElementById(p);
+    if (el) el.classList.toggle('active', p === page);
+  });
+  // Update nav links
+  document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.page === page);
+  });
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (page === 'constitution') initConstitutionPage();
+  if (page === 'council') renderCouncil();
+  if (page === 'updates') renderUpdates();
+  if (page === 'account') renderAccount();
 }
 
-/* ═══════════════════════════════════════════════
-   FLOATING PARTICLES
-   ═══════════════════════════════════════════════ */
+function handleHash() {
+  const hash = window.location.hash.replace('#', '').trim();
+  const page = PAGES.includes(hash) ? hash : 'home';
+  currentPage = page;
+  renderPage(page);
+}
+window.addEventListener('hashchange', handleHash);
 
+/* ═══════════════════════════════════════════════
+   PARTICLES
+   ═══════════════════════════════════════════════ */
 function createParticles() {
-	const container = document.getElementById('particles');
-	if (!container) return;
-
-	const particleCount = window.innerWidth < 768 ? 15 : 25;
-
-	for (let i = 0; i < particleCount; i++) {
-		const particle = document.createElement('div');
-		particle.classList.add('particle');
-
-		const size = Math.random() * 3 + 1;
-		const left = Math.random() * 100;
-		const duration = Math.random() * 15 + 10;
-		const delay = Math.random() * 20;
-		const opacity = Math.random() * 0.4 + 0.1;
-
-		particle.style.cssText = `
-			width: ${size}px;
-			height: ${size}px;
-			left: ${left}%;
-			animation-duration: ${duration}s;
-			animation-delay: -${delay}s;
-			opacity: ${opacity};
-		`;
-
-		container.appendChild(particle);
-	}
+  const container = document.getElementById('particles');
+  if (!container) return;
+  const count = window.innerWidth < 768 ? 12 : 22;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.classList.add('particle');
+    const size = Math.random() * 3 + 1;
+    p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;animation-duration:${Math.random()*15+10}s;animation-delay:-${Math.random()*20}s;opacity:${Math.random()*0.4+0.1};`;
+    container.appendChild(p);
+  }
 }
-
-/* ═══════════════════════════════════════════════
-   SCROLL REVEAL
-   ═══════════════════════════════════════════════ */
-
-function initScrollReveals() {
-	const reveals = document.querySelectorAll('.reveal:not(.visible)');
-
-	const observer = new IntersectionObserver((entries) => {
-		entries.forEach(entry => {
-			if (entry.isIntersecting) {
-				entry.target.classList.add('visible');
-				observer.unobserve(entry.target);
-			}
-		});
-	}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-	reveals.forEach(el => observer.observe(el));
-}
-
-/* ═══════════════════════════════════════════════
-   HEADER SCROLL EFFECT
-   ═══════════════════════════════════════════════ */
-
-function initHeaderScroll() {
-	const header = document.querySelector('header');
-	if (!header) return;
-
-	let ticking = false;
-	window.addEventListener('scroll', () => {
-		if (!ticking) {
-			requestAnimationFrame(() => {
-				if (window.scrollY > 50) {
-					header.classList.add('scrolled');
-				} else {
-					header.classList.remove('scrolled');
-				}
-				ticking = false;
-			});
-			ticking = true;
-		}
-	});
-}
-
-/* ═══════════════════════════════════════════════
-   PASSWORD STRENGTH INDICATOR
-   ═══════════════════════════════════════════════ */
-
-window.checkPasswordStrength = function () {
-	const password = document.getElementById("new-password").value;
-	const strengthBar = document.getElementById("new-strength-bar");
-	const strengthText = document.getElementById("new-strength-text");
-
-	if (!password) {
-		strengthBar.style.width = "0";
-		strengthBar.style.background = "";
-		strengthText.textContent = "Password strength";
-		strengthText.style.color = "";
-		return;
-	}
-
-	let strength = 0;
-
-	if (password.length >= 6) strength++;
-	if (password.length >= 8) strength++;
-	if (password.length >= 12) strength++;
-	if (/[a-z]/.test(password)) strength++;
-	if (/[A-Z]/.test(password)) strength++;
-	if (/[0-9]/.test(password)) strength++;
-	if (/[^a-zA-Z0-9]/.test(password)) strength++;
-
-	let feedback = "";
-	let color = "";
-
-	if (strength <= 2) { feedback = "Weak"; color = "#e05a5a"; }
-	else if (strength <= 4) { feedback = "Fair"; color = "#f0a500"; }
-	else if (strength <= 5) { feedback = "Good"; color = "#d4af37"; }
-	else { feedback = "Strong"; color = "#4caf50"; }
-
-	const percentage = Math.min((strength / 7) * 100, 100);
-	strengthBar.style.width = percentage + "%";
-	strengthBar.style.background = color;
-	strengthText.textContent = feedback;
-	strengthText.style.color = color;
-};
-
-/* ═══════════════════════════════════════════════
-   FRIENDLY ERROR MAPPING
-   Converts raw Firebase errors into themed,
-   human-readable messages.
-   ═══════════════════════════════════════════════ */
-
-const errorMap = {
-	'auth/invalid-credential':          'Invalid email or password. Please check your credentials.',
-	'auth/user-not-found':              'No account found with this email.',
-	'auth/wrong-password':              'Incorrect password. Please try again.',
-	'auth/email-already-in-use':        'This email is already registered. Try logging in instead.',
-	'auth/invalid-email':               'Please enter a valid email address.',
-	'auth/user-disabled':               'This account has been disabled.',
-	'auth/too-many-requests':           'Too many attempts. Please wait a moment and try again.',
-	'auth/network-request-failed':      'Network error. Please check your connection.',
-	'auth/popup-closed-by-user':        'Popup was closed. Please try again.',
-	'auth/operation-not-allowed':       'This sign-in method is not enabled.',
-	'auth/weak-password':               'Password is too weak. Please choose a stronger one.',
-	'auth/requires-recent-login':       'Please log out and log back in to perform this action.',
-	'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
-	'auth/credential-already-in-use':   'This credential is already associated with another account.',
-	'auth/invalid-action-code':         'The verification link is invalid or has expired.',
-	'auth/expired-action-code':         'The verification link has expired. Please request a new one.',
-	'auth/email-already-verified':      'This email is already verified.',
-};
-
-function friendlyError(err) {
-	const msg = (err && err.message) ? err.message.replace('Firebase: ', '') : '';
-
-	// Try to extract the code from the standard Firebase format:
-	// "auth/invalid-credential. (auth/invalid-credential)."
-	const match = msg.match(/\(([^)]+)\)/) || msg.match(/^([a-z/-]+)\b/);
-	const code = match ? match[1] : '';
-
-	if (code && errorMap[code]) return errorMap[code];
-	if (msg) return msg;
-	return 'Something went wrong. Please try again.';
-}
-
-/* ═══════════════════════════════════════════════
-   UTILITY
-   ═══════════════════════════════════════════════ */
-
-function resetSubmitBtn() {
-	const submitBtn = document.getElementById("auth-submit-btn");
-	const btnText = submitBtn.querySelector(".btn-text");
-	const btnSpinner = submitBtn.querySelector(".btn-spinner");
-
-	btnText.textContent = mode === "login" ? "Login" : "Sign Up";
-	btnSpinner.style.display = "none";
-	submitBtn.style.opacity = "1";
-	submitBtn.style.pointerEvents = "auto";
-}
-
-/* ═══════════════════════════════════════════════
-   AUTH MODAL
-   ═══════════════════════════════════════════════ */
-
-window.openAuthModal = function () {
-	playModalOpenSound();
-	// Always reset to login mode
-	mode = "login";
-	document.getElementById("auth-modal-title").textContent = "Login";
-	document.getElementById("auth-submit-btn").querySelector(".btn-text").textContent = "Login";
-	document.getElementById("auth-username").style.display = "none";
-	document.getElementById("auth-password").style.display = "block";
-	document.getElementById("auth-toggle-label").textContent = "Don't have an account?";
-	document.getElementById("auth-toggle-link").textContent = "Sign up";
-	document.getElementById("auth-error").textContent = "";
-	const forgotLink = document.getElementById("forgot-password-link");
-	if (forgotLink) forgotLink.style.display = "inline-block";
-
-	document.getElementById("auth-modal").style.display = "flex";
-};
-
-window.closeAuthModal = function () {
-	const modal = document.getElementById("auth-modal");
-	const box = modal.querySelector('.auth-modal-box');
-
-	box.style.animation = 'modalBoxOut 0.25s ease forwards';
-	setTimeout(() => {
-		modal.style.display = "none";
-		box.style.animation = '';
-		document.getElementById("auth-error").textContent = "";
-		document.getElementById("auth-username").value = "";
-		document.getElementById("auth-email").value = "";
-	}, 250);
-};
-
-/* ═══════════════════════════════════════════════
-   EMAIL CONFIRMATION MODAL
-   Shows the entered email for user to confirm
-   before account creation proceeds.
-   ═══════════════════════════════════════════════ */
-
-function openEmailConfirmModal(email) {
-	document.getElementById('confirm-email-display').innerHTML =
-		`<span class="confirm-label">Your email address</span>` +
-		`<span class="confirm-email">${email}</span>`;
-	document.getElementById('confirm-error').textContent = '';
-	document.getElementById('email-confirm-modal').style.display = 'flex';
-}
-
-window.closeEmailConfirmModal = function () {
-	const modal = document.getElementById('email-confirm-modal');
-	const box = modal.querySelector('.auth-modal-box');
-	box.style.animation = 'modalBoxOut 0.25s ease forwards';
-	setTimeout(() => {
-		modal.style.display = 'none';
-		box.style.animation = '';
-	}, 250);
-	pendingSignupData = null;
-};
-
-window.confirmEmailYes = function () {
-	const errorBox = document.getElementById('confirm-error');
-	const submitBtn = document.getElementById('confirm-yes-btn');
-	const btnText = submitBtn.querySelector('.btn-text');
-	const btnSpinner = submitBtn.querySelector('.btn-spinner');
-
-	errorBox.textContent = '';
-
-	if (!pendingSignupData) {
-		errorBox.textContent = 'Session expired. Please try again.';
-		return;
-	}
-
-	btnText.textContent = 'Sending link...';
-	btnSpinner.style.display = 'inline-block';
-	submitBtn.style.opacity = '0.7';
-	submitBtn.style.pointerEvents = 'none';
-
-	const { username, email } = pendingSignupData;
-
-	// Where Firebase should send the user back to once they click the
-	// link in their email. handleCodeInApp keeps the whole flow on this
-	// page instead of Firebase's hosted page.
-	const actionCodeSettings = {
-		url: window.location.origin + window.location.pathname,
-		handleCodeInApp: true
-	};
-
-	// IMPORTANT: no Firebase account exists yet at this point — we're
-	// only emailing a sign-in link. The account itself is only created
-	// later, in completeEmailLinkSignIn(), once the user actually
-	// clicks that link. This guarantees nobody ends up in Firebase
-	// Authentication without a verified email.
-	sendSignInLinkToEmail(auth, email, actionCodeSettings)
-		.then(() => {
-			// Remember username + email so we can finish signup once the
-			// user comes back through the emailed link (possibly in a
-			// new tab, so this needs to survive that).
-			localStorage.setItem('pendingEmailLinkSignup', JSON.stringify({ username, email }));
-
-			// Close confirmation modal
-			closeEmailConfirmModal();
-
-			// Re-open auth modal to show the success message
-			document.getElementById('auth-modal').style.display = 'flex';
-			document.getElementById('auth-modal-title').textContent = 'Sign Up';
-			document.getElementById('auth-submit-btn').querySelector('.btn-text').textContent = 'Sign Up';
-			document.getElementById('auth-username').style.display = 'block';
-			document.getElementById('auth-password').style.display = 'none';
-			document.getElementById('auth-toggle-label').textContent = 'Already have an account?';
-			document.getElementById('auth-toggle-link').textContent = 'Login';
-			document.getElementById('forgot-password-link').style.display = 'none';
-			const authError = document.getElementById('auth-error');
-			authError.style.color = '#4caf50';
-			authError.innerHTML = 'Verification link sent! Please check your inbox and click the link to finish creating your account.';
-
-			// Reset confirm button
-			btnText.textContent = '✓ Yes, this is my email';
-			btnSpinner.style.display = 'none';
-			submitBtn.style.opacity = '1';
-			submitBtn.style.pointerEvents = 'auto';
-
-			pendingSignupData = null;
-		})
-		.catch((err) => {
-			errorBox.textContent = friendlyError(err);
-			btnText.textContent = '✓ Yes, this is my email';
-			btnSpinner.style.display = 'none';
-			submitBtn.style.opacity = '1';
-			submitBtn.style.pointerEvents = 'auto';
-		});
-};
-
-window.toggleAuthMode = function (e) {
-	e.preventDefault();
-	mode = mode === "login" ? "signup" : "login";
-	document.getElementById("auth-modal-title").textContent = mode === "login" ? "Login" : "Sign Up";
-
-	const submitBtn = document.getElementById("auth-submit-btn");
-	submitBtn.querySelector(".btn-text").textContent = mode === "login" ? "Login" : "Sign Up";
-
-	document.getElementById("auth-toggle-label").textContent = mode === "login" ? "Don't have an account?" : "Already have an account?";
-	document.getElementById("auth-toggle-link").textContent = mode === "login" ? "Sign up" : "Login";
-	document.getElementById("auth-username").style.display = mode === "signup" ? "block" : "none";
-	document.getElementById("auth-password").style.display = mode === "login" ? "block" : "none";
-	document.getElementById("auth-error").textContent = "";
-
-	const forgotLink = document.getElementById("forgot-password-link");
-	if (forgotLink) forgotLink.style.display = mode === "login" ? "inline-block" : "none";
-};
-
-/* ═══════════════════════════════════════════════
-   RESET PASSWORD MODAL
-   ═══════════════════════════════════════════════ */
-
-window.openResetPasswordModal = function () {
-	playModalOpenSound();
-	document.getElementById("auth-modal").style.display = "none";
-	document.getElementById("reset-password-modal").style.display = "flex";
-};
-
-window.closeResetPasswordModal = function () {
-	const modal = document.getElementById("reset-password-modal");
-	const box = modal.querySelector('.auth-modal-box');
-
-	box.style.animation = 'modalBoxOut 0.25s ease forwards';
-	setTimeout(() => {
-		modal.style.display = "none";
-		box.style.animation = '';
-		document.getElementById("reset-error").textContent = "";
-		document.getElementById("reset-success").textContent = "";
-		document.getElementById("reset-email").value = "";
-	}, 250);
-};
-
-window.submitResetPassword = function () {
-	const email = document.getElementById("reset-email").value.trim();
-	const errorBox = document.getElementById("reset-error");
-	const successBox = document.getElementById("reset-success");
-	const submitBtn = document.getElementById("reset-submit-btn");
-	const btnText = submitBtn.querySelector(".btn-text");
-	const btnSpinner = submitBtn.querySelector(".btn-spinner");
-
-	errorBox.textContent = "";
-	successBox.textContent = "";
-
-	if (!email) {
-		errorBox.textContent = "Please enter your email address.";
-		return;
-	}
-
-	btnText.textContent = "Sending...";
-	btnSpinner.style.display = "inline-block";
-	submitBtn.style.opacity = "0.7";
-	submitBtn.style.pointerEvents = "none";
-
-	sendPasswordResetEmail(auth, email)
-		.then(() => {
-			successBox.textContent = "Password reset email sent! Check your inbox.";
-			btnText.textContent = "Send Reset Link";
-			btnSpinner.style.display = "none";
-			submitBtn.style.opacity = "1";
-			submitBtn.style.pointerEvents = "auto";
-		})
-		.catch((err) => {
-			errorBox.textContent = friendlyError(err);
-			btnText.textContent = "Send Reset Link";
-			btnSpinner.style.display = "none";
-			submitBtn.style.opacity = "1";
-			submitBtn.style.pointerEvents = "auto";
-		});
-};
-
-/* ═══════════════════════════════════════════════
-   SIGNUP - VERIFY BEFORE ACCOUNT EXISTS
-   
-   How it works:
-   1. User enters username + email (NO password shown)
-   2. Firebase sends a sign-in link to that email —
-      NO account exists in Firebase yet at this point
-   3. Username + email are saved in localStorage so
-      they survive the trip to the user's inbox
-   4. User clicks the link in their email and lands
-      back on this page
-   5. completeEmailLinkSignIn() (below) detects the
-      link and calls signInWithEmailLink() — THIS is
-      the moment the Firebase account is actually
-      created, and only because the email was verified
-   6. The saved username is attached as displayName
-   7. Password setup modal opens so the user can add
-      a real password to their new account
-   ═══════════════════════════════════════════════ */
-
-window.submitAuth = function () {
-	const username = document.getElementById("auth-username").value.trim();
-	const email = document.getElementById("auth-email").value.trim();
-	const password = document.getElementById("auth-password").value;
-	const errorBox = document.getElementById("auth-error");
-	const submitBtn = document.getElementById("auth-submit-btn");
-	const btnText = submitBtn.querySelector(".btn-text");
-	const btnSpinner = submitBtn.querySelector(".btn-spinner");
-
-	errorBox.textContent = "";
-
-	if (mode === "login") {
-		// ── LOGIN ──
-		if (!email || !password) {
-			errorBox.textContent = "Please fill in both fields.";
-			return;
-		}
-
-		btnText.textContent = "Logging in...";
-		btnSpinner.style.display = "inline-block";
-		submitBtn.style.opacity = "0.7";
-		submitBtn.style.pointerEvents = "none";
-
-		signInWithEmailAndPassword(auth, email, password)
-		.then(() => {
-			playSuccessSound();
-			window.closeAuthModal();
-		})
-			.catch((err) => {
-				errorBox.textContent = friendlyError(err);
-				resetSubmitBtn();
-			});
-	} else {
-		// ── SIGNUP (username + email only, NO password) ──
-		if (!username || !email) {
-			errorBox.textContent = "Please fill in username and email.";
-			return;
-		}
-
-		// Store the data temporarily — account is NOT created yet
-		pendingSignupData = { username, email };
-
-		// Close auth modal and show confirmation modal with the email
-		closeAuthModal();
-		setTimeout(() => openEmailConfirmModal(email), 300);
-	}
-};
-
-/* ═══════════════════════════════════════════════
-   PASSWORD SETUP MODAL
-   ═══════════════════════════════════════════════ */
-
-window.openPasswordSetupModal = function () {
-	playModalOpenSound();
-	document.getElementById("password-setup-modal").style.display = "flex";
-};
-
-window.closePasswordSetupModal = function () {
-	const modal = document.getElementById("password-setup-modal");
-	const box = modal.querySelector('.auth-modal-box');
-
-	box.style.animation = 'modalBoxOut 0.25s ease forwards';
-	setTimeout(() => {
-		modal.style.display = "none";
-		box.style.animation = '';
-		document.getElementById("setup-error").textContent = "";
-		document.getElementById("new-password").value = "";
-		document.getElementById("confirm-password").value = "";
-	}, 250);
-};
-
-window.submitPasswordSetup = function () {
-	const newPassword = document.getElementById("new-password").value;
-	const confirmPassword = document.getElementById("confirm-password").value;
-	const errorBox = document.getElementById("setup-error");
-	const submitBtn = document.getElementById("setup-submit-btn");
-	const btnText = submitBtn.querySelector(".btn-text");
-	const btnSpinner = submitBtn.querySelector(".btn-spinner");
-
-	errorBox.textContent = "";
-
-	if (!newPassword || !confirmPassword) {
-		errorBox.textContent = "Please fill in both fields.";
-		return;
-	}
-
-	if (newPassword.length < 6) {
-		errorBox.textContent = "Password must be at least 6 characters.";
-		return;
-	}
-
-	if (newPassword !== confirmPassword) {
-		errorBox.textContent = "Passwords do not match.";
-		return;
-	}
-
-	// At this point the user is already signed in — completeEmailLinkSignIn()
-	// authenticated them the moment they clicked the emailed link. We just
-	// need to attach a real password to that account.
-	if (!auth.currentUser) {
-		errorBox.textContent = "Session expired. Please sign up again.";
-		return;
-	}
-
-	btnText.textContent = "Setting Password...";
-	btnSpinner.style.display = "inline-block";
-	submitBtn.style.opacity = "0.7";
-	submitBtn.style.pointerEvents = "none";
-
-	updatePassword(auth.currentUser, newPassword)
-		.then(() => {
-			playSuccessSound();
-			closePasswordSetupModal();
-			// User is now signed in with their real password
-		})
-		.catch((err) => {
-			errorBox.textContent = friendlyError(err);
-			btnText.textContent = "Set Password";
-			btnSpinner.style.display = "none";
-			submitBtn.style.opacity = "1";
-			submitBtn.style.pointerEvents = "auto";
-		});
-};
-
-/* ═══════════════════════════════════════════════
-   CHANGE PASSWORD MODAL
-   Allows logged-in users to update their password.
-   ═══════════════════════════════════════════════ */
-
-window.openChangePasswordModal = function () {
-	playModalOpenSound();
-	playClickSound();
-	document.getElementById('change-old-password').value = '';
-	document.getElementById('change-new-password').value = '';
-	document.getElementById('change-confirm-password').value = '';
-	document.getElementById('change-password-error').textContent = '';
-	document.getElementById('change-password-success').textContent = '';
-	document.getElementById('change-strength-bar').style.width = '0';
-	document.getElementById('change-strength-text').textContent = 'Password strength';
-	document.getElementById('change-strength-text').style.color = '';
-	document.getElementById('change-password-modal').style.display = 'flex';
-};
-
-window.closeChangePasswordModal = function () {
-	const modal = document.getElementById('change-password-modal');
-	const box = modal.querySelector('.auth-modal-box');
-	box.style.animation = 'modalBoxOut 0.25s ease forwards';
-	setTimeout(() => {
-		modal.style.display = 'none';
-		box.style.animation = '';
-	}, 250);
-};
-
-window.checkChangePasswordStrength = function () {
-	const password = document.getElementById('change-new-password').value;
-	const bar = document.getElementById('change-strength-bar');
-	const text = document.getElementById('change-strength-text');
-
-	if (!password) {
-		bar.style.width = '0';
-		bar.style.background = '';
-		text.textContent = 'Password strength';
-		text.style.color = '';
-		return;
-	}
-
-	let strength = 0;
-	if (password.length >= 6) strength++;
-	if (password.length >= 8) strength++;
-	if (password.length >= 12) strength++;
-	if (/[a-z]/.test(password)) strength++;
-	if (/[A-Z]/.test(password)) strength++;
-	if (/[0-9]/.test(password)) strength++;
-	if (/[^a-zA-Z0-9]/.test(password)) strength++;
-
-	let feedback = '', color = '';
-	if (strength <= 2) { feedback = 'Weak'; color = '#e05a5a'; }
-	else if (strength <= 4) { feedback = 'Fair'; color = '#f0a500'; }
-	else if (strength <= 5) { feedback = 'Good'; color = '#d4af37'; }
-	else { feedback = 'Strong'; color = '#4caf50'; }
-
-	bar.style.width = Math.min((strength / 7) * 100, 100) + '%';
-	bar.style.background = color;
-	text.textContent = feedback;
-	text.style.color = color;
-};window.openChangePasswordResetModal = function () {
-	playModalOpenSound();
-	// Close change-password modal, open reset-password modal
-	document.getElementById('change-password-modal').style.display = 'none';
-	document.getElementById('reset-password-modal').style.display = 'flex';
-};
-
-window.submitChangePassword = function () {
-	const oldPass = document.getElementById('change-old-password').value;
-	const newPass = document.getElementById('change-new-password').value;
-	const confirmPass = document.getElementById('change-confirm-password').value;
-	const errorBox = document.getElementById('change-password-error');
-	const successBox = document.getElementById('change-password-success');
-	const submitBtn = document.getElementById('change-password-submit-btn');
-	const btnText = submitBtn.querySelector('.btn-text');
-	const btnSpinner = submitBtn.querySelector('.btn-spinner');
-
-	errorBox.textContent = '';
-	successBox.textContent = '';
-
-	if (!oldPass) {
-		errorBox.textContent = 'Please enter your current password.';
-		return;
-	}
-
-	if (!newPass || !confirmPass) {
-		errorBox.textContent = 'Please fill in both new password fields.';
-		return;
-	}
-
-	if (newPass.length < 6) {
-		errorBox.textContent = 'Password must be at least 6 characters.';
-		return;
-	}
-
-	if (newPass !== confirmPass) {
-		errorBox.textContent = 'Passwords do not match.';
-		return;
-	}
-
-	const user = auth.currentUser;
-	if (!user) {
-		errorBox.textContent = 'No user signed in.';
-		return;
-	}
-
-	btnText.textContent = 'Verifying...';
-	btnSpinner.style.display = 'inline-block';
-	submitBtn.style.opacity = '0.7';
-	submitBtn.style.pointerEvents = 'none';
-
-	// Re-authenticate with the old password first
-	const credential = EmailAuthProvider.credential(user.email, oldPass);
-	reauthenticateWithCredential(user, credential)
-		.then(() => {
-			// Authentication succeeded — now update to the new password
-			btnText.textContent = 'Updating...';
-			return updatePassword(user, newPass);
-		})
-		.then(() => {
-			playSuccessSound();
-			successBox.textContent = 'Password updated successfully!';
-			btnText.textContent = 'Update Password';
-			btnSpinner.style.display = 'none';
-			submitBtn.style.opacity = '1';
-			submitBtn.style.pointerEvents = 'auto';
-			document.getElementById('change-old-password').value = '';
-			document.getElementById('change-new-password').value = '';
-			document.getElementById('change-confirm-password').value = '';
-		})
-		.catch((err) => {
-			errorBox.textContent = friendlyError(err);
-			btnText.textContent = 'Update Password';
-			btnSpinner.style.display = 'none';
-			submitBtn.style.opacity = '1';
-			submitBtn.style.pointerEvents = 'auto';
-		});
-};
-
-window.logout = function () {
-	signOut(auth);
-};
-
-/* ═══════════════════════════════════════════════
-   EMAIL LINK SIGN-IN COMPLETION
-
-   Runs once when the script loads. If the current
-   page URL is a Firebase sign-in link (i.e. the user
-   just clicked the link from their verification
-   email), this is the ONLY place a Firebase account
-   gets created — nothing exists in Firebase before
-   the email is verified.
-   ═══════════════════════════════════════════════ */
-
-function showVerifyingOverlay() {
-	const overlay = document.createElement('div');
-	overlay.id = 'verifying-overlay';
-	overlay.className = 'auth-modal-overlay';
-	overlay.innerHTML =
-		'<div class="auth-modal-box" style="text-align:center;">' +
-			'<h2>Verifying your email…</h2>' +
-			'<p class="reset-description" style="margin-bottom:0;">Just a moment, this only takes a second.</p>' +
-			'<div style="width:32px;height:32px;margin:24px auto 0;border:3px solid rgba(212,175,55,0.2);border-top-color:#d4af37;border-radius:50%;animation:spin 0.8s linear infinite;"></div>' +
-		'</div>';
-	document.body.appendChild(overlay);
-	return overlay;
-}
-
-function completeEmailLinkSignIn() {
-	if (!isSignInWithEmailLink(auth, window.location.href)) return;
-
-	const pending = JSON.parse(localStorage.getItem('pendingEmailLinkSignup') || 'null');
-	let email = pending && pending.email;
-
-	// Show feedback immediately — without this, the user just stares at
-	// the bare homepage for however long the network calls below take,
-	// which reads as the site being stuck or slow even when it isn't.
-	const overlay = showVerifyingOverlay();
-
-	if (!email) {
-		// The link was opened on a different device/browser than the one
-		// it was requested from, so we don't have the email saved locally.
-		// Firebase requires re-confirming it as a safety check.
-		overlay.remove();
-		email = window.prompt('Please confirm your email address to finish signing up:');
-	}
-
-	if (!email) return; // user cancelled — nothing more we can do
-
-	if (!document.getElementById('verifying-overlay')) {
-		document.body.appendChild(overlay);
-	}
-
-	signInWithEmailLink(auth, email, window.location.href)
-		.then((cred) => {
-			// Drop the sign-in link params from the URL so refreshing the
-			// page doesn't try to reprocess the same link.
-			window.history.replaceState({}, document.title, window.location.pathname);
-
-			const username = (pending && pending.email === email && pending.username)
-				|| window.prompt('Choose a username:')
-				|| email.split('@')[0];
-
-			return updateProfile(cred.user, { displayName: username }).then(() => username);
-		})
-		.then((username) => {
-			localStorage.removeItem('pendingEmailLinkSignup');
-
-			// onAuthStateChanged fires the moment signInWithEmailLink()
-			// resolves — before this updateProfile() call above has a
-			// chance to finish — so it can't be relied on to show the
-			// right name here. Set the greeting directly instead.
-			const greeting = document.getElementById("user-greeting");
-			if (greeting) {
-				greeting.style.display = "inline-block";
-				greeting.textContent = "Welcome, " + username;
-			}
-
-			overlay.remove();
-			openPasswordSetupModal();
-		})
-		.catch((err) => {
-			console.error('Email link sign-in failed:', err);
-			localStorage.removeItem('pendingEmailLinkSignup');
-			overlay.remove();
-		});
-}
-
-completeEmailLinkSignIn();
-
-/* ═══════════════════════════════════════════════
-   AUTH STATE - keeps the header UI (login/logout
-   buttons, greeting) in sync with the signed-in user
-   ═══════════════════════════════════════════════ */
-
-onAuthStateChanged(auth, (user) => {
-	const loginBtn = document.getElementById("login-btn");
-	const userMenu = document.getElementById("user-menu");
-
-	if (user) {
-		user.reload().catch(() => {}).then(() => {
-			loginBtn.style.display = "none";
-			userMenu.style.display = "block";
-
-			// Populate avatar and dropdown with user info
-			const name = user.displayName || user.email.split("@")[0];
-			const initial = name.charAt(0).toUpperCase();
-			document.getElementById("user-avatar").textContent = initial;
-			document.getElementById("dropdown-avatar").textContent = initial;
-			document.getElementById("dropdown-name").textContent = name;
-			document.getElementById("dropdown-email").textContent = user.email;
-		});
-	} else {
-		loginBtn.style.display = "inline-block";
-		userMenu.style.display = "none";
-	}
-});
 
 /* ═══════════════════════════════════════════════
    SPLASH SCREEN
    ═══════════════════════════════════════════════ */
-
-function initSplashScreen() {
-	const splash = document.getElementById('splash-screen');
-	if (!splash) return;
-
-	document.body.classList.add('splash-active');
-
-	// Hide splash after the loader bar finishes (~2.0s total)
-	setTimeout(() => {
-		splash.classList.add('hidden');
-		document.body.classList.remove('splash-active');
-
-		// Remove from DOM after fade-out completes
-		setTimeout(() => splash.remove(), 600);
-	}, 2100);
+function initSplash() {
+  const splash = document.getElementById('splash-screen');
+  if (!splash) return;
+  document.body.classList.add('splash-active');
+  setTimeout(() => {
+    splash.classList.add('hidden');
+    document.body.classList.remove('splash-active');
+    setTimeout(() => splash.remove(), 600);
+  }, 2100);
 }
 
 /* ═══════════════════════════════════════════════
-   SCROLL PROGRESS BAR
+   HEADER SCROLL
    ═══════════════════════════════════════════════ */
+function initHeaderScroll() {
+  const header = document.querySelector('header');
+  if (!header) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        header.classList.toggle('scrolled', window.scrollY > 40);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+}
 
+/* ═══════════════════════════════════════════════
+   SCROLL PROGRESS
+   ═══════════════════════════════════════════════ */
 function initScrollProgress() {
-	const bar = document.getElementById('scroll-progress');
-	if (!bar) return;
-
-	let ticking = false;
-	window.addEventListener('scroll', () => {
-		if (!ticking) {
-			requestAnimationFrame(() => {
-				const scrollTop = window.scrollY;
-				const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-				const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-				bar.style.width = pct + '%';
-				ticking = false;
-			});
-			ticking = true;
-		}
-	});
+  const bar = document.getElementById('scroll-progress');
+  if (!bar) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const pct = document.documentElement.scrollHeight - window.innerHeight > 0
+          ? (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+          : 0;
+        bar.style.width = pct + '%';
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════
-   BACK TO TOP BUTTON
+   BACK TO TOP
    ═══════════════════════════════════════════════ */
-
 function initBackToTop() {
-	const btn = document.getElementById('back-to-top');
-	if (!btn) return;
-
-	let ticking = false;
-	window.addEventListener('scroll', () => {
-		if (!ticking) {
-			requestAnimationFrame(() => {
-				if (window.scrollY > 400) {
-					btn.classList.add('visible');
-				} else {
-					btn.classList.remove('visible');
-				}
-				ticking = false;
-			});
-			ticking = true;
-		}
-	});
-
-	btn.addEventListener('click', () => {
-		playClickSound();
-		window.scrollTo({ top: 0, behavior: 'smooth' });
-	});
+  const btn = document.getElementById('back-to-top');
+  if (!btn) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        btn.classList.toggle('visible', window.scrollY > 300);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
 /* ═══════════════════════════════════════════════
-   BUTTON RIPPLE EFFECT
+   MOBILE MENU
    ═══════════════════════════════════════════════ */
-
-function addRipple(e) {
-	playClickSound();
-	const btn = e.currentTarget;
-	const ripple = btn.querySelector('.btn-ripple');
-	if (!ripple) return;
-
-	const rect = btn.getBoundingClientRect();
-	const size = Math.max(rect.width, rect.height);
-	const x = e.clientX - rect.left - size / 2;
-	const y = e.clientY - rect.top - size / 2;
-
-	// Reset animation
-	ripple.style.animation = 'none';
-	ripple.offsetHeight; // force reflow
-	ripple.style.width = size + 'px';
-	ripple.style.height = size + 'px';
-	ripple.style.left = x + 'px';
-	ripple.style.top = y + 'px';
-	ripple.style.animation = '';
+function initMobileMenu() {
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  const close = document.getElementById('mobile-nav-close');
+  if (!toggle || !overlay) return;
+  toggle.addEventListener('click', () => {
+    overlay.classList.add('open');
+    toggle.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+    close?.focus();
+  });
+  close?.addEventListener('click', closeMobileMenu);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeMobileMenu(); });
 }
-
-function initRippleButtons() {
-	document.querySelectorAll('.constitution-btn').forEach(btn => {
-		btn.addEventListener('click', addRipple);
-	});
+function closeMobileMenu() {
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  if (overlay) overlay.classList.remove('open');
+  if (toggle) { toggle.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
 }
 
 /* ═══════════════════════════════════════════════
-   STAGGERED MEMBERS LIST ANIMATION
+   USER MENU DROPDOWN
    ═══════════════════════════════════════════════ */
-
-function animateMembersList() {
-	const list = document.querySelector('.members-list');
-	if (!list) return;
-
-	// Reset
-	list.classList.remove('animate-in');
-	const items = list.querySelectorAll('li');
-	items.forEach(item => {
-		item.style.animation = 'none';
-		item.style.opacity = '0';
-	});
-
-	// Trigger staggered animation after a short delay
-	requestAnimationFrame(() => {
-		list.classList.add('animate-in');
-		items.forEach((item, i) => {
-			item.style.animation = `memberSlideIn 0.4s ease ${i * 0.06}s forwards`;
-		});
-	});
-}
-
-/* ═══════════════════════════════════════════════
-   ESC KEY TO CLOSE MODALS
-   ═══════════════════════════════════════════════ */
-
-function initEscKey() {
-	document.addEventListener('keydown', (e) => {
-		if (e.key !== 'Escape') return;
-
-		// Close whichever modal is open, in priority order
-		const modals = [
-			'auth-modal',
-			'email-confirm-modal',
-			'password-setup-modal',
-			'reset-password-modal',
-			'change-password-modal'
-		];
-
-		for (const id of modals) {
-			const modal = document.getElementById(id);
-			if (modal && modal.style.display === 'flex') {
-				e.preventDefault();
-				// Call the corresponding close function
-				if (id === 'auth-modal') closeAuthModal();
-				else if (id === 'email-confirm-modal') closeEmailConfirmModal();
-				else if (id === 'password-setup-modal') closePasswordSetupModal();
-				else if (id === 'reset-password-modal') closeResetPasswordModal();
-				else if (id === 'change-password-modal') closeChangePasswordModal();
-				break;
-			}
-		}
-	});
-}
-
-/* ═══════════════════════════════════════════════
-   GLOW PULSE ON CONSTITUTION BUTTON
-   ═══════════════════════════════════════════════ */
-
-function initGlowPulse() {
-	const btn = document.querySelector('.constitution-btn');
-	if (btn) btn.classList.add('glow-pulse');
-}
-
-/* ═══════════════════════════════════════════════
-   SOUND TOGGLE INIT
-   ═══════════════════════════════════════════════ */
-
-
-/* ═══════════════════════════════════════════════
-   USER DROPDOWN — close on outside click
-   ═══════════════════════════════════════════════ */
-
 function initUserMenu() {
-	const menu = document.getElementById('user-menu');
-	const avatar = document.getElementById('user-avatar');
-	const dropdown = menu ? menu.querySelector('.user-dropdown') : null;
-	if (!menu || !avatar || !dropdown) return;
-
-	// Click on avatar toggles dropdown on mobile/touch
-	avatar.addEventListener('click', (e) => {
-		e.stopPropagation();
-		const isOpen = dropdown.style.opacity === '1';
-		if (isOpen) {
-			dropdown.style.opacity = '';
-			dropdown.style.visibility = '';
-			dropdown.style.transform = '';
-		} else {
-			dropdown.style.opacity = '1';
-			dropdown.style.visibility = 'visible';
-			dropdown.style.transform = 'translateY(0) scale(1)';
-		}
-	});
-
-	// Close when clicking outside
-	document.addEventListener('click', (e) => {
-		if (!menu.contains(e.target)) {
-			dropdown.style.opacity = '';
-			dropdown.style.visibility = '';
-			dropdown.style.transform = '';
-		}
-	});
-
-	// Close dropdown when any item inside is clicked
-	dropdown.querySelectorAll('.dropdown-item').forEach(item => {
-		item.addEventListener('click', () => {
-			dropdown.style.opacity = '';
-			dropdown.style.visibility = '';
-			dropdown.style.transform = '';
-		});
-	});
+  const avatar = document.getElementById('user-avatar');
+  const dropdown = document.querySelector('.user-dropdown');
+  if (!avatar || !dropdown) return;
+  avatar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = dropdown.classList.toggle('show');
+    avatar.setAttribute('aria-expanded', open);
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.user-menu')) {
+      dropdown.classList.remove('show');
+      avatar.setAttribute('aria-expanded', 'false');
+    }
+  });
+  dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      dropdown.classList.remove('show');
+      avatar.setAttribute('aria-expanded', 'false');
+    });
+  });
 }
+
+/* ═══════════════════════════════════════════════
+   CONSTITUTION PAGE FEATURES
+   ═══════════════════════════════════════════════ */
+function initConstitutionPage() {
+  initConstitutionSearch();
+  initConstitutionTOC();
+  initConstitutionProgress();
+  initCopyLinks();
+  initPrintBtn();
+  initTOCToggle();
+}
+
+function initConstitutionSearch() {
+  const input = document.getElementById('const-search');
+  const countEl = document.getElementById('search-count');
+  if (!input) return;
+  input.removeEventListener('input', input._handler);
+  input._handler = () => {
+    const q = input.value.trim().toLowerCase();
+    const sections = document.querySelectorAll('#const-body .const-section');
+    const clauses = document.querySelectorAll('#const-body .const-clause');
+    const texts = document.querySelectorAll('#const-body .const-text');
+    // Clear old highlights
+    texts.forEach(t => { t.querySelectorAll('.search-highlight').forEach(h => { h.replaceWith(h.textContent); }); });
+    clauses.forEach(c => c.classList.remove('search-hidden'));
+    sections.forEach(s => s.classList.remove('search-hidden'));
+    if (!q) { if (countEl) countEl.textContent = ''; return; }
+    let matches = 0;
+    sections.forEach(sec => {
+      let sectionHasMatch = false;
+      const textEls = sec.querySelectorAll('.const-text');
+      textEls.forEach(t => {
+        const raw = t.textContent;
+        if (raw.toLowerCase().includes(q)) {
+          const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          t.innerHTML = raw.replace(regex, '<span class="search-highlight">$1</span>');
+          sectionHasMatch = true;
+          matches += raw.toLowerCase().split(q).length - 1;
+        }
+      });
+      if (!sectionHasMatch) sec.classList.add('search-hidden');
+    });
+    if (countEl) countEl.textContent = matches > 0 ? `${matches} match${matches !== 1 ? 'es' : ''}` : 'No matches';
+  };
+  input.addEventListener('input', input._handler);
+}
+
+function initConstitutionTOC() {
+  const tocLinks = document.querySelectorAll('.toc-link');
+  const sections = document.querySelectorAll('#const-body .const-section');
+  if (!tocLinks.length || !sections.length) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+  sections.forEach(s => observer.observe(s));
+}
+
+function initConstitutionProgress() {
+  const bar = document.getElementById('const-progress-bar');
+  const body = document.getElementById('const-body');
+  if (!bar || !body) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (currentPage !== 'constitution') return;
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const rect = body.getBoundingClientRect();
+        const total = body.offsetHeight - window.innerHeight;
+        const scrolled = -rect.top;
+        const pct = total > 0 ? Math.min(Math.max(scrolled / total, 0), 1) * 100 : 0;
+        bar.style.width = pct + '%';
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+}
+
+function initCopyLinks() {
+  document.querySelectorAll('.copy-link-btn').forEach(btn => {
+    btn.onclick = () => {
+      const section = btn.dataset.section;
+      const url = `${window.location.origin}${window.location.pathname}#${section}`;
+      navigator.clipboard.writeText(url).then(() => {
+        btn.textContent = '✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '🔗'; btn.classList.remove('copied'); }, 1500);
+      });
+    };
+  });
+}
+
+function initPrintBtn() {
+  const btn = document.getElementById('const-print-btn');
+  if (btn) btn.addEventListener('click', () => window.print());
+}
+
+function initTOCToggle() {
+  const btn = document.getElementById('const-toc-toggle');
+  const toc = document.getElementById('const-toc');
+  if (btn && toc) {
+    btn.addEventListener('click', () => toc.classList.toggle('hidden'));
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   COUNCIL PAGE
+   ═══════════════════════════════════════════════ */
+let councilFilter = 'all';
+let councilSearch = '';
+
+function renderCouncil() {
+  renderCouncilCards();
+  initCouncilFilters();
+  initCouncilSearch();
+}
+
+function renderCouncilCards() {
+  const q = councilSearch.toLowerCase();
+  const filtered = MEMBERS.filter(m => {
+    if (councilFilter !== 'all' && m.role !== councilFilter) return false;
+    if (q && !m.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const archonCards = document.getElementById('archon-cards');
+  const councilCards = document.getElementById('council-cards');
+  const citizenCards = document.getElementById('citizen-cards');
+  const countEl = document.getElementById('council-citizen-count');
+  const emptyEl = document.getElementById('council-empty');
+  if (!archonCards || !councilCards || !citizenCards) return;
+
+  archonCards.innerHTML = '';
+  councilCards.innerHTML = '';
+  citizenCards.innerHTML = '';
+
+  filtered.forEach(m => {
+    const card = createMemberCard(m);
+    if (m.role === 'archon') archonCards.appendChild(card);
+    else if (m.role === 'council') councilCards.appendChild(card);
+    else citizenCards.appendChild(card);
+  });
+
+  const citizenCount = filtered.filter(m => m.role === 'citizen').length;
+  if (countEl) countEl.textContent = `(${citizenCount})`;
+  if (emptyEl) emptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
+
+  // Show/hide sections based on filter
+  const sections = document.querySelectorAll('.council-section');
+  sections[0].style.display = (councilFilter === 'all' || councilFilter === 'archon') ? '' : 'none';
+  sections[1].style.display = (councilFilter === 'all' || councilFilter === 'council') ? '' : 'none';
+  sections[2].style.display = (councilFilter === 'all' || councilFilter === 'citizen') ? '' : 'none';
+}
+
+function createMemberCard(m) {
+  const card = document.createElement('div');
+  card.className = 'member-card' + (m.role === 'archon' ? ' archon-card' : '');
+  const initial = m.name.charAt(0).toUpperCase();
+  card.innerHTML = `
+    <div class="member-avatar-lg">${initial}</div>
+    <div class="member-card-name">${escapeHtml(m.name)}</div>
+    <div class="member-card-role">${m.title || capitalize(m.role)}</div>
+    ${m.desc ? `<div class="member-card-desc">${escapeHtml(m.desc)}</div>` : ''}
+  `;
+  return card;
+}
+
+function initCouncilFilters() {
+  document.querySelectorAll('#council .filter-btn[data-role]').forEach(btn => {
+    btn.onclick = () => {
+      councilFilter = btn.dataset.role;
+      document.querySelectorAll('#council .filter-btn[data-role]').forEach(b => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-checked', b === btn);
+      });
+      renderCouncilCards();
+    };
+  });
+}
+
+function initCouncilSearch() {
+  const input = document.getElementById('member-search');
+  if (!input || input._bound) return;
+  input._bound = true;
+  input.addEventListener('input', () => {
+    councilSearch = input.value.trim();
+    renderCouncilCards();
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   UPDATES PAGE
+   ═══════════════════════════════════════════════ */
+let updatesFilter = 'all';
+
+function renderUpdates() {
+  renderUpdateTimeline();
+  initUpdateFilters();
+}
+
+function renderUpdateTimeline() {
+  const container = document.getElementById('updates-timeline');
+  const emptyEl = document.getElementById('updates-empty');
+  if (!container) return;
+
+  const filtered = UPDATES.filter(u => updatesFilter === 'all' || u.category === updatesFilter);
+  // Sort: pinned first, then by date
+  filtered.sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
+
+  container.innerHTML = filtered.map(u => `
+    <div class="update-item${u.pinned ? ' pinned' : ''}">
+      <div class="update-meta">
+        <span class="update-date">${escapeHtml(u.date)}</span>
+        <span class="update-category">${escapeHtml(u.category)}</span>
+        ${u.pinned ? '<span class="update-pin">Pinned</span>' : ''}
+      </div>
+      <h3 class="update-title">${escapeHtml(u.title)}</h3>
+      <p class="update-body">${escapeHtml(u.body)}</p>
+    </div>
+  `).join('');
+
+  if (emptyEl) emptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
+}
+
+function initUpdateFilters() {
+  document.querySelectorAll('#updates .filter-btn[data-filter]').forEach(btn => {
+    btn.onclick = () => {
+      updatesFilter = btn.dataset.filter;
+      document.querySelectorAll('#updates .filter-btn[data-filter]').forEach(b => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-checked', b === btn);
+      });
+      renderUpdateTimeline();
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   ACCOUNT PAGE
+   ═══════════════════════════════════════════════ */
+function renderAccount() {
+  const guest = document.getElementById('account-guest');
+  const logged = document.getElementById('account-logged');
+  if (!guest || !logged) return;
+  const user = auth.currentUser;
+  if (user) {
+    guest.style.display = 'none';
+    logged.style.display = 'block';
+    const name = user.displayName || user.email.split('@')[0];
+    const initial = name.charAt(0).toUpperCase();
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setEl('account-avatar', initial);
+    setEl('account-name', name);
+    setEl('account-email', user.email);
+    setEl('detail-name', name);
+    setEl('detail-email', user.email);
+    setEl('detail-verified', user.emailVerified ? 'Yes' : 'Not yet verified');
+    setEl('detail-since', user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : '—');
+    // Determine role
+    const member = MEMBERS.find(m => m.name.toLowerCase() === name.toLowerCase());
+    setEl('account-role', member ? (member.title || capitalize(member.role)) : 'Citizen');
+  } else {
+    guest.style.display = '';
+    logged.style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — Error mapping
+   ═══════════════════════════════════════════════ */
+const errorMap = {
+  'auth/invalid-credential': 'Invalid email or password. Please check your credentials.',
+  'auth/user-not-found': 'No account found with this email.',
+  'auth/wrong-password': 'Incorrect password. Please try again.',
+  'auth/email-already-in-use': 'This email is already registered. Try logging in instead.',
+  'auth/invalid-email': 'Please enter a valid email address.',
+  'auth/user-disabled': 'This account has been disabled.',
+  'auth/too-many-requests': 'Too many attempts. Please wait and try again.',
+  'auth/network-request-failed': 'Network error. Please check your connection.',
+  'auth/weak-password': 'Password is too weak. Please choose a stronger one.',
+  'auth/requires-recent-login': 'Please log out and log back in to perform this action.',
+  'auth/invalid-action-code': 'The verification link is invalid or has expired.',
+  'auth/expired-action-code': 'The verification link has expired. Please request a new one.',
+};
+function friendlyError(err) {
+  const msg = err?.message ? err.message.replace('Firebase: ', '') : '';
+  const match = msg.match(/\(([^)]+)\)/) || msg.match(/^([a-z/-]+)\b/);
+  const code = match ? match[1] : '';
+  return (code && errorMap[code]) || msg || 'Something went wrong. Please try again.';
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — Modals
+   ═══════════════════════════════════════════════ */
+let mode = 'login';
+let pendingSignupData = null;
+
+function resetSubmitBtn(btnId = 'auth-submit-btn', label = 'Login') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.querySelector('.btn-text').textContent = label;
+  btn.querySelector('.btn-spinner').style.display = 'none';
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+}
+
+function showBtnLoading(btnId, text) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.querySelector('.btn-text').textContent = text;
+  btn.querySelector('.btn-spinner').style.display = 'inline-block';
+  btn.style.opacity = '0.7';
+  btn.style.pointerEvents = 'none';
+}
+
+window.openAuthModal = function() {
+  mode = 'login';
+  const title = document.getElementById('auth-modal-title');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const username = document.getElementById('auth-username');
+  const password = document.getElementById('auth-password');
+  const toggleLabel = document.getElementById('auth-toggle-label');
+  const toggleLink = document.getElementById('auth-toggle-link');
+  const forgotLink = document.getElementById('forgot-password-link');
+  if (title) title.textContent = 'Login';
+  if (submitBtn) submitBtn.querySelector('.btn-text').textContent = 'Login';
+  if (username) username.style.display = 'none';
+  if (password) password.style.display = 'block';
+  if (toggleLabel) toggleLabel.textContent = "Don't have an account?";
+  if (toggleLink) toggleLink.textContent = 'Sign up';
+  if (forgotLink) forgotLink.style.display = 'inline-block';
+  document.getElementById('auth-error').textContent = '';
+  document.getElementById('auth-modal').style.display = 'flex';
+  document.getElementById('auth-email')?.focus();
+};
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = 'none';
+  // Clear errors
+  const err = modal?.querySelector('.auth-error');
+  if (err) err.textContent = '';
+}
+
+window.closeAuthModal = () => closeModal('auth-modal');
+window.closeEmailConfirmModal = () => { closeModal('email-confirm-modal'); pendingSignupData = null; };
+window.closePasswordSetupModal = () => closeModal('password-setup-modal');
+window.closeChangePasswordModal = () => closeModal('change-password-modal');
+window.closeResetPasswordModal = () => closeModal('reset-password-modal');
+
+window.toggleAuthMode = (e) => {
+  e.preventDefault();
+  mode = mode === 'login' ? 'signup' : 'login';
+  document.getElementById('auth-modal-title').textContent = mode === 'login' ? 'Login' : 'Sign Up';
+  document.getElementById('auth-submit-btn').querySelector('.btn-text').textContent = mode === 'login' ? 'Login' : 'Sign Up';
+  document.getElementById('auth-toggle-label').textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
+  document.getElementById('auth-toggle-link').textContent = mode === 'login' ? 'Sign up' : 'Login';
+  document.getElementById('auth-username').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('auth-password').style.display = mode === 'login' ? 'block' : 'none';
+  document.getElementById('auth-error').textContent = '';
+  const forgot = document.getElementById('forgot-password-link');
+  if (forgot) forgot.style.display = mode === 'login' ? 'inline-block' : 'none';
+};
+
+window.submitAuth = function() {
+  const username = document.getElementById('auth-username')?.value.trim();
+  const email = document.getElementById('auth-email')?.value.trim();
+  const password = document.getElementById('auth-password')?.value;
+  const errorBox = document.getElementById('auth-error');
+  errorBox.textContent = '';
+
+  if (mode === 'login') {
+    if (!email || !password) { errorBox.textContent = 'Please fill in both fields.'; return; }
+    showBtnLoading('auth-submit-btn', 'Logging in...');
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => { window.closeAuthModal(); })
+      .catch(err => { errorBox.textContent = friendlyError(err); resetSubmitBtn(); });
+  } else {
+    if (!username || !email) { errorBox.textContent = 'Please fill in username and email.'; return; }
+    pendingSignupData = { username, email };
+    window.closeAuthModal();
+    setTimeout(() => {
+      document.getElementById('confirm-email-display').innerHTML =
+        `<span class="confirm-label">Your email address</span><span class="confirm-email">${escapeHtml(email)}</span>`;
+      document.getElementById('confirm-error').textContent = '';
+      document.getElementById('email-confirm-modal').style.display = 'flex';
+    }, 300);
+  }
+};
+
+window.confirmEmailYes = function() {
+  const errorBox = document.getElementById('confirm-error');
+  const btn = document.getElementById('confirm-yes-btn');
+  errorBox.textContent = '';
+  if (!pendingSignupData) { errorBox.textContent = 'Session expired. Please try again.'; return; }
+  showBtnLoading('confirm-yes-btn', 'Sending link...');
+  const { email } = pendingSignupData;
+  const actionCodeSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
+  sendSignInLinkToEmail(auth, email, actionCodeSettings)
+    .then(() => {
+      localStorage.setItem('pendingEmailLinkSignup', JSON.stringify(pendingSignupData));
+      window.closeEmailConfirmModal();
+      // Show success in auth modal
+      document.getElementById('auth-modal').style.display = 'flex';
+      document.getElementById('auth-modal-title').textContent = 'Sign Up';
+      const errBox = document.getElementById('auth-error');
+      errBox.style.color = 'var(--success-color)';
+      errBox.innerHTML = 'Verification link sent! Check your inbox and click the link to finish.';
+      resetSubmitBtn();
+      pendingSignupData = null;
+    })
+    .catch(err => { errorBox.textContent = friendlyError(err); resetSubmitBtn('confirm-yes-btn', '✓ Yes, this is my email'); });
+};
+
+/* Password Strength */
+function calcStrength(password) {
+  let s = 0;
+  if (password.length >= 6) s++;
+  if (password.length >= 8) s++;
+  if (password.length >= 12) s++;
+  if (/[a-z]/.test(password)) s++;
+  if (/[A-Z]/.test(password)) s++;
+  if (/[0-9]/.test(password)) s++;
+  if (/[^a-zA-Z0-9]/.test(password)) s++;
+  return s;
+}
+function strengthFeedback(s) {
+  if (s <= 2) return { text: 'Weak', color: '#e05a5a' };
+  if (s <= 4) return { text: 'Fair', color: '#f0a500' };
+  if (s <= 5) return { text: 'Good', color: '#d4af37' };
+  return { text: 'Strong', color: '#4caf50' };
+}
+function updateStrengthBar(barId, textId, password) {
+  const bar = document.getElementById(barId);
+  const text = document.getElementById(textId);
+  if (!bar || !text) return;
+  if (!password) { bar.style.width = '0'; text.textContent = 'Password strength'; text.style.color = ''; return; }
+  const s = calcStrength(password);
+  const f = strengthFeedback(s);
+  bar.style.width = Math.min((s / 7) * 100, 100) + '%';
+  bar.style.background = f.color;
+  text.textContent = f.text;
+  text.style.color = f.color;
+}
+window.checkPasswordStrength = () => updateStrengthBar('new-strength-bar', 'new-strength-text', document.getElementById('new-password')?.value);
+window.checkChangePasswordStrength = () => updateStrengthBar('change-strength-bar', 'change-strength-text', document.getElementById('change-new-password')?.value);
+
+/* Password Setup */
+window.openPasswordSetupModal = () => { document.getElementById('password-setup-modal').style.display = 'flex'; };
+window.submitPasswordSetup = function() {
+  const newP = document.getElementById('new-password')?.value;
+  const confirmP = document.getElementById('confirm-password')?.value;
+  const errorBox = document.getElementById('setup-error');
+  errorBox.textContent = '';
+  if (!newP || !confirmP) { errorBox.textContent = 'Please fill in both fields.'; return; }
+  if (newP.length < 6) { errorBox.textContent = 'Password must be at least 6 characters.'; return; }
+  if (newP !== confirmP) { errorBox.textContent = 'Passwords do not match.'; return; }
+  if (!auth.currentUser) { errorBox.textContent = 'Session expired. Please sign up again.'; return; }
+  showBtnLoading('setup-submit-btn', 'Setting Password...');
+  updatePassword(auth.currentUser, newP)
+    .then(() => { window.closePasswordSetupModal(); })
+    .catch(err => { errorBox.textContent = friendlyError(err); resetSubmitBtn('setup-submit-btn', 'Create Account'); });
+};
+
+/* Change Password */
+window.openChangePasswordModal = function() {
+  ['change-old-password', 'change-new-password', 'change-confirm-password'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['change-password-error', 'change-password-success'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = '';
+  });
+  document.getElementById('change-strength-bar').style.width = '0';
+  document.getElementById('change-strength-text').textContent = 'Password strength';
+  document.getElementById('change-password-modal').style.display = 'flex';
+};
+window.openChangePasswordResetModal = function() {
+  document.getElementById('change-password-modal').style.display = 'none';
+  document.getElementById('reset-password-modal').style.display = 'flex';
+};
+window.submitChangePassword = function() {
+  const oldP = document.getElementById('change-old-password')?.value;
+  const newP = document.getElementById('change-new-password')?.value;
+  const confirmP = document.getElementById('change-confirm-password')?.value;
+  const errorBox = document.getElementById('change-password-error');
+  const successBox = document.getElementById('change-password-success');
+  errorBox.textContent = ''; successBox.textContent = '';
+  if (!oldP) { errorBox.textContent = 'Please enter your current password.'; return; }
+  if (!newP || !confirmP) { errorBox.textContent = 'Please fill in both new password fields.'; return; }
+  if (newP.length < 6) { errorBox.textContent = 'Password must be at least 6 characters.'; return; }
+  if (newP !== confirmP) { errorBox.textContent = 'Passwords do not match.'; return; }
+  const user = auth.currentUser;
+  if (!user) { errorBox.textContent = 'No user signed in.'; return; }
+  showBtnLoading('change-password-submit-btn', 'Verifying...');
+  const credential = EmailAuthProvider.credential(user.email, oldP);
+  reauthenticateWithCredential(user, credential)
+    .then(() => { showBtnLoading('change-password-submit-btn', 'Updating...'); return updatePassword(user, newP); })
+    .then(() => {
+      successBox.textContent = 'Password updated successfully!';
+      resetSubmitBtn('change-password-submit-btn', 'Update Password');
+      ['change-old-password', 'change-new-password', 'change-confirm-password'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+    })
+    .catch(err => { errorBox.textContent = friendlyError(err); resetSubmitBtn('change-password-submit-btn', 'Update Password'); });
+};
+
+/* Reset Password */
+window.openResetPasswordModal = function() {
+  document.getElementById('auth-modal').style.display = 'none';
+  document.getElementById('reset-email').value = '';
+  document.getElementById('reset-error').textContent = '';
+  document.getElementById('reset-success').textContent = '';
+  document.getElementById('reset-password-modal').style.display = 'flex';
+};
+window.submitResetPassword = function() {
+  const email = document.getElementById('reset-email')?.value.trim();
+  const errorBox = document.getElementById('reset-error');
+  const successBox = document.getElementById('reset-success');
+  errorBox.textContent = ''; successBox.textContent = '';
+  if (!email) { errorBox.textContent = 'Please enter your email address.'; return; }
+  showBtnLoading('reset-submit-btn', 'Sending...');
+  sendPasswordResetEmail(auth, email)
+    .then(() => { successBox.textContent = 'Password reset email sent! Check your inbox.'; resetSubmitBtn('reset-submit-btn', 'Send Reset Link'); })
+    .catch(err => { errorBox.textContent = friendlyError(err); resetSubmitBtn('reset-submit-btn', 'Send Reset Link'); });
+};
+
+window.logout = function() { signOut(auth); };
+
+/* ═══════════════════════════════════════════════
+   EMAIL LINK SIGN-IN COMPLETION
+   ═══════════════════════════════════════════════ */
+function completeEmailLinkSignIn() {
+  if (!isSignInWithEmailLink(auth, window.location.href)) return;
+  const pending = JSON.parse(localStorage.getItem('pendingEmailLinkSignup') || 'null');
+  let email = pending?.email;
+  if (!email) { email = window.prompt('Please confirm your email to finish signing up:'); }
+  if (!email) return;
+  signInWithEmailLink(auth, email, window.location.href)
+    .then((cred) => {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      const username = pending?.email === email ? pending?.username : (window.prompt('Choose a username:') || email.split('@')[0]);
+      return updateProfile(cred.user, { displayName: username }).then(() => username);
+    })
+    .then((username) => {
+      localStorage.removeItem('pendingEmailLinkSignup');
+      openPasswordSetupModal();
+    })
+    .catch(err => { console.error('Email link sign-in failed:', err); localStorage.removeItem('pendingEmailLinkSignup'); });
+}
+completeEmailLinkSignIn();
+
+/* ═══════════════════════════════════════════════
+   AUTH STATE
+   ═══════════════════════════════════════════════ */
+onAuthStateChanged(auth, (user) => {
+  const loginBtn = document.getElementById('login-btn');
+  const userMenu = document.getElementById('user-menu');
+  if (user) {
+    user.reload().catch(() => {}).then(() => {
+      if (loginBtn) loginBtn.style.display = 'none';
+      if (userMenu) userMenu.style.display = 'block';
+      const name = user.displayName || user.email.split('@')[0];
+      const initial = name.charAt(0).toUpperCase();
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('user-avatar', initial);
+      set('dropdown-avatar', initial);
+      set('dropdown-name', name);
+      set('dropdown-email', user.email);
+      // Update account page if visible
+      if (currentPage === 'account') renderAccount();
+    });
+  } else {
+    if (loginBtn) loginBtn.style.display = 'inline-block';
+    if (userMenu) userMenu.style.display = 'none';
+    if (currentPage === 'account') renderAccount();
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   ESC KEY CLOSES MODALS
+   ═══════════════════════════════════════════════ */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  // Close mobile menu first
+  const overlay = document.getElementById('mobile-nav-overlay');
+  if (overlay?.classList.contains('open')) { closeMobileMenu(); return; }
+  // Close modals
+  const modals = ['auth-modal', 'email-confirm-modal', 'password-setup-modal', 'reset-password-modal', 'change-password-modal'];
+  for (const id of modals) {
+    const m = document.getElementById(id);
+    if (m && m.style.display === 'flex') {
+      e.preventDefault();
+      closeModal(id);
+      if (id === 'email-confirm-modal') pendingSignupData = null;
+      break;
+    }
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════ */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// Footer year
+const yearEl = document.getElementById('footer-year');
+if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+/* ═══════════════════════════════════════════════
+   NAV LINK CLICKS
+   ═══════════════════════════════════════════════ */
+document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigateTo(link.dataset.page);
+  });
+});
+// Hero buttons
+document.querySelectorAll('.hero-btn[data-page]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigateTo(btn.dataset.page);
+  });
+});
 
 /* ═══════════════════════════════════════════════
    INIT
-   ═══════════════════════════════════════════════ */	document.addEventListener('DOMContentLoaded', () => {
-	initSplashScreen();
-	createParticles();
-	initUserMenu();
-	initHeaderScroll();
-	initScrollReveals();
-	initScrollProgress();
-	initBackToTop();
-	initRippleButtons();
-	initEscKey();
-	initGlowPulse();
-
-	// Animate members list after splash screen finishes
-	setTimeout(() => animateMembersList(), 2300);
+   ═══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initSplash();
+  createParticles();
+  initHeaderScroll();
+  initScrollProgress();
+  initBackToTop();
+  initMobileMenu();
+  initUserMenu();
+  handleHash();
 });
