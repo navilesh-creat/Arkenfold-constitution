@@ -997,7 +997,6 @@ completeEmailLinkSignIn();
 onAuthStateChanged(auth, (user) => {
 	const loginBtn = document.getElementById("login-btn");
 	const userMenu = document.getElementById("user-menu");
-	const membersSection = document.getElementById("members-only");
 
 	if (user) {
 		user.reload().catch(() => {}).then(() => {
@@ -1011,13 +1010,10 @@ onAuthStateChanged(auth, (user) => {
 			document.getElementById("dropdown-avatar").textContent = initial;
 			document.getElementById("dropdown-name").textContent = name;
 			document.getElementById("dropdown-email").textContent = user.email;
-
-			if (membersSection) membersSection.style.display = "block";
 		});
 	} else {
 		loginBtn.style.display = "inline-block";
 		userMenu.style.display = "none";
-		if (membersSection) membersSection.style.display = "none";
 	}
 });
 

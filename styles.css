@@ -480,7 +480,6 @@ header.scrolled {
 	transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	opacity: 0.7;
 	z-index: 10;
-	animation: textReveal 0.8s ease-out 1.2s both;
 }
 
 .designer-credit:hover {
@@ -499,14 +498,6 @@ header.scrolled {
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 	font-size: 1.1em;
-}
-
-/* #members-only reuses .designer-credit's pill styling but needs its
-   own position, since both can be visible at the same time (logged-in
-   users see both the members banner and the "Designed by" credit) and
-   .designer-credit is absolutely positioned dead-center at the bottom. */
-#members-only .designer-credit {
-	bottom: 80px;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1572,7 +1563,6 @@ footer {
 	.constitution-text { padding: 35px 25px; border-radius: 14px; }
 	.leadership-container { padding: 35px 25px; border-radius: 16px; }
 	.designer-credit { bottom: 20px; font-size: 0.75em; padding: 10px 18px; }
-	#members-only .designer-credit { bottom: 65px; }
 	.constitution-btn { padding: 18px 35px; font-size: 1.1em; }
 	.auth-modal-box { padding: 35px 25px; }
 	.header-content { padding: 0 20px; }
