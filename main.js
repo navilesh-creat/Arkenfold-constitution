@@ -909,15 +909,10 @@ function initCursorTrail() {
   });
 
   function animate() {
-    mainX += (mouseX - mainX) * 0.2;
-    mainY += (mouseY - mainY) * 0.2;
-    ringX += (mouseX - ringX) * 0.1;
-    ringY += (mouseY - ringY) * 0.1;
-
-    mainDot.style.left = mainX + 'px';
-    mainDot.style.top = mainY + 'px';
-    ring.style.left = ringX + 'px';
-    ring.style.top = ringY + 'px';
+    mainDot.style.left = mouseX + 'px';
+    mainDot.style.top = mouseY + 'px';
+    ring.style.left = mouseX + 'px';
+    ring.style.top = mouseY + 'px';
 
     requestAnimationFrame(animate);
   }
