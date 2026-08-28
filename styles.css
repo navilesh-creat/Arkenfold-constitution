@@ -31,16 +31,16 @@
 	--bg-header: rgba(245, 242, 235, 0.88);
 	--bg-header-scrolled: rgba(245, 242, 235, 0.95);
 	--bg-input: rgba(235, 231, 222, 0.9);
-	--text-gold: #9a7b1a;
-	--text-gold-light: #b8960b;
-	--text-gold-dark: #7a6215;
-	--text-secondary: #6b5c3a;
-	--text-body: #4a3f2a;
-	--text-list: #5a4e35;
-	--text-white: #2a2418;
-	--border-gold: rgba(154, 123, 26, 0.2);
-	--border-gold-hover: rgba(154, 123, 26, 0.4);
-	--shadow-color: rgba(0, 0, 0, 0.12);
+	--text-gold: #6b5210;
+	--text-gold-light: #8a6e0e;
+	--text-gold-dark: #5a450d;
+	--text-secondary: #4a3d28;
+	--text-body: #322a1a;
+	--text-list: #3d3320;
+	--text-white: #1a150d;
+	--border-gold: rgba(107, 82, 16, 0.25);
+	--border-gold-hover: rgba(107, 82, 16, 0.45);
+	--shadow-color: rgba(0, 0, 0, 0.15);
 }
 
 /* ── Reset & Base ── */
