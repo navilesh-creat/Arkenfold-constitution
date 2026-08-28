@@ -11,6 +11,7 @@
 	<link rel="preconnect" href="https://securetoken.googleapis.com">
 	<link rel="icon" type="image/png" href="./favicon.png">
 	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+	<link rel="preload" href="styles.css" as="style">
 	<link rel="stylesheet" href="styles.css">
 	<title>Dominion of Arkenfold | Official Constitution</title>
 
@@ -35,8 +36,6 @@
 <meta name="twitter:description" content="Official Constitution of the Dominion of Arkenfold.">
 <meta name="twitter:image" content="https://navilesh-creat.github.io/Arkenfold-constitution/favicon.png">
 
-<link rel="icon" href="favicon.ico">
-
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -48,6 +47,19 @@
 </script>
 </head>
 <body>
+	<!-- Splash Screen -->
+	<div id="splash-screen">
+		<div class="splash-emblem">✦</div>
+		<div class="splash-title">ARKENFOLD</div>
+		<div class="splash-subtitle">Dominion of Arkenfold</div>
+		<div class="splash-loader">
+			<div class="splash-loader-bar"></div>
+		</div>
+	</div>
+
+	<!-- Scroll Progress Bar -->
+	<div id="scroll-progress"></div>
+
 	<!-- Floating Particles -->
 	<div id="particles"></div>
 
@@ -55,6 +67,7 @@
 		<div class="header-content">
 			<div class="logo">ARKENFOLD</div>
 			<div id="auth-area">
+				<button id="sound-toggle" onclick="toggleSound()" title="Mute sounds"></button>
 				<button id="login-btn" onclick="openAuthModal()">Login / Sign Up</button>
 				<span id="user-greeting" style="display:none;"></span>
 				<button id="logout-btn" onclick="logout()" style="display:none;">Logout</button>
@@ -185,14 +198,17 @@
 			<li>7youngstunna7</li>
 		</ul>
 
-		<button class="constitution-btn reveal" onclick="showConstitution()">The Constitution of the Arkenfold</button>
+		<button class="constitution-btn reveal" onclick="showConstitution()">
+			<span class="btn-ripple"></span>
+			<span class="btn-label">The Constitution of the Arkenfold</span>
+		</button>
 
 		<div id="members-only" style="display:none;">
 			<div class="designer-credit">✦ Welcome back, citizen. This section is visible only to logged-in members. ✦</div>
 		</div>
 
 		<div class="designer-credit">
-			✦ Designed and Developed by <span>_navi_49</span> ✦
+			✦ Designed and Developed by <span>Navi</span> ✦
 		</div>
 	</section>
 
@@ -262,6 +278,9 @@
 			</div>
 		</div>
 	</section>
+
+	<!-- Back to Top Button -->
+	<button id="back-to-top" title="Back to top">↑</button>
 
 	<footer>
 		<p>&copy; Dominion of Arkenfold. Eternal Command.</p>

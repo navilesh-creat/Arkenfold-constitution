@@ -30,6 +30,156 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 let mode = "login"; // or "signup"
+
+/* ═══════════════════════════════════════════════
+   SOUND ENGINE (Web Audio API)
+   Generates subtle, themed sound effects —
+   no external audio files needed.
+   ═══════════════════════════════════════════════ */
+
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('arkenfold-sound') !== 'off';
+
+function getAudioCtx() {
+	if (!audioCtx) {
+		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+	}
+	// Resume if suspended (browser autoplay policy)
+	if (audioCtx.state === 'suspended') audioCtx.resume();
+	return audioCtx;
+}
+
+/** Short, crisp "ting" for button clicks */
+function playClickSound() {
+	if (!soundEnabled) return;
+	try {
+		const ctx = getAudioCtx();
+		const now = ctx.currentTime;
+
+		const osc = ctx.createOscillator();
+		const gain = ctx.createGain();
+
+		osc.type = 'sine';
+		osc.frequency.setValueAtTime(880, now);
+		osc.frequency.exponentialRampToValueAtTime(1320, now + 0.05);
+
+		gain.gain.setValueAtTime(0.15, now);
+		gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+		osc.connect(gain);
+		gain.connect(ctx.destination);
+		osc.start(now);
+		osc.stop(now + 0.12);
+	} catch (e) { /* silent fail */ }
+}
+
+/** Soft "whoosh" sweep for page transitions */
+function playTransitionSound() {
+	if (!soundEnabled) return;
+	try {
+		const ctx = getAudioCtx();
+		const now = ctx.currentTime;
+
+		// Filtered noise for whoosh
+		const bufferSize = ctx.sampleRate * 0.35;
+		const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+		const data = buffer.getChannelData(0);
+		for (let i = 0; i < bufferSize; i++) {
+			data[i] = (Math.random() * 2 - 1) * 0.5;
+		}
+
+		const noise = ctx.createBufferSource();
+		noise.buffer = buffer;
+
+		const filter = ctx.createBiquadFilter();
+		filter.type = 'bandpass';
+		filter.frequency.setValueAtTime(200, now);
+		filter.frequency.exponentialRampToValueAtTime(2000, now + 0.15);
+		filter.frequency.exponentialRampToValueAtTime(300, now + 0.35);
+		filter.Q.value = 1.5;
+
+		const gain = ctx.createGain();
+		gain.gain.setValueAtTime(0, now);
+		gain.gain.linearRampToValueAtTime(0.08, now + 0.05);
+		gain.gain.linearRampToValueAtTime(0, now + 0.35);
+
+		noise.connect(filter);
+		filter.connect(gain);
+		gain.connect(ctx.destination);
+		noise.start(now);
+		noise.stop(now + 0.35);
+
+		// Add a soft chime overlay
+		const osc = ctx.createOscillator();
+		const oscGain = ctx.createGain();
+		osc.type = 'sine';
+		osc.frequency.setValueAtTime(523, now); // C5
+		osc.frequency.setValueAtTime(659, now + 0.1); // E5
+		oscGain.gain.setValueAtTime(0, now);
+		oscGain.gain.linearRampToValueAtTime(0.06, now + 0.08);
+		oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+		osc.connect(oscGain);
+		oscGain.connect(ctx.destination);
+		osc.start(now);
+		osc.stop(now + 0.3);
+	} catch (e) { /* silent fail */ }
+}
+
+/** Two-note ascending chime for success moments */
+function playSuccessSound() {
+	if (!soundEnabled) return;
+	try {
+		const ctx = getAudioCtx();
+		const now = ctx.currentTime;
+
+		[523, 784].forEach((freq, i) => {
+			const osc = ctx.createOscillator();
+			const gain = ctx.createGain();
+			osc.type = 'sine';
+			osc.frequency.value = freq;
+			gain.gain.setValueAtTime(0, now + i * 0.12);
+			gain.gain.linearRampToValueAtTime(0.1, now + i * 0.12 + 0.02);
+			gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.25);
+			osc.connect(gain);
+			gain.connect(ctx.destination);
+			osc.start(now + i * 0.12);
+			osc.stop(now + i * 0.12 + 0.25);
+		});
+	} catch (e) { /* silent fail */ }
+}
+
+/** Soft low thud for modal open */
+function playModalOpenSound() {
+	if (!soundEnabled) return;
+	try {
+		const ctx = getAudioCtx();
+		const now = ctx.currentTime;
+
+		const osc = ctx.createOscillator();
+		const gain = ctx.createGain();
+		osc.type = 'sine';
+		osc.frequency.setValueAtTime(180, now);
+		osc.frequency.exponentialRampToValueAtTime(120, now + 0.1);
+		gain.gain.setValueAtTime(0.1, now);
+		gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+		osc.connect(gain);
+		gain.connect(ctx.destination);
+		osc.start(now);
+		osc.stop(now + 0.15);
+	} catch (e) { /* silent fail */ }
+}
+
+/** Toggle sound on/off and persist preference */
+window.toggleSound = function () {
+	soundEnabled = !soundEnabled;
+	localStorage.setItem('arkenfold-sound', soundEnabled ? 'on' : 'off');
+	const btn = document.getElementById('sound-toggle');
+	if (btn) {
+		btn.textContent = soundEnabled ? '🔊' : '🔇';
+		btn.title = soundEnabled ? 'Mute sounds' : 'Unmute sounds';
+	}
+	if (soundEnabled) playClickSound();
+};
 let pendingSignupData = null; // temporarily holds {username, email} before confirmation
 
 /* ═══════════════════════════════════════════════
@@ -37,16 +187,16 @@ let pendingSignupData = null; // temporarily holds {username, email} before conf
    ═══════════════════════════════════════════════ */
 
 window.showConstitution = function () {
+	playTransitionSound();
 	const home = document.getElementById('home');
 	const constitution = document.getElementById('constitution');
 
-	home.style.opacity = '0';
-	home.style.transform = 'translateY(-20px)';
+	// Apply exit animation
+	home.style.animation = 'pageSlideOut 0.4s ease forwards';
 
 	setTimeout(() => {
 		home.classList.remove('active');
-		home.style.opacity = '';
-		home.style.transform = '';
+		home.style.animation = '';
 
 		constitution.classList.add('active');
 		window.scrollTo({ top: 0, behavior: 'instant' });
@@ -59,23 +209,23 @@ window.showConstitution = function () {
 };
 
 window.showHome = function () {
+	playTransitionSound();
 	const home = document.getElementById('home');
 	const constitution = document.getElementById('constitution');
 	const constContent = document.getElementById('const-content');
 
 	constContent.classList.remove('active');
-	constitution.style.opacity = '0';
-	constitution.style.transform = 'translateY(20px)';
+	constitution.style.animation = 'pageSlideOut 0.4s ease forwards';
 
 	setTimeout(() => {
 		constitution.classList.remove('active');
-		constitution.style.opacity = '';
-		constitution.style.transform = '';
+		constitution.style.animation = '';
 
 		home.classList.add('active');
 		window.scrollTo({ top: 0, behavior: 'instant' });
 
 		animateHomeElements();
+		animateMembersList();
 	}, 400);
 };
 
@@ -206,6 +356,45 @@ window.checkPasswordStrength = function () {
 };
 
 /* ═══════════════════════════════════════════════
+   FRIENDLY ERROR MAPPING
+   Converts raw Firebase errors into themed,
+   human-readable messages.
+   ═══════════════════════════════════════════════ */
+
+const errorMap = {
+	'auth/invalid-credential':          'Invalid email or password. Please check your credentials.',
+	'auth/user-not-found':              'No account found with this email.',
+	'auth/wrong-password':              'Incorrect password. Please try again.',
+	'auth/email-already-in-use':        'This email is already registered. Try logging in instead.',
+	'auth/invalid-email':               'Please enter a valid email address.',
+	'auth/user-disabled':               'This account has been disabled.',
+	'auth/too-many-requests':           'Too many attempts. Please wait a moment and try again.',
+	'auth/network-request-failed':      'Network error. Please check your connection.',
+	'auth/popup-closed-by-user':        'Popup was closed. Please try again.',
+	'auth/operation-not-allowed':       'This sign-in method is not enabled.',
+	'auth/weak-password':               'Password is too weak. Please choose a stronger one.',
+	'auth/requires-recent-login':       'Please log out and log back in to perform this action.',
+	'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+	'auth/credential-already-in-use':   'This credential is already associated with another account.',
+	'auth/invalid-action-code':         'The verification link is invalid or has expired.',
+	'auth/expired-action-code':         'The verification link has expired. Please request a new one.',
+	'auth/email-already-verified':      'This email is already verified.',
+};
+
+function friendlyError(err) {
+	const msg = (err && err.message) ? err.message.replace('Firebase: ', '') : '';
+
+	// Try to extract the code from the standard Firebase format:
+	// "auth/invalid-credential. (auth/invalid-credential)."
+	const match = msg.match(/\(([^)]+)\)/) || msg.match(/^([a-z/-]+)\b/);
+	const code = match ? match[1] : '';
+
+	if (code && errorMap[code]) return errorMap[code];
+	if (msg) return msg;
+	return 'Something went wrong. Please try again.';
+}
+
+/* ═══════════════════════════════════════════════
    UTILITY
    ═══════════════════════════════════════════════ */
 
@@ -225,6 +414,7 @@ function resetSubmitBtn() {
    ═══════════════════════════════════════════════ */
 
 window.openAuthModal = function () {
+	playModalOpenSound();
 	// Always reset to login mode
 	mode = "login";
 	document.getElementById("auth-modal-title").textContent = "Login";
@@ -249,7 +439,6 @@ window.closeAuthModal = function () {
 		modal.style.display = "none";
 		box.style.animation = '';
 		document.getElementById("auth-error").textContent = "";
-		document.getElementById("auth-error").style.color = "#e05a5a";
 		document.getElementById("auth-username").value = "";
 		document.getElementById("auth-email").value = "";
 	}, 250);
@@ -345,7 +534,7 @@ window.confirmEmailYes = function () {
 			pendingSignupData = null;
 		})
 		.catch((err) => {
-			errorBox.textContent = err.message.replace('Firebase: ', '');
+			errorBox.textContent = friendlyError(err);
 			btnText.textContent = '✓ Yes, this is my email';
 			btnSpinner.style.display = 'none';
 			submitBtn.style.opacity = '1';
@@ -376,6 +565,7 @@ window.toggleAuthMode = function (e) {
    ═══════════════════════════════════════════════ */
 
 window.openResetPasswordModal = function () {
+	playModalOpenSound();
 	document.getElementById("auth-modal").style.display = "none";
 	document.getElementById("reset-password-modal").style.display = "flex";
 };
@@ -424,7 +614,7 @@ window.submitResetPassword = function () {
 			submitBtn.style.pointerEvents = "auto";
 		})
 		.catch((err) => {
-			errorBox.textContent = err.message.replace("Firebase: ", "");
+			errorBox.textContent = friendlyError(err);
 			btnText.textContent = "Send Reset Link";
 			btnSpinner.style.display = "none";
 			submitBtn.style.opacity = "1";
@@ -462,7 +652,6 @@ window.submitAuth = function () {
 	const btnSpinner = submitBtn.querySelector(".btn-spinner");
 
 	errorBox.textContent = "";
-	errorBox.style.color = "#e05a5a";
 
 	if (mode === "login") {
 		// ── LOGIN ──
@@ -477,11 +666,12 @@ window.submitAuth = function () {
 		submitBtn.style.pointerEvents = "none";
 
 		signInWithEmailAndPassword(auth, email, password)
-			.then(() => {
-				window.closeAuthModal();
-			})
+		.then(() => {
+			playSuccessSound();
+			window.closeAuthModal();
+		})
 			.catch((err) => {
-				errorBox.textContent = err.message.replace("Firebase: ", "");
+				errorBox.textContent = friendlyError(err);
 				resetSubmitBtn();
 			});
 	} else {
@@ -505,6 +695,7 @@ window.submitAuth = function () {
    ═══════════════════════════════════════════════ */
 
 window.openPasswordSetupModal = function () {
+	playModalOpenSound();
 	document.getElementById("password-setup-modal").style.display = "flex";
 };
 
@@ -562,11 +753,12 @@ window.submitPasswordSetup = function () {
 
 	updatePassword(auth.currentUser, newPassword)
 		.then(() => {
+			playSuccessSound();
 			closePasswordSetupModal();
 			// User is now signed in with their real password
 		})
 		.catch((err) => {
-			errorBox.textContent = err.message.replace("Firebase: ", "");
+			errorBox.textContent = friendlyError(err);
 			btnText.textContent = "Set Password";
 			btnSpinner.style.display = "none";
 			submitBtn.style.opacity = "1";
@@ -697,12 +889,198 @@ onAuthStateChanged(auth, (user) => {
 });
 
 /* ═══════════════════════════════════════════════
-   INIT
+   SPLASH SCREEN
    ═══════════════════════════════════════════════ */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initSplashScreen() {
+	const splash = document.getElementById('splash-screen');
+	if (!splash) return;
+
+	document.body.classList.add('splash-active');
+
+	// Hide splash after the loader bar finishes (~2.0s total)
+	setTimeout(() => {
+		splash.classList.add('hidden');
+		document.body.classList.remove('splash-active');
+
+		// Remove from DOM after fade-out completes
+		setTimeout(() => splash.remove(), 600);
+	}, 2100);
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLL PROGRESS BAR
+   ═══════════════════════════════════════════════ */
+
+function initScrollProgress() {
+	const bar = document.getElementById('scroll-progress');
+	if (!bar) return;
+
+	let ticking = false;
+	window.addEventListener('scroll', () => {
+		if (!ticking) {
+			requestAnimationFrame(() => {
+				const scrollTop = window.scrollY;
+				const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+				const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+				bar.style.width = pct + '%';
+				ticking = false;
+			});
+			ticking = true;
+		}
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   BACK TO TOP BUTTON
+   ═══════════════════════════════════════════════ */
+
+function initBackToTop() {
+	const btn = document.getElementById('back-to-top');
+	if (!btn) return;
+
+	let ticking = false;
+	window.addEventListener('scroll', () => {
+		if (!ticking) {
+			requestAnimationFrame(() => {
+				if (window.scrollY > 400) {
+					btn.classList.add('visible');
+				} else {
+					btn.classList.remove('visible');
+				}
+				ticking = false;
+			});
+			ticking = true;
+		}
+	});
+
+	btn.addEventListener('click', () => {
+		playClickSound();
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTON RIPPLE EFFECT
+   ═══════════════════════════════════════════════ */
+
+function addRipple(e) {
+	playClickSound();
+	const btn = e.currentTarget;
+	const ripple = btn.querySelector('.btn-ripple');
+	if (!ripple) return;
+
+	const rect = btn.getBoundingClientRect();
+	const size = Math.max(rect.width, rect.height);
+	const x = e.clientX - rect.left - size / 2;
+	const y = e.clientY - rect.top - size / 2;
+
+	// Reset animation
+	ripple.style.animation = 'none';
+	ripple.offsetHeight; // force reflow
+	ripple.style.width = size + 'px';
+	ripple.style.height = size + 'px';
+	ripple.style.left = x + 'px';
+	ripple.style.top = y + 'px';
+	ripple.style.animation = '';
+}
+
+function initRippleButtons() {
+	document.querySelectorAll('.constitution-btn').forEach(btn => {
+		btn.addEventListener('click', addRipple);
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   STAGGERED MEMBERS LIST ANIMATION
+   ═══════════════════════════════════════════════ */
+
+function animateMembersList() {
+	const list = document.querySelector('.members-list');
+	if (!list) return;
+
+	// Reset
+	list.classList.remove('animate-in');
+	const items = list.querySelectorAll('li');
+	items.forEach(item => {
+		item.style.animation = 'none';
+		item.style.opacity = '0';
+	});
+
+	// Trigger staggered animation after a short delay
+	requestAnimationFrame(() => {
+		list.classList.add('animate-in');
+		items.forEach((item, i) => {
+			item.style.animation = `memberSlideIn 0.4s ease ${i * 0.06}s forwards`;
+		});
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   ESC KEY TO CLOSE MODALS
+   ═══════════════════════════════════════════════ */
+
+function initEscKey() {
+	document.addEventListener('keydown', (e) => {
+		if (e.key !== 'Escape') return;
+
+		// Close whichever modal is open, in priority order
+		const modals = [
+			'auth-modal',
+			'email-confirm-modal',
+			'password-setup-modal',
+			'reset-password-modal'
+		];
+
+		for (const id of modals) {
+			const modal = document.getElementById(id);
+			if (modal && modal.style.display === 'flex') {
+				e.preventDefault();
+				// Call the corresponding close function
+				if (id === 'auth-modal') closeAuthModal();
+				else if (id === 'email-confirm-modal') closeEmailConfirmModal();
+				else if (id === 'password-setup-modal') closePasswordSetupModal();
+				else if (id === 'reset-password-modal') closeResetPasswordModal();
+				break;
+			}
+		}
+	});
+}
+
+/* ═══════════════════════════════════════════════
+   GLOW PULSE ON CONSTITUTION BUTTON
+   ═══════════════════════════════════════════════ */
+
+function initGlowPulse() {
+	const btn = document.querySelector('.constitution-btn');
+	if (btn) btn.classList.add('glow-pulse');
+}
+
+/* ═══════════════════════════════════════════════
+   SOUND TOGGLE INIT
+   ═══════════════════════════════════════════════ */
+
+function initSoundToggle() {
+	const btn = document.getElementById('sound-toggle');
+	if (!btn) return;
+	btn.textContent = soundEnabled ? '🔊' : '🔇';
+	btn.title = soundEnabled ? 'Mute sounds' : 'Unmute sounds';
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */	document.addEventListener('DOMContentLoaded', () => {
+	initSplashScreen();
 	createParticles();
+	initSoundToggle();
 	initHeaderScroll();
 	initScrollReveals();
-	animateHomeElements();
+	initScrollProgress();
+	initBackToTop();
+	initRippleButtons();
+	initEscKey();
+	initGlowPulse();
+
+	// Animate members list after splash screen finishes
+	setTimeout(() => animateMembersList(), 2300);
 });
