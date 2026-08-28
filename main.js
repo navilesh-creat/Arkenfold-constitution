@@ -766,6 +766,147 @@ window.submitPasswordSetup = function () {
 		});
 };
 
+/* ═══════════════════════════════════════════════
+   CHANGE PASSWORD MODAL
+   Allows logged-in users to update their password.
+   ═══════════════════════════════════════════════ */
+
+window.openChangePasswordModal = function () {
+	playModalOpenSound();
+	playClickSound();
+	// Pre-fill email for convenience
+	document.getElementById('change-new-password').value = '';
+	document.getElementById('change-confirm-password').value = '';
+	document.getElementById('change-password-error').textContent = '';
+	document.getElementById('change-password-success').textContent = '';
+	document.getElementById('change-strength-bar').style.width = '0';
+	document.getElementById('change-strength-text').textContent = 'Password strength';
+	document.getElementById('change-strength-text').style.color = '';
+	document.getElementById('change-password-modal').style.display = 'flex';
+};
+
+window.closeChangePasswordModal = function () {
+	const modal = document.getElementById('change-password-modal');
+	const box = modal.querySelector('.auth-modal-box');
+	box.style.animation = 'modalBoxOut 0.25s ease forwards';
+	setTimeout(() => {
+		modal.style.display = 'none';
+		box.style.animation = '';
+	}, 250);
+};
+
+window.checkChangePasswordStrength = function () {
+	const password = document.getElementById('change-new-password').value;
+	const bar = document.getElementById('change-strength-bar');
+	const text = document.getElementById('change-strength-text');
+
+	if (!password) {
+		bar.style.width = '0';
+		bar.style.background = '';
+		text.textContent = 'Password strength';
+		text.style.color = '';
+		return;
+	}
+
+	let strength = 0;
+	if (password.length >= 6) strength++;
+	if (password.length >= 8) strength++;
+	if (password.length >= 12) strength++;
+	if (/[a-z]/.test(password)) strength++;
+	if (/[A-Z]/.test(password)) strength++;
+	if (/[0-9]/.test(password)) strength++;
+	if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+	let feedback = '', color = '';
+	if (strength <= 2) { feedback = 'Weak'; color = '#e05a5a'; }
+	else if (strength <= 4) { feedback = 'Fair'; color = '#f0a500'; }
+	else if (strength <= 5) { feedback = 'Good'; color = '#d4af37'; }
+	else { feedback = 'Strong'; color = '#4caf50'; }
+
+	bar.style.width = Math.min((strength / 7) * 100, 100) + '%';
+	bar.style.background = color;
+	text.textContent = feedback;
+	text.style.color = color;
+};
+
+window.submitChangePassword = function () {
+	const newPass = document.getElementById('change-new-password').value;
+	const confirmPass = document.getElementById('change-confirm-password').value;
+	const errorBox = document.getElementById('change-password-error');
+	const successBox = document.getElementById('change-password-success');
+	const submitBtn = document.getElementById('change-password-submit-btn');
+	const btnText = submitBtn.querySelector('.btn-text');
+	const btnSpinner = submitBtn.querySelector('.btn-spinner');
+
+	errorBox.textContent = '';
+	successBox.textContent = '';
+
+	if (!newPass || !confirmPass) {
+		errorBox.textContent = 'Please fill in both fields.';
+		return;
+	}
+
+	if (newPass.length < 6) {
+		errorBox.textContent = 'Password must be at least 6 characters.';
+		return;
+	}
+
+	if (newPass !== confirmPass) {
+		errorBox.textContent = 'Passwords do not match.';
+		return;
+	}
+
+	const user = auth.currentUser;
+	if (!user) {
+		errorBox.textContent = 'No user signed in.';
+		return;
+	}
+
+	btnText.textContent = 'Updating...';
+	btnSpinner.style.display = 'inline-block';
+	submitBtn.style.opacity = '0.7';
+	submitBtn.style.pointerEvents = 'none';
+
+	updatePassword(user, newPass)
+		.then(() => {
+			playSuccessSound();
+			successBox.textContent = 'Password updated successfully!';
+			btnText.textContent = 'Update Password';
+			btnSpinner.style.display = 'none';
+			submitBtn.style.opacity = '1';
+			submitBtn.style.pointerEvents = 'auto';
+			document.getElementById('change-new-password').value = '';
+			document.getElementById('change-confirm-password').value = '';
+		})
+		.catch((err) => {
+			const msg = friendlyError(err);
+			// If requires recent login, fall back to reset email
+			if (err.code === 'auth/requires-recent-login') {
+				sendPasswordResetEmail(auth, user.email)
+					.then(() => {
+						successBox.textContent = 'A password reset link has been sent to your email. Please check your inbox.';
+						btnText.textContent = 'Update Password';
+						btnSpinner.style.display = 'none';
+						submitBtn.style.opacity = '1';
+						submitBtn.style.pointerEvents = 'auto';
+				})
+					.catch((resetErr) => {
+						errorBox.textContent = friendlyError(resetErr);
+						btnText.textContent = 'Update Password';
+						btnSpinner.style.display = 'none';
+						submitBtn.style.opacity = '1';
+						submitBtn.style.pointerEvents = 'auto';
+					});
+			} else {
+				errorBox.textContent = msg;
+				btnText.textContent = 'Update Password';
+				btnSpinner.style.display = 'none';
+				submitBtn.style.opacity = '1';
+				submitBtn.style.pointerEvents = 'auto';
+			}
+		});
+};
+
 window.logout = function () {
 	signOut(auth);
 };
@@ -864,26 +1005,27 @@ completeEmailLinkSignIn();
 
 onAuthStateChanged(auth, (user) => {
 	const loginBtn = document.getElementById("login-btn");
-	const logoutBtn = document.getElementById("logout-btn");
-	const greeting = document.getElementById("user-greeting");
+	const userMenu = document.getElementById("user-menu");
 	const membersSection = document.getElementById("members-only");
 
 	if (user) {
-		// Refresh the user's profile from Firebase's servers before reading
-		// displayName. The cached User object can be stale right after
-		// sign-in, which previously caused the greeting to fall back to
-		// the email prefix even though the username was saved correctly.
 		user.reload().catch(() => {}).then(() => {
 			loginBtn.style.display = "none";
-			logoutBtn.style.display = "inline-block";
-			greeting.style.display = "inline-block";
-			greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
+			userMenu.style.display = "block";
+
+			// Populate avatar and dropdown with user info
+			const name = user.displayName || user.email.split("@")[0];
+			const initial = name.charAt(0).toUpperCase();
+			document.getElementById("user-avatar").textContent = initial;
+			document.getElementById("dropdown-avatar").textContent = initial;
+			document.getElementById("dropdown-name").textContent = name;
+			document.getElementById("dropdown-email").textContent = user.email;
+
 			if (membersSection) membersSection.style.display = "block";
 		});
 	} else {
 		loginBtn.style.display = "inline-block";
-		logoutBtn.style.display = "none";
-		greeting.style.display = "none";
+		userMenu.style.display = "none";
 		if (membersSection) membersSection.style.display = "none";
 	}
 });
@@ -1029,7 +1171,8 @@ function initEscKey() {
 			'auth-modal',
 			'email-confirm-modal',
 			'password-setup-modal',
-			'reset-password-modal'
+			'reset-password-modal',
+			'change-password-modal'
 		];
 
 		for (const id of modals) {
@@ -1041,6 +1184,7 @@ function initEscKey() {
 				else if (id === 'email-confirm-modal') closeEmailConfirmModal();
 				else if (id === 'password-setup-modal') closePasswordSetupModal();
 				else if (id === 'reset-password-modal') closeResetPasswordModal();
+				else if (id === 'change-password-modal') closeChangePasswordModal();
 				break;
 			}
 		}
@@ -1068,11 +1212,56 @@ function initSoundToggle() {
 }
 
 /* ═══════════════════════════════════════════════
+   USER DROPDOWN — close on outside click
+   ═══════════════════════════════════════════════ */
+
+function initUserMenu() {
+	const menu = document.getElementById('user-menu');
+	const avatar = document.getElementById('user-avatar');
+	const dropdown = menu ? menu.querySelector('.user-dropdown') : null;
+	if (!menu || !avatar || !dropdown) return;
+
+	// Click on avatar toggles dropdown on mobile/touch
+	avatar.addEventListener('click', (e) => {
+		e.stopPropagation();
+		const isOpen = dropdown.style.opacity === '1';
+		if (isOpen) {
+			dropdown.style.opacity = '';
+			dropdown.style.visibility = '';
+			dropdown.style.transform = '';
+		} else {
+			dropdown.style.opacity = '1';
+			dropdown.style.visibility = 'visible';
+			dropdown.style.transform = 'translateY(0) scale(1)';
+		}
+	});
+
+	// Close when clicking outside
+	document.addEventListener('click', (e) => {
+		if (!menu.contains(e.target)) {
+			dropdown.style.opacity = '';
+			dropdown.style.visibility = '';
+			dropdown.style.transform = '';
+		}
+	});
+
+	// Close dropdown when any item inside is clicked
+	dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+		item.addEventListener('click', () => {
+			dropdown.style.opacity = '';
+			dropdown.style.visibility = '';
+			dropdown.style.transform = '';
+		});
+	});
+}
+
+/* ═══════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════ */	document.addEventListener('DOMContentLoaded', () => {
 	initSplashScreen();
 	createParticles();
 	initSoundToggle();
+	initUserMenu();
 	initHeaderScroll();
 	initScrollReveals();
 	initScrollProgress();
