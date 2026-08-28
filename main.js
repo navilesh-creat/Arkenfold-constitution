@@ -423,7 +423,7 @@ function renderCouncilCards() {
 function createMemberCard(m) {
   const card = document.createElement('div');
   card.className = 'member-card' + (m.role === 'archon' ? ' archon-card' : '');
-  const initial = m.name.charAt(0).toUpperCase();
+  const initial = getInitial(m.name);
   card.innerHTML = `
     <div class="member-avatar-lg">${initial}</div>
     <div class="member-card-name">${escapeHtml(m.name)}</div>
@@ -519,7 +519,7 @@ function renderAccount() {
     guest.style.display = 'none';
     logged.style.display = 'block';
     const name = user.displayName || user.email.split('@')[0];
-    const initial = name.charAt(0).toUpperCase();
+    const initial = getInitial(name);
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     setEl('account-avatar', initial);
     setEl('account-name', name);
@@ -833,7 +833,7 @@ onAuthStateChanged(auth, (user) => {
       if (loginBtn) loginBtn.style.display = 'none';
       if (userMenu) userMenu.style.display = 'block';
       const name = user.displayName || user.email.split('@')[0];
-      const initial = name.charAt(0).toUpperCase();
+      const initial = getInitial(name);
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       set('user-avatar', initial);
       set('dropdown-avatar', initial);
@@ -871,52 +871,250 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ═══════════════════════════════════════════════
-   MEMBERS LIST STAGGER ANIMATION
-   ═══════════════════════════════════════════════ */
-function animateMembersList() {
-  const list = document.querySelector('.members-list');
-  if (!list) return;
-  const items = list.querySelectorAll('li');
-  items.forEach((item, i) => {
-    item.style.opacity = '0';
-    item.style.transform = 'translateX(-20px)';
-    setTimeout(() => {
-      item.style.transition = 'all 0.4s ease';
-      item.style.opacity = '1';
-      item.style.transform = 'translateX(0)';
-    }, 2300 + i * 60);
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   CURSOR TRAIL PARTICLES
+   CURSOR TRAIL — PREMIUM SYSTEM
    ═══════════════════════════════════════════════ */
 function initCursorTrail() {
-  if (window.matchMedia('(pointer: coarse)').matches) return; // skip touch devices
-  let lastX = 0, lastY = 0, throttled = false;
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.body.classList.add('has-custom-cursor');
+
+  // Create main cursor dot and ring
+  const mainDot = document.createElement('div');
+  mainDot.className = 'cursor-main';
+  document.body.appendChild(mainDot);
+
+  const ring = document.createElement('div');
+  ring.className = 'cursor-ring';
+  document.body.appendChild(ring);
+
+  // Create trail canvas for ribbon effect
+  const canvas = document.createElement('canvas');
+  canvas.id = 'trail-canvas';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // State
+  let mouseX = 0, mouseY = 0;
+  let mainX = 0, mainY = 0;
+  let ringX = 0, ringY = 0;
+  let speed = 0;
+  let lastMouseX = 0, lastMouseY = 0;
+  let isHovering = false;
+  let trailPoints = [];
+  let particlePool = [];
+  const MAX_PARTICLES = 50;
+  const MAX_TRAIL_POINTS = 20;
+  const TRAIL_COLORS = [
+    [212, 175, 55],
+    [245, 230, 163],
+    [184, 134, 11],
+    [240, 220, 140],
+    [200, 170, 60]
+  ];
+
+  // Track mouse
   document.addEventListener('mousemove', (e) => {
-    if (throttled) return;
-    throttled = true;
-    requestAnimationFrame(() => {
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 8) {
-        createTrailDot(e.clientX, e.clientY);
-        lastX = e.clientX;
-        lastY = e.clientY;
-      }
-      throttled = false;
-    });
+    mouseX = e.clientX;
+    mouseY = e.clientY;
   });
-}
-function createTrailDot(x, y) {
-  const dot = document.createElement('div');
-  dot.className = 'cursor-trail';
-  dot.style.left = x + 'px';
-  dot.style.top = y + 'px';
-  document.body.appendChild(dot);
-  setTimeout(() => dot.remove(), 600);
+
+  // Detect hoverable elements
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('a, button, .constitution-btn, .nav-link, .member-card, .announcement-card, .stat-card, input')) {
+      isHovering = true;
+      mainDot.classList.add('hovering');
+      ring.classList.add('hovering');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest('a, button, .constitution-btn, .nav-link, .member-card, .announcement-card, .stat-card, input')) {
+      isHovering = false;
+      mainDot.classList.remove('hovering');
+      ring.classList.remove('hovering');
+    }
+  });
+
+  // Spawn trail particle
+  function spawnParticle(x, y, spd) {
+    if (particlePool.length >= MAX_PARTICLES) return;
+    const el = document.createElement('div');
+    el.className = 'trail-particle';
+
+    // Pick variant based on speed
+    const variants = ['type-a', 'type-b', 'type-c'];
+    if (spd > 12) variants.push('firefly', 'sparkle');
+    if (spd > 20) variants.push('sparkle', 'sparkle');
+    if (spd < 4) variants.push('dust', 'dust');
+    const variant = variants[Math.floor(Math.random() * variants.length)];
+    el.classList.add(variant);
+
+    // Size based on speed and randomness
+    const baseSize = 3 + Math.random() * 5;
+    const size = spd > 15 ? baseSize * 1.4 : baseSize;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+
+    // Slight position offset for organic feel
+    const offsetX = (Math.random() - 0.5) * 10;
+    const offsetY = (Math.random() - 0.5) * 10;
+    el.style.left = (x + offsetX) + 'px';
+    el.style.top = (y + offsetY) + 'px';
+
+    // Random upward drift
+    const driftX = (Math.random() - 0.5) * 30;
+    const driftY = -(Math.random() * 40 + 10);
+    const duration = 600 + Math.random() * 500;
+    const rotation = (Math.random() - 0.5) * 180;
+
+    document.body.appendChild(el);
+
+    const particle = {
+      el, startTime: performance.now(),
+      duration, x: x + offsetX, y: y + offsetY,
+      driftX, driftY, rotation, size
+    };
+    particlePool.push(particle);
+
+    // Animate with WAAPI for smoothness
+    el.animate([
+      { opacity: 1, transform: `translate(-50%, -50%) scale(1) rotate(0deg)`, offset: 0 },
+      { opacity: 0.8, transform: `translate(calc(-50% + ${driftX * 0.3}px), calc(-50% + ${driftY * 0.3}px)) scale(0.8) rotate(${rotation * 0.3}deg)`, offset: 0.3 },
+      { opacity: 0, transform: `translate(calc(-50% + ${driftX}px), calc(-50% + ${driftY}px)) scale(0) rotate(${rotation}deg)`, offset: 1 }
+    ], {
+      duration, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+      fill: 'forwards'
+    }).onfinish = () => {
+      el.remove();
+      const idx = particlePool.indexOf(particle);
+      if (idx > -1) particlePool.splice(idx, 1);
+    };
+  }
+
+  // Draw ribbon on canvas
+  function drawRibbon() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (trailPoints.length < 2) return;
+
+    // Draw glow layer
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 1; i < trailPoints.length; i++) {
+      const p = trailPoints[i];
+      const prev = trailPoints[i - 1];
+      const alpha = (i / trailPoints.length) * 0.3 * (p.life || 1);
+      const width = (i / trailPoints.length) * 4 * (p.life || 1);
+
+      ctx.beginPath();
+      ctx.moveTo(prev.x, prev.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = `rgba(212, 175, 55, ${alpha})`;
+      ctx.lineWidth = width + 4;
+      ctx.lineCap = 'round';
+      ctx.filter = 'blur(4px)';
+      ctx.stroke();
+      ctx.filter = 'none';
+    }
+    ctx.restore();
+
+    // Draw core line
+    ctx.beginPath();
+    ctx.moveTo(trailPoints[0].x, trailPoints[0].y);
+    for (let i = 1; i < trailPoints.length; i++) {
+      const p = trailPoints[i];
+      const prev = trailPoints[i - 1];
+      const alpha = (i / trailPoints.length) * 0.5 * (p.life || 1);
+      const width = (i / trailPoints.length) * 2.5 * (p.life || 1);
+
+      ctx.strokeStyle = `rgba(245, 230, 163, ${alpha})`;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(prev.x, prev.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+  }
+
+  // Main animation loop
+  let frameCount = 0;
+  function animate() {
+    frameCount++;
+
+    // Smooth follow with lerp
+    const mainLerp = 0.18;
+    const ringLerp = 0.1;
+    mainX += (mouseX - mainX) * mainLerp;
+    mainY += (mouseY - mainY) * mainLerp;
+    ringX += (mouseX - ringX) * ringLerp;
+    ringY += (mouseY - ringY) * ringLerp;
+
+    // Calculate speed
+    const dx = mouseX - lastMouseX;
+    const dy = mouseY - lastMouseY;
+    speed = Math.sqrt(dx * dx + dy * dy);
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+
+    // Update main dot
+    mainDot.style.left = mainX + 'px';
+    mainDot.style.top = mainY + 'px';
+
+    // Update ring
+    ring.style.left = ringX + 'px';
+    ring.style.top = ringY + 'px';
+
+    // Add trail points
+    if (speed > 2) {
+      trailPoints.push({ x: mouseX, y: mouseY, life: 1, birth: performance.now() });
+      if (trailPoints.length > MAX_TRAIL_POINTS) trailPoints.shift();
+    }
+
+    // Fade trail points
+    const now = performance.now();
+    trailPoints = trailPoints.filter(p => {
+      p.life -= 0.04;
+      return p.life > 0;
+    });
+
+    // Draw ribbon
+    drawRibbon();
+
+    // Spawn particles based on speed
+    if (speed > 3 && frameCount % 2 === 0) {
+      const count = speed > 18 ? 3 : speed > 10 ? 2 : 1;
+      for (let i = 0; i < count; i++) {
+        spawnParticle(mouseX, mouseY, speed);
+      }
+    }
+
+    // Occasional ambient sparkle even when still
+    if (frameCount % 60 === 0 && speed < 3) {
+      const el = document.createElement('div');
+      el.className = 'trail-particle sparkle';
+      el.style.left = (mainX + (Math.random() - 0.5) * 30) + 'px';
+      el.style.top = (mainY + (Math.random() - 0.5) * 30) + 'px';
+      document.body.appendChild(el);
+      el.animate([
+        { opacity: 0, transform: 'translate(-50%, -50%) scale(0) rotate(0deg)' },
+        { opacity: 0.7, transform: 'translate(-50%, -50%) scale(1.5) rotate(90deg)', offset: 0.4 },
+        { opacity: 0, transform: 'translate(-50%, -50%) scale(0) rotate(180deg)' }
+      ], {
+        duration: 800, easing: 'ease-out', fill: 'forwards'
+      }).onfinish = () => el.remove();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
 }
 
 /* ═══════════════════════════════════════════════
@@ -967,7 +1165,7 @@ function initMagneticButtons() {
    ═══════════════════════════════════════════════ */
 function initScrollReveals() {
   // Add reveal classes to elements
-  document.querySelectorAll('.leadership-container, .members-list, .constitution-btn').forEach(el => {
+  document.querySelectorAll('.leadership-container, .constitution-btn').forEach(el => {
     el.classList.add('reveal-up');
   });
   document.querySelectorAll('.announcement-card').forEach((el, i) => {
@@ -1174,6 +1372,12 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function getInitial(name) {
+  for (let i = 0; i < name.length; i++) {
+    if (/[a-zA-Z]/.test(name[i])) return name[i].toUpperCase();
+  }
+  return '?';
+}
 
 // Footer year
 const yearEl = document.getElementById('footer-year');
@@ -1202,7 +1406,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initUserMenu();
   handleHash();
-  animateMembersList();
+
   // Animation systems
   initCursorTrail();
   initClickBurst();
