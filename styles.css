@@ -68,11 +68,11 @@ body {
   min-height: 100vh;
   transition: background 0.4s, color 0.4s;
 }
-body.has-custom-cursor { cursor: none; }
+body.has-custom-cursor { cursor: auto; }
 body.has-custom-cursor a,
 body.has-custom-cursor button,
 body.has-custom-cursor input,
-body.has-custom-cursor [role="button"] { cursor: none; }
+body.has-custom-cursor [role="button"] { cursor: auto; }
 body.splash-active { overflow: hidden; }
 a { color: var(--link-color); text-decoration: none; transition: color 0.3s; }
 a:hover { color: var(--text-gold-light); }

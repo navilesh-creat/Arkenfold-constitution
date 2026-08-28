@@ -876,16 +876,6 @@ document.addEventListener('keydown', (e) => {
 function initCursorTrail() {
   if (window.matchMedia('(pointer: coarse)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  document.body.classList.add('has-custom-cursor');
-
-  // Create main cursor dot and ring
-  const mainDot = document.createElement('div');
-  mainDot.className = 'cursor-main';
-  document.body.appendChild(mainDot);
-
-  const ring = document.createElement('div');
-  ring.className = 'cursor-ring';
-  document.body.appendChild(ring);
 
   // Create trail canvas for ribbon effect
   const canvas = document.createElement('canvas');
@@ -902,8 +892,6 @@ function initCursorTrail() {
 
   // State
   let mouseX = 0, mouseY = 0;
-  let mainX = 0, mainY = 0;
-  let ringX = 0, ringY = 0;
   let speed = 0;
   let lastMouseX = 0, lastMouseY = 0;
   let isHovering = false;
@@ -929,15 +917,11 @@ function initCursorTrail() {
   document.addEventListener('mouseover', (e) => {
     if (e.target.closest('a, button, .constitution-btn, .nav-link, .member-card, .announcement-card, .stat-card, input')) {
       isHovering = true;
-      mainDot.classList.add('hovering');
-      ring.classList.add('hovering');
     }
   });
   document.addEventListener('mouseout', (e) => {
     if (e.target.closest('a, button, .constitution-btn, .nav-link, .member-card, .announcement-card, .stat-card, input')) {
       isHovering = false;
-      mainDot.classList.remove('hovering');
-      ring.classList.remove('hovering');
     }
   });
 
@@ -1048,28 +1032,12 @@ function initCursorTrail() {
   function animate() {
     frameCount++;
 
-    // Smooth follow with lerp
-    const mainLerp = 0.18;
-    const ringLerp = 0.1;
-    mainX += (mouseX - mainX) * mainLerp;
-    mainY += (mouseY - mainY) * mainLerp;
-    ringX += (mouseX - ringX) * ringLerp;
-    ringY += (mouseY - ringY) * ringLerp;
-
     // Calculate speed
     const dx = mouseX - lastMouseX;
     const dy = mouseY - lastMouseY;
     speed = Math.sqrt(dx * dx + dy * dy);
     lastMouseX = mouseX;
     lastMouseY = mouseY;
-
-    // Update main dot
-    mainDot.style.left = mainX + 'px';
-    mainDot.style.top = mainY + 'px';
-
-    // Update ring
-    ring.style.left = ringX + 'px';
-    ring.style.top = ringY + 'px';
 
     // Add trail points
     if (speed > 2) {
@@ -1099,8 +1067,8 @@ function initCursorTrail() {
     if (frameCount % 60 === 0 && speed < 3) {
       const el = document.createElement('div');
       el.className = 'trail-particle sparkle';
-      el.style.left = (mainX + (Math.random() - 0.5) * 30) + 'px';
-      el.style.top = (mainY + (Math.random() - 0.5) * 30) + 'px';
+      el.style.left = (mouseX + (Math.random() - 0.5) * 30) + 'px';
+      el.style.top = (mouseY + (Math.random() - 0.5) * 30) + 'px';
       document.body.appendChild(el);
       el.animate([
         { opacity: 0, transform: 'translate(-50%, -50%) scale(0) rotate(0deg)' },
