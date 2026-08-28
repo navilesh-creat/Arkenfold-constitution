@@ -68,11 +68,7 @@ body {
   min-height: 100vh;
   transition: background 0.4s, color 0.4s;
 }
-body.has-custom-cursor { cursor: auto; }
-body.has-custom-cursor a,
-body.has-custom-cursor button,
-body.has-custom-cursor input,
-body.has-custom-cursor [role="button"] { cursor: auto; }
+
 body.splash-active { overflow: hidden; }
 a { color: var(--link-color); text-decoration: none; transition: color 0.3s; }
 a:hover { color: var(--text-gold-light); }
@@ -1060,114 +1056,53 @@ footer {
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(107, 82, 16, 0.2); }
 
 /* ══════════════════════════════════════════════
-   CURSOR TRAIL — PREMIUM
+   CUSTOM CURSOR — THEME MATCHED
    ══════════════════════════════════════════════ */
 
-/* Main cursor follower dot */
+body.has-custom-cursor { cursor: none; }
+body.has-custom-cursor a,
+body.has-custom-cursor button,
+body.has-custom-cursor input,
+body.has-custom-cursor [role="button"] { cursor: none; }
+
+/* Main cursor dot */
 .cursor-main {
   position: fixed; pointer-events: none; z-index: 9999;
-  width: 12px; height: 12px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.9), rgba(212, 175, 55, 0.3) 60%, transparent 100%);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.5), 0 0 30px rgba(212, 175, 55, 0.2), 0 0 60px rgba(212, 175, 55, 0.08);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-gold);
+  box-shadow: 0 0 6px var(--text-gold);
   transform: translate(-50%, -50%);
-  transition: width 0.3s, height 0.3s, box-shadow 0.3s;
-  mix-blend-mode: screen;
+  transition: width 0.25s ease, height 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+[data-theme="light"] .cursor-main {
+  background: var(--text-gold);
+  box-shadow: 0 0 4px var(--text-gold);
 }
 .cursor-main.hovering {
-  width: 22px; height: 22px;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.7), 0 0 50px rgba(212, 175, 55, 0.3), 0 0 80px rgba(212, 175, 55, 0.12);
+  width: 16px; height: 16px;
+  background: var(--text-gold-light);
+  box-shadow: 0 0 14px var(--text-gold), 0 0 28px var(--text-gold-dark);
 }
 
-/* Outer glow ring */
+/* Outer ring */
 .cursor-ring {
   position: fixed; pointer-events: none; z-index: 9998;
-  width: 36px; height: 36px; border-radius: 50%;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1.5px solid var(--text-gold);
+  opacity: 0.35;
   transform: translate(-50%, -50%);
-  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              border-color 0.3s;
+  transition: width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 0.25s, opacity 0.25s;
+}
+[data-theme="light"] .cursor-ring {
+  border-color: var(--text-gold);
+  opacity: 0.3;
 }
 .cursor-ring.hovering {
-  width: 52px; height: 52px;
-  border-color: rgba(212, 175, 55, 0.4);
-}
-
-/* Trail particle — core */
-.trail-particle {
-  position: fixed; pointer-events: none; z-index: 9997;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-.trail-particle.type-a {
-  background: radial-gradient(circle, rgba(245, 230, 163, 0.9), rgba(212, 175, 55, 0.4) 50%, transparent 100%);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6), 0 0 20px rgba(212, 175, 55, 0.2);
-}
-.trail-particle.type-b {
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.7), rgba(184, 134, 11, 0.3) 50%, transparent 100%);
-  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
-}
-.trail-particle.type-c {
-  background: radial-gradient(circle, rgba(245, 230, 163, 0.5), transparent 70%);
-  box-shadow: 0 0 10px rgba(245, 230, 163, 0.3);
-}
-
-/* Trail particle — firefly variant */
-.trail-particle.firefly {
-  background: radial-gradient(circle, rgba(245, 230, 163, 1), rgba(212, 175, 55, 0.6) 40%, transparent 100%);
-  box-shadow: 0 0 12px rgba(245, 230, 163, 0.8), 0 0 30px rgba(212, 175, 55, 0.4), 0 0 60px rgba(212, 175, 55, 0.15);
-  animation: fireflyGlow 1.5s ease-in-out infinite alternate;
-}
-@keyframes fireflyGlow {
-  0% { box-shadow: 0 0 8px rgba(245, 230, 163, 0.6), 0 0 20px rgba(212, 175, 55, 0.3); transform: translate(-50%, -50%) scale(1); }
-  100% { box-shadow: 0 0 16px rgba(245, 230, 163, 1), 0 0 40px rgba(212, 175, 55, 0.5), 0 0 70px rgba(212, 175, 55, 0.15); transform: translate(-50%, -50%) scale(1.3); }
-}
-
-/* Trail particle — sparkle variant */
-.trail-particle.sparkle {
-  background: none;
-  width: 4px !important; height: 4px !important;
-  box-shadow: none;
-}
-.trail-particle.sparkle::before,
-.trail-particle.sparkle::after {
-  content: '';
-  position: absolute; top: 50%; left: 50%;
-  background: rgba(245, 230, 163, 0.9);
-}
-.trail-particle.sparkle::before {
-  width: 100%; height: 1px; transform: translate(-50%, -50%);
-  box-shadow: 0 0 4px rgba(245, 230, 163, 0.8);
-}
-.trail-particle.sparkle::after {
-  width: 1px; height: 100%; transform: translate(-50%, -50%);
-  box-shadow: 0 0 4px rgba(245, 230, 163, 0.8);
-}
-
-/* Trail particle — dust variant */
-.trail-particle.dust {
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.4), transparent 70%);
-  box-shadow: none;
-  filter: blur(1px);
-}
-
-/* Canvas trail ribbon */
-#trail-canvas {
-  position: fixed; inset: 0; pointer-events: none; z-index: 9996;
-}
-
-/* ══════════════════════════════════════════════
-   CLICK BURST PARTICLES
-   ══════════════════════════════════════════════ */
-.click-burst {
-  position: fixed; pointer-events: none; z-index: 9998;
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--text-gold);
-  animation: burstOut 0.5s ease-out forwards;
-}
-@keyframes burstOut {
-  0% { opacity: 1; transform: translate(0, 0) scale(1); }
-  100% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(0); }
+  width: 48px; height: 48px;
+  border-color: var(--text-gold-light);
+  opacity: 0.55;
 }
 
 /* ══════════════════════════════════════════════
@@ -1207,20 +1142,6 @@ footer {
   93% { clip-path: inset(0 0 100% 0); transform: translate(0); }
   94% { clip-path: inset(70% 0 5% 0); transform: translate(1px, -2px); }
   95%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
-}
-
-/* ══════════════════════════════════════════════
-   SCAN LINE OVERLAY
-   ══════════════════════════════════════════════ */
-.scan-lines {
-  position: fixed; inset: 0; pointer-events: none; z-index: -1;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(212, 175, 55, 0.008) 2px,
-    rgba(212, 175, 55, 0.008) 4px
-  );
 }
 
 /* ══════════════════════════════════════════════
