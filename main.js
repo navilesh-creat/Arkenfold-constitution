@@ -174,7 +174,9 @@ window.checkPasswordStrength = function () {
 
 	if (!password) {
 		strengthBar.style.width = "0";
-		strengthText.textContent = "";
+		strengthBar.style.background = "";
+		strengthText.textContent = "Password strength";
+		strengthText.style.color = "";
 		return;
 	}
 
@@ -612,10 +614,21 @@ function completeEmailLinkSignIn() {
 				|| window.prompt('Choose a username:')
 				|| email.split('@')[0];
 
-			return updateProfile(cred.user, { displayName: username });
+			return updateProfile(cred.user, { displayName: username }).then(() => username);
 		})
-		.then(() => {
+		.then((username) => {
 			localStorage.removeItem('pendingEmailLinkSignup');
+
+			// onAuthStateChanged fires the moment signInWithEmailLink()
+			// resolves — before this updateProfile() call above has a
+			// chance to finish — so it can't be relied on to show the
+			// right name here. Set the greeting directly instead.
+			const greeting = document.getElementById("user-greeting");
+			if (greeting) {
+				greeting.style.display = "inline-block";
+				greeting.textContent = "Welcome, " + username;
+			}
+
 			setTimeout(() => openPasswordSetupModal(), 500);
 		})
 		.catch((err) => {
