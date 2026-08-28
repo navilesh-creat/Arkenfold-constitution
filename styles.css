@@ -502,6 +502,14 @@ header.scrolled {
 	font-size: 1.1em;
 }
 
+/* #members-only reuses .designer-credit's pill styling but needs its
+   own position, since both can be visible at the same time (logged-in
+   users see both the members banner and the "Designed by" credit) and
+   .designer-credit is absolutely positioned dead-center at the bottom. */
+#members-only .designer-credit {
+	bottom: 95px;
+}
+
 /* ═══════════════════════════════════════════════════════
    CONSTITUTION PAGE
    ═══════════════════════════════════════════════════════ */
@@ -1132,6 +1140,7 @@ footer {
 	.constitution-text { padding: 35px 25px; border-radius: 14px; }
 	.leadership-container { padding: 35px 25px; border-radius: 16px; }
 	.designer-credit { bottom: 20px; font-size: 0.75em; padding: 10px 18px; }
+	#members-only .designer-credit { bottom: 75px; }
 	.constitution-btn { padding: 18px 35px; font-size: 1.1em; }
 	.auth-modal-box { padding: 35px 25px; }
 	.header-content { padding: 0 20px; }
