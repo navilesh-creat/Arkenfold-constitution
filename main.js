@@ -861,6 +861,24 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ═══════════════════════════════════════════════
+   MEMBERS LIST STAGGER ANIMATION
+   ═══════════════════════════════════════════════ */
+function animateMembersList() {
+  const list = document.querySelector('.members-list');
+  if (!list) return;
+  const items = list.querySelectorAll('li');
+  items.forEach((item, i) => {
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(-20px)';
+    setTimeout(() => {
+      item.style.transition = 'all 0.4s ease';
+      item.style.opacity = '1';
+      item.style.transform = 'translateX(0)';
+    }, 2300 + i * 60);
+  });
+}
+
+/* ═══════════════════════════════════════════════
    UTILITIES
    ═══════════════════════════════════════════════ */
 function escapeHtml(str) {
@@ -883,13 +901,7 @@ document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
     navigateTo(link.dataset.page);
   });
 });
-// Hero buttons
-document.querySelectorAll('.hero-btn[data-page]').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    navigateTo(btn.dataset.page);
-  });
-});
+
 
 /* ═══════════════════════════════════════════════
    INIT
@@ -903,4 +915,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initUserMenu();
   handleHash();
+  animateMembersList();
 });

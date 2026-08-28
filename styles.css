@@ -312,24 +312,29 @@ header.scrolled {
 .page-subtitle { color: var(--text-secondary); font-size: 1.05em; margin-top: 8px; }
 
 /* ══════════════════════════════════════════════
-   HOME PAGE
+   HOME PAGE (Original Layout)
    ══════════════════════════════════════════════ */
-.hero {
-  text-align: center; padding: 60px 24px 50px; max-width: 800px; margin: 0 auto;
+.page.active#home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 140px 30px 200px;
+  justify-content: flex-start;
 }
-.hero-badge {
-  font-family: 'Cinzel', serif; font-size: 0.8em; color: var(--text-secondary);
-  letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 20px;
-  animation: fadeUp 0.6s ease 0.2s both;
+.vista-valley {
+  font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--text-secondary);
+  margin-bottom: 15px; letter-spacing: 0.25em; text-transform: uppercase;
+  animation: fadeUp 0.8s ease-out 0.2s both;
 }
-.hero-title {
-  font-family: 'Cinzel', serif; font-size: clamp(3rem, 8vw, 5.5rem);
-  font-weight: 900; line-height: 1.1; margin-bottom: 16px;
+.arkenfold-con {
+  font-family: 'Cinzel', serif; font-size: clamp(3.5rem, 10vw, 7rem); font-weight: 700;
+  margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase;
   background: linear-gradient(135deg, #d4af37 0%, #f5e6a3 25%, #d4af37 50%, #b8860b 75%, #d4af37 100%);
   background-size: 200% auto;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; filter: drop-shadow(0 4px 30px rgba(212, 175, 55, 0.25));
-  animation: fadeUp 0.7s ease 0.3s both, shimmerText 5s ease-in-out infinite;
+  background-clip: text; filter: drop-shadow(0 4px 30px rgba(212, 175, 55, 0.3));
+  animation: fadeUp 0.8s ease-out 0.4s both, shimmerText 4s ease-in-out infinite;
 }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
@@ -339,134 +344,141 @@ header.scrolled {
   0%, 100% { background-position: 0% center; }
   50% { background-position: 200% center; }
 }
-.hero-divider {
-  width: 120px; height: 1px; margin: 16px auto 20px; position: relative;
+.title-divider {
+  width: 120px; height: 1px; margin: 20px auto 50px;
   background: linear-gradient(90deg, transparent, var(--text-gold), transparent);
-  animation: fadeUp 0.6s ease 0.5s both;
+  position: relative; animation: fadeUp 0.8s ease-out 0.6s both;
 }
-.divider-diamond {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  color: var(--text-gold); background: var(--bg-primary); padding: 0 10px; font-size: 0.7em;
-}
-.hero-mission {
-  color: var(--text-secondary); font-size: 1.1em; line-height: 1.8;
-  max-width: 600px; margin: 0 auto 32px;
-  animation: fadeUp 0.6s ease 0.6s both;
-}
-.hero-actions {
-  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-  animation: fadeUp 0.6s ease 0.7s both;
-}
-.hero-btn {
-  font-family: 'Cinzel', serif; font-size: 0.88em; font-weight: 600;
-  letter-spacing: 0.04em; text-transform: uppercase; padding: 13px 28px;
-  border-radius: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
-  border: 1px solid var(--border-gold); position: relative; overflow: hidden;
-}
-.hero-btn.primary {
-  background: linear-gradient(135deg, #d4af37, #b8960b);
-  color: #0a0a0a; border-color: #d4af37;
-}
-.hero-btn.primary:hover {
-  transform: translateY(-2px); box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
-  color: #0a0a0a;
-}
-.hero-btn.secondary {
-  background: var(--bg-card); color: var(--text-gold);
-}
-.hero-btn.secondary:hover {
-  transform: translateY(-2px); border-color: var(--border-gold-hover);
-  background: rgba(212, 175, 55, 0.08); color: var(--text-gold);
+.title-divider::after {
+  content: '\25C6'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); color: var(--text-gold); font-size: 0.6em;
+  background: var(--bg-primary); padding: 0 10px;
 }
 
-/* ── Home Sections ── */
-.home-section {
-  max-width: 1000px; margin: 0 auto; padding: 0 24px 48px;
+/* ── Leadership Container ── */
+.leadership-container {
+  background: var(--bg-card); backdrop-filter: blur(30px);
+  border: 1px solid var(--border-gold); border-radius: 20px;
+  padding: 50px 40px; margin: 20px 0 40px;
+  box-shadow: 0 25px 60px var(--shadow-color);
+  position: relative; overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: fadeUp 0.8s ease-out 0.6s both;
+  max-width: 700px; width: 100%;
 }
-.section-heading {
-  font-family: 'Cinzel', serif; font-size: 1.5em; font-weight: 700;
-  color: var(--text-gold); text-align: center; margin-bottom: 28px;
-  letter-spacing: 0.04em; position: relative;
+.leadership-container:hover {
+  border-color: var(--border-gold-hover);
+  box-shadow: 0 30px 70px var(--shadow-color), 0 0 40px rgba(212, 175, 55, 0.05);
+  transform: translateY(-4px);
 }
-.section-heading::after {
-  content: ''; display: block; width: 60px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--text-gold), transparent);
-  margin: 14px auto 0;
+.leader-name {
+  font-family: 'Cinzel', serif; font-size: clamp(2em, 5vw, 3em); font-weight: 700;
+  margin-bottom: 25px; letter-spacing: 0.08em; text-transform: uppercase;
+  background: linear-gradient(135deg, #d4af37, #f5e6a3, #d4af37);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; background-size: 200% auto;
+  animation: shimmerText 5s ease-in-out infinite;
 }
-.section-link {
-  display: block; text-align: center; margin-top: 20px;
-  font-family: 'Cinzel', serif; font-size: 0.88em; color: var(--text-gold);
-  letter-spacing: 0.04em; transition: all 0.3s;
+.leader-name::after {
+  content: '\2726  SUPREME ARCHON  \2726'; display: block;
+  font-family: 'Cinzel', serif; font-size: 0.45em;
+  -webkit-text-fill-color: var(--text-secondary); letter-spacing: 0.25em;
+  margin-top: 12px; background: none; -webkit-background-clip: unset;
 }
-.section-link:hover { color: var(--text-gold-light); }
+.assistants-name {
+  font-family: 'Cinzel', serif; font-size: 1.4em; color: var(--text-secondary);
+  font-weight: 600; margin: 30px 0 10px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.assistants-name::before { content: '\2694'; margin-right: 12px; font-size: 1.1em; }
+.assistants-list {
+  display: inline-block; font-size: 1.15em; color: var(--text-white);
+  background: rgba(212, 175, 55, 0.04); padding: 18px 30px;
+  border-radius: 12px; border-left: 3px solid rgba(212, 175, 55, 0.3);
+  margin-top: 12px; transition: all 0.3s;
+}
+.assistants-list:hover { background: rgba(212, 175, 55, 0.07); border-left-color: rgba(212, 175, 55, 0.5); }
+.assistants-list span {
+  color: var(--text-gold); font-weight: 600; font-family: 'Cinzel', serif;
+  letter-spacing: 0.02em; transition: all 0.3s;
+}
+.assistants-list span:hover { text-shadow: 0 0 12px rgba(212, 175, 55, 0.4); }
 
-/* ── Announcements Grid ── */
-.announcements-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-.announcement-card {
+/* ── Members List ── */
+.members-list {
   background: var(--bg-card); backdrop-filter: blur(20px);
-  border: 1px solid var(--border-gold); border-radius: 14px; padding: 24px;
-  transition: all 0.3s;
+  border: 1px solid var(--border-gold); border-radius: 16px;
+  padding: 35px 40px; margin: 10px 0 40px;
+  max-height: 320px; overflow-y: auto; list-style: none;
+  display: inline-block; text-align: left; width: 100%; max-width: 600px;
+  animation: fadeUp 0.8s ease-out 0.8s both;
 }
-.announcement-card:hover {
-  border-color: var(--border-gold-hover); transform: translateY(-2px);
-  box-shadow: 0 8px 24px var(--shadow-color);
+.members-list::-webkit-scrollbar { width: 5px; }
+.members-list::-webkit-scrollbar-track { background: transparent; }
+.members-list::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.25); border-radius: 10px; }
+.members-list li {
+  font-family: 'Playfair Display', Georgia, serif; font-size: 1.05em;
+  color: var(--text-body); padding: 10px 15px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: all 0.3s; border-radius: 8px; margin: 2px 0;
 }
-.announcement-badge {
-  display: inline-block; font-family: 'Cinzel', serif; font-size: 0.65em;
-  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 20px; margin-bottom: 10px;
-  background: rgba(212, 175, 55, 0.1); color: var(--text-gold); border: 1px solid var(--border-gold);
+.members-list li:hover {
+  color: var(--text-gold); padding-left: 25px;
+  background: rgba(212, 175, 55, 0.04);
 }
-.announcement-badge.pinned { background: rgba(212, 175, 55, 0.15); }
-.announcement-date { font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; }
-.announcement-card h3 {
-  font-family: 'Cinzel', serif; font-size: 1.05em; color: var(--text-gold);
-  margin-bottom: 8px; font-weight: 600;
-}
-.announcement-card p { font-size: 0.92em; color: var(--text-secondary); line-height: 1.6; }
 
-/* ── Hierarchy Preview ── */
-.hierarchy-preview { display: flex; flex-direction: column; align-items: center; gap: 0; }
-.hierarchy-tier {
+/* ── Constitution Button ── */
+.constitution-btn {
+  display: inline-block; font-family: 'Cinzel', serif; font-size: 1.3em; font-weight: 600;
+  color: var(--text-gold); background: var(--bg-card);
+  backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 22px 55px; border-radius: 12px; text-decoration: none;
+  letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  position: relative; overflow: hidden; margin-bottom: 40px;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: fadeUp 0.8s ease-out 1s both;
+}
+.constitution-btn::after {
+  content: ''; position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+.constitution-btn:hover {
+  transform: translateY(-4px) scale(1.03); border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.1);
+}
+.constitution-btn:hover::after { left: 100%; }
+.constitution-btn:active { transform: translateY(-1px) scale(0.98); }
+.btn-ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(212, 175, 55, 0.3); transform: scale(0);
+  animation: rippleExpand 0.6s ease-out forwards; pointer-events: none;
+}
+@keyframes rippleExpand { to { transform: scale(4); opacity: 0; } }
+.btn-label { position: relative; z-index: 1; }
+
+/* ── Designer Credit ── */
+.designer-credit {
+  position: absolute; bottom: 30px; left: 0; right: 0;
+  margin: 0 auto; width: fit-content;
+  font-family: 'Cinzel', serif; font-size: 0.85em;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
   background: var(--bg-card); backdrop-filter: blur(20px);
-  border: 1px solid var(--border-gold); border-radius: 14px;
-  padding: 24px 32px; text-align: center; width: 100%; max-width: 480px;
-  transition: all 0.3s;
+  padding: 12px 28px; border: 1px solid var(--border-subtle);
+  border-radius: 30px; box-shadow: 0 8px 25px var(--shadow-color);
+  transition: all 0.4s; opacity: 0.7; z-index: 10;
 }
-.hierarchy-tier:hover { border-color: var(--border-gold-hover); transform: translateY(-2px); }
-.tier-supreme { border-color: rgba(212, 175, 55, 0.3); }
-.tier-badge {
-  font-family: 'Cinzel', serif; font-size: 0.7em; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
-  margin-bottom: 8px;
+.designer-credit:hover {
+  color: var(--text-gold); border-color: var(--border-gold-hover);
+  box-shadow: 0 12px 35px rgba(212, 175, 55, 0.08);
+  transform: translateY(-3px); opacity: 1;
 }
-.tier-name {
-  font-family: 'Cinzel', serif; font-size: 1.6em; font-weight: 700; color: var(--text-gold);
-  margin-bottom: 4px;
-}
-.tier-names span { color: var(--text-gold); font-family: 'Cinzel', serif; font-weight: 600; }
-.tier-desc { font-size: 0.88em; color: var(--text-secondary); margin-top: 4px; }
-.tier-count { font-family: 'Cinzel', serif; font-size: 1.2em; color: var(--text-gold); font-weight: 600; }
-.hierarchy-connector { color: var(--text-muted); font-size: 1.2em; padding: 4px 0; opacity: 0.4; }
-
-/* ── Stats Grid ── */
-.stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-}
-.stat-card {
-  background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 12px;
-  padding: 24px 16px; text-align: center; transition: all 0.3s;
-}
-.stat-card:hover { border-color: var(--border-gold-hover); transform: translateY(-2px); }
-.stat-number {
-  font-family: 'Cinzel', serif; font-size: 2em; font-weight: 700; color: var(--text-gold);
-}
-.stat-label {
-  font-size: 0.78em; color: var(--text-secondary); letter-spacing: 0.04em; margin-top: 4px;
+.designer-credit span {
+  color: var(--text-gold); font-weight: 700;
+  background: linear-gradient(135deg, #d4af37, #f5e6a3, #d4af37);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; font-size: 1.1em;
 }
 
 /* ══════════════════════════════════════════════
@@ -1057,12 +1069,10 @@ footer {
 @media (max-width: 768px) {
   .main-nav { display: none; }
   .mobile-menu-toggle { display: flex; }
-  .hero { padding: 40px 16px 36px; }
-  .hero-title { font-size: clamp(2.4rem, 9vw, 4rem); }
-  .hero-actions { flex-direction: column; align-items: center; }
-  .hero-btn { width: 100%; max-width: 280px; justify-content: center; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .announcements-grid { grid-template-columns: 1fr; }
+  .page.active#home { padding: 120px 20px 180px; }
+  .leadership-container { padding: 35px 25px; border-radius: 14px; }
+  .members-list { padding: 25px 20px; }
+  .constitution-btn { font-size: 1.1em; padding: 18px 40px; }
   .const-body { padding: 28px 20px; }
   .const-section { padding: 20px 0; }
   .const-section-title { font-size: 1.1em; padding-left: 0; }
@@ -1082,9 +1092,9 @@ footer {
 }
 
 @media (max-width: 480px) {
-  .hero-title { font-size: 2.2rem; }
-  .hero-mission { font-size: 0.95em; }
-  .stat-card { padding: 18px 12px; }
-  .stat-number { font-size: 1.5em; }
+  .arkenfold-con { font-size: 2.8rem; }
+  .leadership-container { padding: 28px 20px; }
+  .leader-name { font-size: 1.8em; }
+  .constitution-btn { font-size: 1em; padding: 16px 30px; }
   .modal-box { padding: 28px 20px; }
 }
