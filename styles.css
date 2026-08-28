@@ -734,32 +734,6 @@ footer {
 	letter-spacing: 0.04em;
 }
 
-/* ── Sound Toggle ── */
-#sound-toggle {
-	background: rgba(12, 11, 16, 0.6);
-	backdrop-filter: blur(10px);
-	border: 1px solid rgba(212, 175, 55, 0.25);
-	color: #d4af37;
-	width: 38px;
-	height: 38px;
-	padding: 0;
-	border-radius: 50%;
-	font-size: 1em;
-	cursor: pointer;
-	transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	line-height: 1;
-}
-
-#sound-toggle:hover {
-	background: rgba(212, 175, 55, 0.1);
-	border-color: rgba(212, 175, 55, 0.5);
-	box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
-	transform: translateY(-2px);
-}
-
 /* ── User Menu ── */
 .user-menu {
 	position: relative;

@@ -171,17 +171,7 @@ function playModalOpenSound() {
 	} catch (e) { /* silent fail */ }
 }
 
-/** Toggle sound on/off and persist preference */
-window.toggleSound = function () {
-	soundEnabled = !soundEnabled;
-	localStorage.setItem('arkenfold-sound', soundEnabled ? 'on' : 'off');
-	const btn = document.getElementById('sound-toggle');
-	if (btn) {
-		btn.textContent = soundEnabled ? '🔊' : '🔇';
-		btn.title = soundEnabled ? 'Mute sounds' : 'Unmute sounds';
-	}
-	if (soundEnabled) playClickSound();
-};
+
 let pendingSignupData = null; // temporarily holds {username, email} before confirmation
 
 /* ═══════════════════════════════════════════════
@@ -1205,12 +1195,6 @@ function initGlowPulse() {
    SOUND TOGGLE INIT
    ═══════════════════════════════════════════════ */
 
-function initSoundToggle() {
-	const btn = document.getElementById('sound-toggle');
-	if (!btn) return;
-	btn.textContent = soundEnabled ? '🔊' : '🔇';
-	btn.title = soundEnabled ? 'Mute sounds' : 'Unmute sounds';
-}
 
 /* ═══════════════════════════════════════════════
    USER DROPDOWN — close on outside click
@@ -1261,7 +1245,6 @@ function initUserMenu() {
    ═══════════════════════════════════════════════ */	document.addEventListener('DOMContentLoaded', () => {
 	initSplashScreen();
 	createParticles();
-	initSoundToggle();
 	initUserMenu();
 	initHeaderScroll();
 	initScrollReveals();
