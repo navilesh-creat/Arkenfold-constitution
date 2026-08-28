@@ -589,20 +589,44 @@ window.logout = function () {
    the email is verified.
    ═══════════════════════════════════════════════ */
 
+function showVerifyingOverlay() {
+	const overlay = document.createElement('div');
+	overlay.id = 'verifying-overlay';
+	overlay.className = 'auth-modal-overlay';
+	overlay.innerHTML =
+		'<div class="auth-modal-box" style="text-align:center;">' +
+			'<h2>Verifying your email…</h2>' +
+			'<p class="reset-description" style="margin-bottom:0;">Just a moment, this only takes a second.</p>' +
+			'<div style="width:32px;height:32px;margin:24px auto 0;border:3px solid rgba(212,175,55,0.2);border-top-color:#d4af37;border-radius:50%;animation:spin 0.8s linear infinite;"></div>' +
+		'</div>';
+	document.body.appendChild(overlay);
+	return overlay;
+}
+
 function completeEmailLinkSignIn() {
 	if (!isSignInWithEmailLink(auth, window.location.href)) return;
 
 	const pending = JSON.parse(localStorage.getItem('pendingEmailLinkSignup') || 'null');
 	let email = pending && pending.email;
 
+	// Show feedback immediately — without this, the user just stares at
+	// the bare homepage for however long the network calls below take,
+	// which reads as the site being stuck or slow even when it isn't.
+	const overlay = showVerifyingOverlay();
+
 	if (!email) {
 		// The link was opened on a different device/browser than the one
 		// it was requested from, so we don't have the email saved locally.
 		// Firebase requires re-confirming it as a safety check.
+		overlay.remove();
 		email = window.prompt('Please confirm your email address to finish signing up:');
 	}
 
 	if (!email) return; // user cancelled — nothing more we can do
+
+	if (!document.getElementById('verifying-overlay')) {
+		document.body.appendChild(overlay);
+	}
 
 	signInWithEmailLink(auth, email, window.location.href)
 		.then((cred) => {
@@ -629,11 +653,13 @@ function completeEmailLinkSignIn() {
 				greeting.textContent = "Welcome, " + username;
 			}
 
-			setTimeout(() => openPasswordSetupModal(), 500);
+			overlay.remove();
+			openPasswordSetupModal();
 		})
 		.catch((err) => {
 			console.error('Email link sign-in failed:', err);
 			localStorage.removeItem('pendingEmailLinkSignup');
+			overlay.remove();
 		});
 }
 
