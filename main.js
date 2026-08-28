@@ -613,6 +613,7 @@ onAuthStateChanged(auth, (user) => {
 	const membersSection = document.getElementById("members-only");
 
 	if (user) {
+		user.reload().catch(() => {}).then(() => {
 		// Check if this user has a pending password setup
 		const pending = JSON.parse(localStorage.getItem('pendingPasswordSetup'));
 		if (pending && user.email === pending.email && user.emailVerified) {
@@ -631,6 +632,7 @@ onAuthStateChanged(auth, (user) => {
 		greeting.style.display = "inline-block";
 		greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
 		if (membersSection) membersSection.style.display = "block";
+		});
 	} else {
 		// Not signed in — check if there's a pending password setup that needs completing
 		const pending = JSON.parse(localStorage.getItem('pendingPasswordSetup'));
