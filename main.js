@@ -28,6 +28,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 let mode = "login"; // or "signup"
+let pendingSignupData = null; // temporarily holds {username, email} before confirmation
+let skipAutoLogin = false; // prevents sign-in loop right after signup
 
 /* ═══════════════════════════════════════════════
    PAGE NAVIGATION (with transitions)
@@ -259,6 +261,104 @@ window.closeAuthModal = function () {
 	}, 250);
 };
 
+/* ═══════════════════════════════════════════════
+   EMAIL CONFIRMATION MODAL
+   Shows the entered email for user to confirm
+   before account creation proceeds.
+   ═══════════════════════════════════════════════ */
+
+function openEmailConfirmModal(email) {
+	document.getElementById('confirm-email-display').innerHTML =
+		`<span class="confirm-label">Your email address</span>` +
+		`<span class="confirm-email">${email}</span>`;
+	document.getElementById('confirm-error').textContent = '';
+	document.getElementById('email-confirm-modal').style.display = 'flex';
+}
+
+window.closeEmailConfirmModal = function () {
+	const modal = document.getElementById('email-confirm-modal');
+	const box = modal.querySelector('.auth-modal-box');
+	box.style.animation = 'modalBoxOut 0.25s ease forwards';
+	setTimeout(() => {
+		modal.style.display = 'none';
+		box.style.animation = '';
+	}, 250);
+	pendingSignupData = null;
+};
+
+window.confirmEmailYes = function () {
+	const errorBox = document.getElementById('confirm-error');
+	const submitBtn = document.getElementById('confirm-yes-btn');
+	const btnText = submitBtn.querySelector('.btn-text');
+	const btnSpinner = submitBtn.querySelector('.btn-spinner');
+
+	errorBox.textContent = '';
+
+	if (!pendingSignupData) {
+		errorBox.textContent = 'Session expired. Please try again.';
+		return;
+	}
+
+	btnText.textContent = 'Creating account...';
+	btnSpinner.style.display = 'inline-block';
+	submitBtn.style.opacity = '0.7';
+	submitBtn.style.pointerEvents = 'none';
+
+	const { username, email } = pendingSignupData;
+	const tempPassword = generateTempPassword();
+
+	createUserWithEmailAndPassword(auth, email, tempPassword)
+		.then((cred) => {
+			return updateProfile(cred.user, { displayName: username }).then(() => cred.user);
+		})
+		.then((user) => {
+			localStorage.setItem('pendingPasswordSetup', JSON.stringify({
+				email: user.email,
+				tempPassword: tempPassword
+			}));
+
+			return sendEmailVerification(user);
+		})
+		.then(() => {
+			return signOut(auth);
+		})
+		.then(() => {
+			// Close confirmation modal
+			closeEmailConfirmModal();
+
+			// Prevent the onAuthStateChanged auto-login loop
+			skipAutoLogin = true;
+
+			// Re-open auth modal to show the success message
+			document.getElementById('auth-modal').style.display = 'flex';
+			document.getElementById('auth-modal-title').textContent = 'Sign Up';
+			document.getElementById('auth-submit-btn').querySelector('.btn-text').textContent = 'Sign Up';
+			document.getElementById('auth-username').style.display = 'block';
+			document.getElementById('auth-password').style.display = 'none';
+			document.getElementById('auth-toggle-label').textContent = 'Already have an account?';
+			document.getElementById('auth-toggle-link').textContent = 'Login';
+			document.getElementById('forgot-password-link').style.display = 'none';
+			const authError = document.getElementById('auth-error');
+			authError.style.color = '#4caf50';
+			authError.innerHTML = 'Verification email sent! Please check your inbox, verify your email, then come back to set your password.';
+
+			// Reset confirm button
+			btnText.textContent = '✓ Yes, this is my email';
+			btnSpinner.style.display = 'none';
+			submitBtn.style.opacity = '1';
+			submitBtn.style.pointerEvents = 'auto';
+
+			pendingSignupData = null;
+		})
+		.catch((err) => {
+			errorBox.textContent = err.message.replace('Firebase: ', '');
+			btnText.textContent = '✓ Yes, this is my email';
+			btnSpinner.style.display = 'none';
+			submitBtn.style.opacity = '1';
+			submitBtn.style.pointerEvents = 'auto';
+		});
+};
+
 window.toggleAuthMode = function (e) {
 	e.preventDefault();
 	mode = mode === "login" ? "signup" : "login";
@@ -410,43 +510,12 @@ window.submitAuth = function () {
 			return;
 		}
 
-		btnText.textContent = "Sending...";
-		btnSpinner.style.display = "inline-block";
-		submitBtn.style.opacity = "0.7";
-		submitBtn.style.pointerEvents = "none";
+		// Store the data temporarily — account is NOT created yet
+		pendingSignupData = { username, email };
 
-		// Generate a random temp password (user never sees this)
-		const tempPassword = generateTempPassword();
-
-		// Create account with temp password so Firebase sends a REAL verification email
-		createUserWithEmailAndPassword(auth, email, tempPassword)
-			.then((cred) => {
-				return updateProfile(cred.user, { displayName: username }).then(() => cred.user);
-			})
-			.then((user) => {
-				// Save temp password so we can sign in later for password setup
-				localStorage.setItem('pendingPasswordSetup', JSON.stringify({
-					email: user.email,
-					tempPassword: tempPassword
-				}));
-
-				// Send REAL Firebase verification email
-				return sendEmailVerification(user);
-			})
-			.then(() => {
-				// Sign out - user must verify email before setting password
-				return signOut(auth);
-			})
-			.then(() => {
-				errorBox.style.color = "#4caf50";
-				errorBox.innerHTML = "Verification email sent! Please check your inbox, verify your email, then come back to set your password.";
-				resetSubmitBtn();
-			})
-			.catch((err) => {
-				errorBox.style.color = "#e05a5a";
-				errorBox.textContent = err.message.replace("Firebase: ", "");
-				resetSubmitBtn();
-			});
+		// Close auth modal and show confirmation modal with the email
+		closeAuthModal();
+		setTimeout(() => openEmailConfirmModal(email), 300);
 	}
 };
 
@@ -563,6 +632,27 @@ onAuthStateChanged(auth, (user) => {
 		greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
 		if (membersSection) membersSection.style.display = "block";
 	} else {
+		// Not signed in — check if there's a pending password setup that needs completing
+		const pending = JSON.parse(localStorage.getItem('pendingPasswordSetup'));
+		if (pending && !skipAutoLogin) {
+			// Auto sign in with temp password so the auth state listener
+			// can detect verification status and open password setup
+			signInWithEmailAndPassword(auth, pending.email, pending.tempPassword)
+				.then((cred) => {
+					if (!cred.user.emailVerified) {
+						// Not verified yet → sign back out
+						signOut(auth);
+					}
+					// If verified, onAuthStateChanged fires again and opens password setup
+				})
+				.catch(() => {
+					// Temp password expired or invalid — clear pending data
+					localStorage.removeItem('pendingPasswordSetup');
+				});
+		} else {
+			skipAutoLogin = false; // reset after one cycle so future page loads still auto-login
+		}
+
 		loginBtn.style.display = "inline-block";
 		logoutBtn.style.display = "none";
 		greeting.style.display = "none";

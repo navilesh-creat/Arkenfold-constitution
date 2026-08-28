@@ -86,6 +86,22 @@
 		</div>
 	</div>
 
+	<!-- Email Confirmation Modal -->
+	<div id="email-confirm-modal" class="auth-modal-overlay" style="display:none;">
+		<div class="auth-modal-box">
+			<button class="auth-modal-close" onclick="closeEmailConfirmModal()">&times;</button>
+			<h2>Confirm Your Email</h2>
+			<p class="reset-description">Please confirm that this is your email address. A verification link will be sent there.</p>
+			<div id="confirm-email-display" class="confirm-email-display"></div>
+			<div id="confirm-error" class="auth-error"></div>
+			<button id="confirm-yes-btn" onclick="confirmEmailYes()">
+				<span class="btn-text">✓ Yes, this is my email</span>
+				<span class="btn-spinner" style="display:none;"></span>
+			</button>
+			<button class="confirm-edit-btn" onclick="closeEmailConfirmModal()">← Edit email</button>
+		</div>
+	</div>
+
 	<!-- Password Setup Modal (after email verification) -->
 	<div id="password-setup-modal" class="auth-modal-overlay" style="display:none;">
 		<div class="auth-modal-box">

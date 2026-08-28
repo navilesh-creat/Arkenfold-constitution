@@ -988,6 +988,68 @@ footer {
 	text-transform: uppercase;
 }
 
+/* ── Email Confirmation Modal ── */
+.confirm-email-display {
+	background: rgba(7, 6, 10, 0.8);
+	border: 1px solid rgba(212, 175, 55, 0.2);
+	border-radius: 10px;
+	padding: 16px 20px;
+	margin-bottom: 20px;
+	word-break: break-all;
+}
+
+.confirm-email-display .confirm-label {
+	display: block;
+	font-size: 0.78em;
+	color: #8a7a5e;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-family: 'Cinzel', serif;
+	margin-bottom: 6px;
+}
+
+.confirm-email-display .confirm-email {
+	color: #d4af37;
+	font-size: 1.05em;
+	font-weight: 600;
+}
+
+#confirm-yes-btn {
+	width: 100%;
+	background: linear-gradient(135deg, #4caf50, #388e3c);
+	color: #fff;
+	border: none;
+	padding: 14px;
+	border-radius: 10px;
+	font-family: 'Cinzel', serif;
+	font-weight: 700;
+	font-size: 0.95em;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+	margin-top: 8px;
+	transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	text-transform: uppercase;
+}
+
+#confirm-yes-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+}
+
+.confirm-edit-btn {
+	background: none;
+	border: none;
+	color: #8a7a5e;
+	font-size: 0.85em;
+	cursor: pointer;
+	padding: 10px 0 0;
+	transition: color 0.3s ease;
+}
+
+.confirm-edit-btn:hover {
+	color: #d4af37;
+}
+
 /* ═══════════════════════════════════════════════════════
    SCROLL REVEAL ANIMATIONS
    ═══════════════════════════════════════════════════════ */
