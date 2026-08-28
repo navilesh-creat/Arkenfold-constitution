@@ -1114,6 +1114,65 @@ footer {
 	padding-left: 2px;
 }
 
+/* ── Change Password — Forgot Link ── */
+.change-forgot-text {
+	margin: -6px 0 14px;
+	text-align: right;
+}
+
+.change-forgot-text a {
+	color: rgba(212, 175, 55, 0.6);
+	text-decoration: none;
+	font-size: 0.82em;
+	transition: all 0.3s ease;
+	border-bottom: 1px solid transparent;
+}
+
+.change-forgot-text a:hover {
+	color: #d4af37;
+	border-bottom-color: #d4af37;
+}
+
+/* ── Change Password — Submit Button ── */
+#change-password-submit-btn {
+	width: 100%;
+	background: linear-gradient(135deg, #d4af37, #b8960b);
+	color: #0a0a0a;
+	border: none;
+	padding: 14px;
+	border-radius: 10px;
+	font-family: 'Cinzel', serif;
+	font-weight: 700;
+	font-size: 0.95em;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+	margin-top: 8px;
+	transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	text-transform: uppercase;
+	position: relative;
+	overflow: hidden;
+}
+
+#change-password-submit-btn::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+	transition: left 0.5s ease;
+}
+
+#change-password-submit-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(212, 175, 55, 0.25);
+}
+
+#change-password-submit-btn:hover::after {
+	left: 100%;
+}
+
 /* ── Button Spinner ── */
 .btn-spinner {
 	display: inline-block;

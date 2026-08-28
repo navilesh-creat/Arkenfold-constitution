@@ -163,7 +163,11 @@
 			<div class="auth-modal-box">
 				<button class="auth-modal-close" onclick="closeChangePasswordModal()">&times;</button>
 				<h2>Change Password</h2>
-				<p class="reset-description">Enter your new password below.</p>
+				<p class="reset-description">Verify your current password, then set a new one.</p>
+				<input type="password" id="change-old-password" placeholder="Current Password" />
+				<p class="change-forgot-text">
+					<a href="#" id="change-forgot-link" onclick="openChangePasswordResetModal()">Forgot current password?</a>
+				</p>
 				<input type="password" id="change-new-password" placeholder="New Password" oninput="checkChangePasswordStrength()" />
 				<div class="password-strength">
 					<div class="strength-bar-container">

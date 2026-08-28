@@ -9,7 +9,9 @@ import {
 	sendPasswordResetEmail,
 	sendSignInLinkToEmail,
 	isSignInWithEmailLink,
-	signInWithEmailLink
+	signInWithEmailLink,
+	reauthenticateWithCredential,
+	EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 /* ═══════════════════════════════════════════════
@@ -774,7 +776,7 @@ window.submitPasswordSetup = function () {
 window.openChangePasswordModal = function () {
 	playModalOpenSound();
 	playClickSound();
-	// Pre-fill email for convenience
+	document.getElementById('change-old-password').value = '';
 	document.getElementById('change-new-password').value = '';
 	document.getElementById('change-confirm-password').value = '';
 	document.getElementById('change-password-error').textContent = '';
@@ -827,9 +829,15 @@ window.checkChangePasswordStrength = function () {
 	bar.style.background = color;
 	text.textContent = feedback;
 	text.style.color = color;
+};window.openChangePasswordResetModal = function () {
+	playModalOpenSound();
+	// Close change-password modal, open reset-password modal
+	document.getElementById('change-password-modal').style.display = 'none';
+	document.getElementById('reset-password-modal').style.display = 'flex';
 };
 
 window.submitChangePassword = function () {
+	const oldPass = document.getElementById('change-old-password').value;
 	const newPass = document.getElementById('change-new-password').value;
 	const confirmPass = document.getElementById('change-confirm-password').value;
 	const errorBox = document.getElementById('change-password-error');
@@ -841,8 +849,13 @@ window.submitChangePassword = function () {
 	errorBox.textContent = '';
 	successBox.textContent = '';
 
+	if (!oldPass) {
+		errorBox.textContent = 'Please enter your current password.';
+		return;
+	}
+
 	if (!newPass || !confirmPass) {
-		errorBox.textContent = 'Please fill in both fields.';
+		errorBox.textContent = 'Please fill in both new password fields.';
 		return;
 	}
 
@@ -862,12 +875,19 @@ window.submitChangePassword = function () {
 		return;
 	}
 
-	btnText.textContent = 'Updating...';
+	btnText.textContent = 'Verifying...';
 	btnSpinner.style.display = 'inline-block';
 	submitBtn.style.opacity = '0.7';
 	submitBtn.style.pointerEvents = 'none';
 
-	updatePassword(user, newPass)
+	// Re-authenticate with the old password first
+	const credential = EmailAuthProvider.credential(user.email, oldPass);
+	reauthenticateWithCredential(user, credential)
+		.then(() => {
+			// Authentication succeeded — now update to the new password
+			btnText.textContent = 'Updating...';
+			return updatePassword(user, newPass);
+		})
 		.then(() => {
 			playSuccessSound();
 			successBox.textContent = 'Password updated successfully!';
@@ -875,35 +895,16 @@ window.submitChangePassword = function () {
 			btnSpinner.style.display = 'none';
 			submitBtn.style.opacity = '1';
 			submitBtn.style.pointerEvents = 'auto';
+			document.getElementById('change-old-password').value = '';
 			document.getElementById('change-new-password').value = '';
 			document.getElementById('change-confirm-password').value = '';
 		})
 		.catch((err) => {
-			const msg = friendlyError(err);
-			// If requires recent login, fall back to reset email
-			if (err.code === 'auth/requires-recent-login') {
-				sendPasswordResetEmail(auth, user.email)
-					.then(() => {
-						successBox.textContent = 'A password reset link has been sent to your email. Please check your inbox.';
-						btnText.textContent = 'Update Password';
-						btnSpinner.style.display = 'none';
-						submitBtn.style.opacity = '1';
-						submitBtn.style.pointerEvents = 'auto';
-				})
-					.catch((resetErr) => {
-						errorBox.textContent = friendlyError(resetErr);
-						btnText.textContent = 'Update Password';
-						btnSpinner.style.display = 'none';
-						submitBtn.style.opacity = '1';
-						submitBtn.style.pointerEvents = 'auto';
-					});
-			} else {
-				errorBox.textContent = msg;
-				btnText.textContent = 'Update Password';
-				btnSpinner.style.display = 'none';
-				submitBtn.style.opacity = '1';
-				submitBtn.style.pointerEvents = 'auto';
-			}
+			errorBox.textContent = friendlyError(err);
+			btnText.textContent = 'Update Password';
+			btnSpinner.style.display = 'none';
+			submitBtn.style.opacity = '1';
+			submitBtn.style.pointerEvents = 'auto';
 		});
 };
 
