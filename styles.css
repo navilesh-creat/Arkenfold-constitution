@@ -1105,6 +1105,24 @@ body.has-custom-cursor [role="button"] { cursor: none; }
   opacity: 0.55;
 }
 
+/* Trail particle */
+.cursor-trail {
+  position: fixed; pointer-events: none; z-index: 9997;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text-gold);
+  transform: translate(-50%, -50%);
+}
+[data-theme="light"] .cursor-trail { background: var(--text-gold); }
+
+/* Click burst */
+.cursor-burst {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--text-gold-light);
+  transform: translate(-50%, -50%);
+}
+[data-theme="light"] .cursor-burst { background: var(--text-gold); }
+
 /* ══════════════════════════════════════════════
    GLITCH TEXT EFFECT
    ══════════════════════════════════════════════ */

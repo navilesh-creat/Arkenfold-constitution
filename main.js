@@ -887,12 +887,14 @@ function initCursorTrail() {
   document.body.appendChild(ring);
 
   let mouseX = 0, mouseY = 0;
-  let mainX = 0, mainY = 0;
-  let ringX = 0, ringY = 0;
 
   document.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
+    mainDot.style.left = mouseX + 'px';
+    mainDot.style.top = mouseY + 'px';
+    ring.style.left = mouseX + 'px';
+    ring.style.top = mouseY + 'px';
   });
 
   document.addEventListener('mouseover', (e) => {
@@ -908,15 +910,38 @@ function initCursorTrail() {
     }
   });
 
-  function animate() {
-    mainDot.style.left = mouseX + 'px';
-    mainDot.style.top = mouseY + 'px';
-    ring.style.left = mouseX + 'px';
-    ring.style.top = mouseY + 'px';
+  // Trail particles — instant, no lag
+  let trailCount = 0;
+  document.addEventListener('mousemove', (e) => {
+    trailCount++;
+    if (trailCount % 2 !== 0) return;
+    const p = document.createElement('div');
+    p.className = 'cursor-trail';
+    p.style.left = e.clientX + 'px';
+    p.style.top = e.clientY + 'px';
+    document.body.appendChild(p);
+    p.animate([
+      { opacity: 0.7, transform: 'translate(-50%, -50%) scale(1)' },
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(0)' }
+    ], { duration: 400, easing: 'ease-out', fill: 'forwards' }).onfinish = () => p.remove();
+  });
 
-    requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
+  // Click burst — instant
+  document.addEventListener('click', (e) => {
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.className = 'cursor-burst';
+      p.style.left = e.clientX + 'px';
+      p.style.top = e.clientY + 'px';
+      const angle = (Math.PI * 2 * i) / 8;
+      const dist = 25 + Math.random() * 25;
+      p.animate([
+        { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+        { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(0)` }
+      ], { duration: 350, easing: 'ease-out', fill: 'forwards' }).onfinish = () => p.remove();
+      document.body.appendChild(p);
+    }
+  });
 }
 
 
