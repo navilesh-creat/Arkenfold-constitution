@@ -1,13 +1,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import {
 	getAuth,
-	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
 	signOut,
 	updateProfile,
+	updatePassword,
 	onAuthStateChanged,
-	sendEmailVerification,
-	sendPasswordResetEmail
+	sendPasswordResetEmail,
+	sendSignInLinkToEmail,
+	isSignInWithEmailLink,
+	signInWithEmailLink
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 /* ═══════════════════════════════════════════════
@@ -29,7 +31,6 @@ const auth = getAuth(app);
 
 let mode = "login"; // or "signup"
 let pendingSignupData = null; // temporarily holds {username, email} before confirmation
-let skipAutoLogin = false; // prevents sign-in loop right after signup
 
 /* ═══════════════════════════════════════════════
    PAGE NAVIGATION (with transitions)
@@ -206,15 +207,6 @@ window.checkPasswordStrength = function () {
    UTILITY
    ═══════════════════════════════════════════════ */
 
-function generateTempPassword() {
-	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-	let password = '';
-	for (let i = 0; i < 20; i++) {
-		password += chars.charAt(Math.floor(Math.random() * chars.length));
-	}
-	return password;
-}
-
 function resetSubmitBtn() {
 	const submitBtn = document.getElementById("auth-submit-btn");
 	const btnText = submitBtn.querySelector(".btn-text");
@@ -299,35 +291,35 @@ window.confirmEmailYes = function () {
 		return;
 	}
 
-	btnText.textContent = 'Creating account...';
+	btnText.textContent = 'Sending link...';
 	btnSpinner.style.display = 'inline-block';
 	submitBtn.style.opacity = '0.7';
 	submitBtn.style.pointerEvents = 'none';
 
 	const { username, email } = pendingSignupData;
-	const tempPassword = generateTempPassword();
 
-	createUserWithEmailAndPassword(auth, email, tempPassword)
-		.then((cred) => {
-			return updateProfile(cred.user, { displayName: username }).then(() => cred.user);
-		})
-		.then((user) => {
-			localStorage.setItem('pendingPasswordSetup', JSON.stringify({
-				email: user.email,
-				tempPassword: tempPassword
-			}));
+	// Where Firebase should send the user back to once they click the
+	// link in their email. handleCodeInApp keeps the whole flow on this
+	// page instead of Firebase's hosted page.
+	const actionCodeSettings = {
+		url: window.location.origin + window.location.pathname,
+		handleCodeInApp: true
+	};
 
-			return sendEmailVerification(user);
-		})
+	// IMPORTANT: no Firebase account exists yet at this point — we're
+	// only emailing a sign-in link. The account itself is only created
+	// later, in completeEmailLinkSignIn(), once the user actually
+	// clicks that link. This guarantees nobody ends up in Firebase
+	// Authentication without a verified email.
+	sendSignInLinkToEmail(auth, email, actionCodeSettings)
 		.then(() => {
-			return signOut(auth);
-		})
-		.then(() => {
+			// Remember username + email so we can finish signup once the
+			// user comes back through the emailed link (possibly in a
+			// new tab, so this needs to survive that).
+			localStorage.setItem('pendingEmailLinkSignup', JSON.stringify({ username, email }));
+
 			// Close confirmation modal
 			closeEmailConfirmModal();
-
-			// Prevent the onAuthStateChanged auto-login loop
-			skipAutoLogin = true;
 
 			// Re-open auth modal to show the success message
 			document.getElementById('auth-modal').style.display = 'flex';
@@ -340,7 +332,7 @@ window.confirmEmailYes = function () {
 			document.getElementById('forgot-password-link').style.display = 'none';
 			const authError = document.getElementById('auth-error');
 			authError.style.color = '#4caf50';
-			authError.innerHTML = 'Verification email sent! Please check your inbox, verify your email, then come back to set your password.';
+			authError.innerHTML = 'Verification link sent! Please check your inbox and click the link to finish creating your account.';
 
 			// Reset confirm button
 			btnText.textContent = '✓ Yes, this is my email';
@@ -439,17 +431,23 @@ window.submitResetPassword = function () {
 };
 
 /* ═══════════════════════════════════════════════
-   SIGNUP - EMAIL FIRST FLOW
+   SIGNUP - VERIFY BEFORE ACCOUNT EXISTS
    
    How it works:
    1. User enters username + email (NO password shown)
-   2. Account is created with a random temp password
-   3. REAL verification email is sent via Firebase
-   4. Temp password is saved in localStorage
-   5. User is signed out
-   6. User verifies email via the link in the email
-   7. User comes back → auto signs in → sees password setup
-   8. User sets real password → password is updated
+   2. Firebase sends a sign-in link to that email —
+      NO account exists in Firebase yet at this point
+   3. Username + email are saved in localStorage so
+      they survive the trip to the user's inbox
+   4. User clicks the link in their email and lands
+      back on this page
+   5. completeEmailLinkSignIn() (below) detects the
+      link and calls signInWithEmailLink() — THIS is
+      the moment the Firebase account is actually
+      created, and only because the email was verified
+   6. The saved username is attached as displayName
+   7. Password setup modal opens so the user can add
+      a real password to their new account
    ═══════════════════════════════════════════════ */
 
 window.submitAuth = function () {
@@ -477,26 +475,7 @@ window.submitAuth = function () {
 		submitBtn.style.pointerEvents = "none";
 
 		signInWithEmailAndPassword(auth, email, password)
-			.then((cred) => {
-				if (!cred.user.emailVerified) {
-					const unverifiedUser = cred.user;
-					signOut(auth).then(() => {
-						errorBox.style.color = "#e05a5a";
-						errorBox.innerHTML = "Please verify your email first. Check your inbox for the verification link. <a href='#' id='resend-verification' style='color: #d4af37; text-decoration: underline; cursor: pointer;'>Resend verification email</a>";
-						resetSubmitBtn();
-						document.getElementById('resend-verification').addEventListener('click', (e) => {
-							e.preventDefault();
-							sendEmailVerification(unverifiedUser).then(() => {
-								errorBox.style.color = "#4caf50";
-								errorBox.textContent = "Verification email resent! Please check your inbox.";
-							}).catch((err) => {
-								errorBox.style.color = "#e05a5a";
-								errorBox.textContent = "Failed to resend: " + err.message;
-							});
-						});
-					});
-					return;
-				}
+			.then(() => {
 				window.closeAuthModal();
 			})
 			.catch((err) => {
@@ -566,9 +545,10 @@ window.submitPasswordSetup = function () {
 		return;
 	}
 
-	// Get pending data from localStorage
-	const pending = JSON.parse(localStorage.getItem('pendingPasswordSetup'));
-	if (!pending) {
+	// At this point the user is already signed in — completeEmailLinkSignIn()
+	// authenticated them the moment they clicked the emailed link. We just
+	// need to attach a real password to that account.
+	if (!auth.currentUser) {
 		errorBox.textContent = "Session expired. Please sign up again.";
 		return;
 	}
@@ -578,13 +558,8 @@ window.submitPasswordSetup = function () {
 	submitBtn.style.opacity = "0.7";
 	submitBtn.style.pointerEvents = "none";
 
-	// Sign in with temp password, then update to real password
-	signInWithEmailAndPassword(auth, pending.email, pending.tempPassword)
-		.then((cred) => {
-			return cred.user.updatePassword(newPassword);
-		})
+	updatePassword(auth.currentUser, newPassword)
 		.then(() => {
-			localStorage.removeItem('pendingPasswordSetup');
 			closePasswordSetupModal();
 			// User is now signed in with their real password
 		})
@@ -602,8 +577,58 @@ window.logout = function () {
 };
 
 /* ═══════════════════════════════════════════════
-   AUTH STATE - Detect verified users who need
-   to set their password after email verification
+   EMAIL LINK SIGN-IN COMPLETION
+
+   Runs once when the script loads. If the current
+   page URL is a Firebase sign-in link (i.e. the user
+   just clicked the link from their verification
+   email), this is the ONLY place a Firebase account
+   gets created — nothing exists in Firebase before
+   the email is verified.
+   ═══════════════════════════════════════════════ */
+
+function completeEmailLinkSignIn() {
+	if (!isSignInWithEmailLink(auth, window.location.href)) return;
+
+	const pending = JSON.parse(localStorage.getItem('pendingEmailLinkSignup') || 'null');
+	let email = pending && pending.email;
+
+	if (!email) {
+		// The link was opened on a different device/browser than the one
+		// it was requested from, so we don't have the email saved locally.
+		// Firebase requires re-confirming it as a safety check.
+		email = window.prompt('Please confirm your email address to finish signing up:');
+	}
+
+	if (!email) return; // user cancelled — nothing more we can do
+
+	signInWithEmailLink(auth, email, window.location.href)
+		.then((cred) => {
+			// Drop the sign-in link params from the URL so refreshing the
+			// page doesn't try to reprocess the same link.
+			window.history.replaceState({}, document.title, window.location.pathname);
+
+			const username = (pending && pending.email === email && pending.username)
+				|| window.prompt('Choose a username:')
+				|| email.split('@')[0];
+
+			return updateProfile(cred.user, { displayName: username });
+		})
+		.then(() => {
+			localStorage.removeItem('pendingEmailLinkSignup');
+			setTimeout(() => openPasswordSetupModal(), 500);
+		})
+		.catch((err) => {
+			console.error('Email link sign-in failed:', err);
+			localStorage.removeItem('pendingEmailLinkSignup');
+		});
+}
+
+completeEmailLinkSignIn();
+
+/* ═══════════════════════════════════════════════
+   AUTH STATE - keeps the header UI (login/logout
+   buttons, greeting) in sync with the signed-in user
    ═══════════════════════════════════════════════ */
 
 onAuthStateChanged(auth, (user) => {
@@ -613,48 +638,18 @@ onAuthStateChanged(auth, (user) => {
 	const membersSection = document.getElementById("members-only");
 
 	if (user) {
+		// Refresh the user's profile from Firebase's servers before reading
+		// displayName. The cached User object can be stale right after
+		// sign-in, which previously caused the greeting to fall back to
+		// the email prefix even though the username was saved correctly.
 		user.reload().catch(() => {}).then(() => {
-		// Check if this user has a pending password setup
-		const pending = JSON.parse(localStorage.getItem('pendingPasswordSetup'));
-		if (pending && user.email === pending.email && user.emailVerified) {
-			// Email verified and pending password setup → open password setup modal
-			setTimeout(() => {
-				openPasswordSetupModal();
-			}, 500);
-		} else if (pending && user.email === pending.email && !user.emailVerified) {
-			// Not verified yet → sign out
-			signOut(auth);
-			return;
-		}
-
-		loginBtn.style.display = "none";
-		logoutBtn.style.display = "inline-block";
-		greeting.style.display = "inline-block";
-		greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
-		if (membersSection) membersSection.style.display = "block";
+			loginBtn.style.display = "none";
+			logoutBtn.style.display = "inline-block";
+			greeting.style.display = "inline-block";
+			greeting.textContent = "Welcome, " + (user.displayName || user.email.split("@")[0]);
+			if (membersSection) membersSection.style.display = "block";
 		});
 	} else {
-		// Not signed in — check if there's a pending password setup that needs completing
-		const pending = JSON.parse(localStorage.getItem('pendingPasswordSetup'));
-		if (pending && !skipAutoLogin) {
-			// Auto sign in with temp password so the auth state listener
-			// can detect verification status and open password setup
-			signInWithEmailAndPassword(auth, pending.email, pending.tempPassword)
-				.then((cred) => {
-					if (!cred.user.emailVerified) {
-						// Not verified yet → sign back out
-						signOut(auth);
-					}
-					// If verified, onAuthStateChanged fires again and opens password setup
-				})
-				.catch(() => {
-					// Temp password expired or invalid — clear pending data
-					localStorage.removeItem('pendingPasswordSetup');
-				});
-		} else {
-			skipAutoLogin = false; // reset after one cycle so future page loads still auto-login
-		}
-
 		loginBtn.style.display = "inline-block";
 		logoutBtn.style.display = "none";
 		greeting.style.display = "none";
