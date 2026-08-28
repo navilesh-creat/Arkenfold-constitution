@@ -175,6 +175,27 @@ function playModalOpenSound() {
 let pendingSignupData = null; // temporarily holds {username, email} before confirmation
 
 /* ═══════════════════════════════════════════════
+   THEME TOGGLE (Dark / Light)
+   ═══════════════════════════════════════════════ */
+
+let currentTheme = localStorage.getItem('arkenfold-theme') || 'dark';
+
+function applyTheme(theme) {
+	currentTheme = theme;
+	document.documentElement.setAttribute('data-theme', theme);
+	localStorage.setItem('arkenfold-theme', theme);
+	const btn = document.getElementById('theme-toggle');
+	if (btn) btn.textContent = theme === 'dark' ? '☀' : '☾';
+}
+
+window.toggleTheme = function () {
+	applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+};
+
+// Apply saved theme on load
+applyTheme(currentTheme);
+
+/* ═══════════════════════════════════════════════
    PAGE NAVIGATION (with transitions)
    ═══════════════════════════════════════════════ */
 
