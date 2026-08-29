@@ -686,6 +686,20 @@
 
 			<div class="admin-gate" id="admin-gate" style="display:none;"></div>
 
+			<!-- Admin Password Gate -->
+			<div class="admin-password-gate" id="admin-password-gate" style="display:none;">
+				<div class="admin-password-card">
+					<div class="admin-password-seal">✦</div>
+					<h2 class="admin-password-title">Admin Access Required</h2>
+					<p class="admin-password-desc">Enter the admin passphrase to access the control panel.</p>
+					<input type="password" id="admin-password-input" placeholder="Enter passphrase" autocomplete="off" />
+					<div id="admin-password-error" class="auth-error" role="alert"></div>
+					<button class="admin-submit-btn" onclick="verifyAdminPassword()">
+						Authenticate
+					</button>
+				</div>
+			</div>
+
 			<div class="admin-panel" id="admin-panel" style="display:none;">
 
 				<!-- Dashboard Overview -->

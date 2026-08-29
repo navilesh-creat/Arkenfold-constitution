@@ -557,34 +557,88 @@ function initFirestoreListeners() {
 /* ═══════════════════════════════════════════════
    ADMIN PANEL
    ═══════════════════════════════════════════════ */
+const ADMIN_PASS_HASH = 'dd2882509f0f18099407b3cb8bdeca3befff329963e6e758fd48336df0db3c6c';
+let adminPasswordVerified = false;
+
+async function hashString(str) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+window.verifyAdminPassword = async function() {
+  const input = document.getElementById('admin-password-input');
+  const errorEl = document.getElementById('admin-password-error');
+  if (!input || !errorEl) return;
+  const entered = input.value;
+  if (!entered) { errorEl.textContent = 'Please enter the passphrase.'; return; }
+  errorEl.textContent = '';
+  const hash = await hashString(entered);
+  if (hash === ADMIN_PASS_HASH) {
+    adminPasswordVerified = true;
+    sessionStorage.setItem('arkenfold-admin-ok', '1');
+    document.getElementById('admin-password-gate').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    renderAdminMembersList();
+    renderAdminUpdatesList();
+    updateAdminStats();
+    initAdminTabs();
+  } else {
+    errorEl.textContent = 'Incorrect passphrase. Access denied.';
+    input.value = '';
+    input.focus();
+  }
+};
+
 function renderAdminPage() {
   const gate = document.getElementById('admin-gate');
   const panel = document.getElementById('admin-panel');
+  const pwGate = document.getElementById('admin-password-gate');
   if (!gate || !panel) return;
 
   if (!auth.currentUser) {
     gate.style.display = 'block';
     gate.textContent = 'Please log in to access the Admin Panel.';
     panel.style.display = 'none';
+    if (pwGate) pwGate.style.display = 'none';
     return;
   }
   if (!isAdminUser) {
     gate.style.display = 'block';
     gate.textContent = 'Your account does not have Admin Panel access.';
     panel.style.display = 'none';
+    if (pwGate) pwGate.style.display = 'none';
     return;
   }
 
   gate.style.display = 'none';
-  panel.style.display = 'block';
 
-  const seedBtn = document.getElementById('admin-seed-btn');
-  if (seedBtn) seedBtn.style.display = MEMBERS.length === 0 && UPDATES.length === 0 ? 'inline-block' : 'none';
+  // Check if password was already verified this session
+  if (adminPasswordVerified || sessionStorage.getItem('arkenfold-admin-ok') === '1') {
+    adminPasswordVerified = true;
+    if (pwGate) pwGate.style.display = 'none';
+    panel.style.display = 'block';
 
-  renderAdminMembersList();
-  renderAdminUpdatesList();
-  updateAdminStats();
-  initAdminTabs();
+    const seedBtn = document.getElementById('admin-seed-btn');
+    if (seedBtn) seedBtn.style.display = MEMBERS.length === 0 && UPDATES.length === 0 ? 'inline-block' : 'none';
+
+    renderAdminMembersList();
+    renderAdminUpdatesList();
+    updateAdminStats();
+    initAdminTabs();
+  } else {
+    panel.style.display = 'none';
+    if (pwGate) {
+      pwGate.style.display = 'flex';
+      const pwInput = document.getElementById('admin-password-input');
+      if (pwInput) {
+        pwInput.focus();
+        pwInput.onkeydown = (e) => { if (e.key === 'Enter') verifyAdminPassword(); };
+        pwInput.oninput = () => { const err = document.getElementById('admin-password-error'); if (err) err.textContent = ''; };
+      }
+    }
+  }
 }
 
 function updateAdminStats() {
@@ -1023,7 +1077,11 @@ window.submitResetPassword = function() {
     .catch(err => { errorBox.textContent = friendlyError(err); resetSubmitBtn('reset-submit-btn', 'Send Reset Link'); });
 };
 
-window.logout = function() { signOut(auth); };
+window.logout = function() {
+  adminPasswordVerified = false;
+  sessionStorage.removeItem('arkenfold-admin-ok');
+  signOut(auth);
+};
 
 /* ═══════════════════════════════════════════════
    EMAIL LINK SIGN-IN COMPLETION

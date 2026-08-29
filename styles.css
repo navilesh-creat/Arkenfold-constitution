@@ -1623,6 +1623,46 @@ body.has-custom-cursor [role="button"] { cursor: none; }
    ADMIN PANEL
    ================================================ */
 
+/* Password Gate */
+.admin-password-gate {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 20px;
+}
+.admin-password-card {
+  background: var(--bg-card); border: 1px solid var(--border-gold);
+  border-radius: 20px; padding: 44px 40px; text-align: center;
+  max-width: 420px; width: 100%; position: relative; overflow: hidden;
+}
+.admin-password-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
+}
+.admin-password-seal {
+  font-size: 2.4em; color: var(--text-gold); margin-bottom: 16px;
+  text-shadow: 0 0 20px rgba(212,175,55,0.3);
+}
+.admin-password-title {
+  font-family: 'Cinzel', serif; font-size: 1.15em; font-weight: 700;
+  color: var(--text-gold); letter-spacing: 0.06em; margin: 0 0 8px;
+}
+.admin-password-desc {
+  color: var(--text-secondary); font-size: 0.9em; margin: 0 0 24px;
+}
+.admin-password-card input[type='password'] {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border-gold);
+  color: var(--text-white); padding: 13px 16px; border-radius: 12px;
+  font-size: 1em; font-family: 'Playfair Display', Georgia, serif;
+  text-align: center; letter-spacing: 0.15em; box-sizing: border-box;
+  transition: all 0.3s;
+}
+.admin-password-card input[type='password']:focus {
+  outline: none; border-color: var(--text-gold);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.08), 0 2px 12px rgba(0,0,0,0.2);
+}
+.admin-password-card .admin-submit-btn {
+  width: 100%; margin-top: 16px; justify-content: center;
+}
+
 /* Gate (access denied / not logged in) */
 .admin-gate {
   text-align: center; padding: 60px 24px; color: var(--text-secondary);
