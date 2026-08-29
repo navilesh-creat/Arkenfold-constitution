@@ -7,8 +7,8 @@ import {
   reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  getDoc, onSnapshot, query, orderBy, serverTimestamp
+  getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+  getDoc, getDocs, onSnapshot, query, where, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 /* ═══════════════════════════════════════════════
@@ -95,6 +95,15 @@ applyTheme(currentTheme);
 const PAGES = ['home', 'constitution', 'council', 'updates', 'account', 'admin'];
 let currentPage = 'home';
 let isAdminUser = false;
+
+// Applications / notifications state
+let myApplication = null;          // the current user's own application doc (or null)
+let pendingApplications = [];      // admin-only: all pending applications
+let resolvedApplications = [];     // admin-only: approved/declined applications
+let myNotifications = [];          // current user's own notifications
+let unsubMyApplication = null;
+let unsubAllApplications = null;
+let unsubMyNotifications = null;
 
 window.navigateTo = function(page) {
   if (!PAGES.includes(page)) page = 'home';
@@ -445,7 +454,7 @@ function createMemberCard(m) {
   card.innerHTML = `
     <div class="member-avatar-lg">${initial}</div>
     <div class="member-card-name">${escapeHtml(m.name)}</div>
-    <div class="member-card-role">${m.title || capitalize(m.role)}</div>
+    <div class="member-card-role">${m.title ? escapeHtml(m.title) : capitalize(m.role)}</div>
     ${m.desc ? `<div class="member-card-desc">${escapeHtml(m.desc)}</div>` : ''}
   `;
   return card;
@@ -555,6 +564,184 @@ function initFirestoreListeners() {
 }
 
 /* ═══════════════════════════════════════════════
+   MEMBERSHIP APPLICATIONS
+   One application document per user, keyed by their
+   UID (applications/{uid}) — this naturally prevents
+   duplicate applications and makes "my application"
+   a single direct lookup instead of a query.
+
+   Username uniqueness is enforced by Firestore itself,
+   not just client-side: reserving a name means creating
+   usernames/{lowercasedName}, and the security rules only
+   allow *creating* that document, never overwriting an
+   existing one — so two people can't grab the same name
+   even if they submit at the same moment.
+   ═══════════════════════════════════════════════ */
+function usernameKey(str) {
+  return (str || '').trim().toLowerCase();
+}
+
+function nameTakenByExistingMember(name) {
+  const key = usernameKey(name);
+  return MEMBERS.some(m => usernameKey(m.name) === key);
+}
+
+window.openJoinModal = function() {
+  const user = auth.currentUser;
+  if (!user) { openAuthModal(); return; }
+
+  document.getElementById('join-modal').style.display = 'flex';
+  const formEl = document.getElementById('join-state-form');
+  const pendingEl = document.getElementById('join-state-pending');
+  const approvedEl = document.getElementById('join-state-approved');
+  const declinedEl = document.getElementById('join-state-declined');
+  [formEl, pendingEl, approvedEl, declinedEl].forEach(el => el.style.display = 'none');
+
+  if (myApplication && myApplication.status === 'pending') {
+    pendingEl.style.display = 'block';
+  } else if (myApplication && myApplication.status === 'approved') {
+    document.getElementById('join-approved-detail').textContent =
+      `You hold the role of ${capitalize(myApplication.resolvedRole || 'citizen')}.`;
+    approvedEl.style.display = 'block';
+  } else if (myApplication && myApplication.status === 'declined') {
+    document.getElementById('join-declined-reason').textContent =
+      'Reason: ' + (myApplication.declineReason || '—');
+    declinedEl.style.display = 'block';
+  } else {
+    document.getElementById('join-name').value = user.displayName || '';
+    document.getElementById('join-message').value = '';
+    document.getElementById('join-error').textContent = '';
+    formEl.style.display = 'block';
+  }
+};
+
+window.closeJoinModal = function() {
+  document.getElementById('join-modal').style.display = 'none';
+};
+
+window.resetJoinApplication = function() {
+  document.getElementById('join-state-declined').style.display = 'none';
+  document.getElementById('join-name').value = auth.currentUser?.displayName || '';
+  document.getElementById('join-message').value = '';
+  document.getElementById('join-error').textContent = '';
+  document.getElementById('join-state-form').style.display = 'block';
+};
+
+window.submitJoinApplication = function() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const nameEl = document.getElementById('join-name');
+  const messageEl = document.getElementById('join-message');
+  const errorEl = document.getElementById('join-error');
+  const btn = document.getElementById('join-submit-btn');
+  const name = nameEl.value.trim();
+
+  if (!name) { errorEl.textContent = 'Please enter your in-game username.'; return; }
+  if (nameTakenByExistingMember(name)) {
+    errorEl.textContent = 'That username is already used by an existing member.';
+    return;
+  }
+  errorEl.textContent = '';
+  btn.querySelector('.btn-text').textContent = 'Submitting...';
+  btn.querySelector('.btn-spinner').style.display = 'inline-block';
+  btn.style.pointerEvents = 'none';
+
+  const key = usernameKey(name);
+  const previousKey = myApplication ? usernameKey(myApplication.name) : null;
+
+  // Reserve the username first — this is the step Firestore actually
+  // enforces uniqueness on. If someone else grabbed this exact name a
+  // moment ago, this fails and nothing else happens.
+  const reserve = (previousKey && previousKey === key)
+    ? Promise.resolve() // re-applying with the same name — already reserved
+    : setDoc(doc(db, 'usernames', key), { uid: user.uid, status: 'pending' });
+
+  reserve
+    .then(() => {
+      // If they changed their desired name on a re-application, free the old one
+      const cleanup = (previousKey && previousKey !== key)
+        ? deleteDoc(doc(db, 'usernames', previousKey)).catch(() => {})
+        : Promise.resolve();
+      return cleanup;
+    })
+    .then(() => setDoc(doc(db, 'applications', user.uid), {
+      uid: user.uid,
+      email: user.email,
+      name,
+      message: messageEl.value.trim(),
+      status: 'pending',
+      declineReason: null,
+      resolvedRole: null,
+      createdAt: serverTimestamp()
+    }))
+    .then(() => {
+      closeJoinModal();
+    })
+    .catch(err => {
+      errorEl.textContent = err.code === 'permission-denied'
+        ? 'That username was just taken — please choose another.'
+        : err.message;
+    })
+    .finally(() => {
+      btn.querySelector('.btn-text').textContent = 'Submit Application';
+      btn.querySelector('.btn-spinner').style.display = 'none';
+      btn.style.pointerEvents = 'auto';
+    });
+};
+
+/* ═══════════════════════════════════════════════
+   NOTIFICATIONS
+   ═══════════════════════════════════════════════ */
+window.toggleNotifDropdown = function() {
+  const dropdown = document.getElementById('notif-dropdown');
+  const opening = dropdown.style.display === 'none';
+  dropdown.style.display = opening ? 'block' : 'none';
+
+  if (isAdminUser) {
+    // For admins the bell is a direct shortcut to the Applicants tab,
+    // not a dropdown of their own notifications.
+    dropdown.style.display = 'none';
+    navigateTo('admin');
+    setTimeout(() => {
+      const tabBtn = document.querySelector('.admin-tab-btn[data-tab="applicants"]');
+      if (tabBtn) tabBtn.click();
+    }, 50);
+    return;
+  }
+
+  if (opening) renderNotifDropdown();
+};
+
+function renderNotifDropdown() {
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+  if (myNotifications.length === 0) {
+    list.innerHTML = '<p class="admin-empty">No notifications yet.</p>';
+    return;
+  }
+  list.innerHTML = myNotifications.map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}" data-id="${n.id}">
+      <span class="notif-item-icon">${n.type === 'approved' ? '✦' : '✕'}</span>
+      <span class="notif-item-text">${escapeHtml(n.message)}</span>
+    </div>
+  `).join('');
+
+  // Mark all as read once opened
+  myNotifications.filter(n => !n.read).forEach(n => {
+    updateDoc(doc(db, 'notifications', n.id), { read: true }).catch(() => {});
+  });
+}
+
+function updateNotifBadge() {
+  const wrap = document.getElementById('notif-bell-wrap');
+  const badge = document.getElementById('notif-badge');
+  if (!wrap || !badge) return;
+  const count = isAdminUser ? pendingApplications.length : myNotifications.filter(n => !n.read).length;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+}
+
+/* ═══════════════════════════════════════════════
    ADMIN PANEL
    ═══════════════════════════════════════════════ */
 const ADMIN_PASS_HASH = 'dd2882509f0f18099407b3cb8bdeca3befff329963e6e758fd48336df0db3c6c';
@@ -582,6 +769,7 @@ window.verifyAdminPassword = async function() {
     document.getElementById('admin-panel').style.display = 'block';
     renderAdminMembersList();
     renderAdminUpdatesList();
+    renderAdminApplicantsList();
     updateAdminStats();
     initAdminTabs();
   } else {
@@ -625,6 +813,7 @@ function renderAdminPage() {
 
     renderAdminMembersList();
     renderAdminUpdatesList();
+    renderAdminApplicantsList();
     updateAdminStats();
     initAdminTabs();
   } else {
@@ -667,17 +856,41 @@ function renderAdminMembersList() {
 
   list.innerHTML = sorted.map(m => `
     <div class="admin-row" data-id="${m.id}">
-      <div class="admin-row-main">
-        <span class="admin-row-name">${escapeHtml(m.name)}</span>
-        <span class="admin-row-role-badge role-${m.role}">${capitalize(m.role)}</span>
+      <div class="admin-row-view">
+        <div class="admin-row-main">
+          <span class="admin-row-name">${escapeHtml(m.name)}</span>
+          <span class="admin-row-role-badge role-${m.role}">${capitalize(m.role)}</span>
+          ${m.title ? `<span class="admin-row-pin">${escapeHtml(m.title)}</span>` : ''}
+        </div>
+        <div class="admin-row-actions">
+          <select class="admin-role-select" data-id="${m.id}">
+            <option value="citizen"${m.role === 'citizen' ? ' selected' : ''}>Citizen</option>
+            <option value="council"${m.role === 'council' ? ' selected' : ''}>Council</option>
+            <option value="archon"${m.role === 'archon' ? ' selected' : ''}>Archon</option>
+          </select>
+          <button class="admin-btn-small" data-action="edit-member" data-id="${m.id}">Edit</button>
+          <button class="admin-btn-small admin-btn-delete" data-id="${m.id}" data-action="delete-member">Delete</button>
+        </div>
       </div>
-      <div class="admin-row-actions">
-        <select class="admin-role-select" data-id="${m.id}">
-          <option value="citizen"${m.role === 'citizen' ? ' selected' : ''}>Citizen</option>
-          <option value="council"${m.role === 'council' ? ' selected' : ''}>Council</option>
-          <option value="archon"${m.role === 'archon' ? ' selected' : ''}>Archon</option>
-        </select>
-        <button class="admin-btn-small admin-btn-delete" data-id="${m.id}" data-action="delete-member">Delete</button>
+      <div class="admin-row-edit" id="edit-member-${m.id}" style="display:none;">
+        <div class="admin-form-grid">
+          <div class="admin-field">
+            <label class="admin-field-label">Username</label>
+            <input type="text" class="edit-member-name" value="${escapeHtml(m.name)}" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-field-label">Title</label>
+            <input type="text" class="edit-member-title" value="${escapeHtml(m.title || '')}" />
+          </div>
+        </div>
+        <div class="admin-field">
+          <label class="admin-field-label">Description</label>
+          <textarea class="edit-member-desc" rows="2">${escapeHtml(m.desc || '')}</textarea>
+        </div>
+        <div class="admin-row-actions">
+          <button class="admin-btn-small" data-action="save-member" data-id="${m.id}">Save</button>
+          <button class="admin-btn-small" data-action="cancel-edit-member" data-id="${m.id}">Cancel</button>
+        </div>
       </div>
     </div>
   `).join('') || '<p class="admin-empty">No members yet. Use "Import existing roster" or add one below.</p>';
@@ -687,6 +900,29 @@ function renderAdminMembersList() {
   });
   list.querySelectorAll('[data-action="delete-member"]').forEach(btn => {
     btn.addEventListener('click', () => adminDeleteMember(btn.dataset.id, btn.closest('.admin-row').querySelector('.admin-row-name').textContent));
+  });
+  list.querySelectorAll('[data-action="edit-member"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('edit-member-' + btn.dataset.id).style.display = 'block';
+      btn.closest('.admin-row').querySelector('.admin-row-view').style.display = 'none';
+    });
+  });
+  list.querySelectorAll('[data-action="cancel-edit-member"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('edit-member-' + btn.dataset.id).style.display = 'none';
+      btn.closest('.admin-row').querySelector('.admin-row-view').style.display = 'flex';
+    });
+  });
+  list.querySelectorAll('[data-action="save-member"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = btn.closest('.admin-row');
+      const newName = row.querySelector('.edit-member-name').value.trim();
+      const newTitle = row.querySelector('.edit-member-title').value.trim();
+      const newDesc = row.querySelector('.edit-member-desc').value.trim();
+      if (!newName) return;
+      updateDoc(doc(db, 'members', btn.dataset.id), { name: newName, title: newTitle, desc: newDesc })
+        .catch(err => console.error('Failed to save member:', err));
+    });
   });
 }
 
@@ -724,16 +960,27 @@ window.adminAddMember = function() {
   const errorEl = document.getElementById('admin-member-error');
   const name = nameEl.value.trim();
   if (!name) { errorEl.textContent = 'Please enter a name.'; return; }
+  if (nameTakenByExistingMember(name)) {
+    errorEl.textContent = 'That name is already used by an existing member.';
+    return;
+  }
   errorEl.textContent = '';
 
-  addDoc(collection(db, 'members'), {
-    name,
-    role: roleEl.value,
-    title: titleEl.value.trim(),
-    desc: descEl.value.trim()
-  }).then(() => {
-    nameEl.value = ''; titleEl.value = ''; descEl.value = ''; roleEl.value = 'citizen';
-  }).catch(err => { errorEl.textContent = err.message; });
+  setDoc(doc(db, 'usernames', usernameKey(name)), { uid: null, status: 'approved' })
+    .then(() => addDoc(collection(db, 'members'), {
+      name,
+      role: roleEl.value,
+      title: titleEl.value.trim(),
+      desc: descEl.value.trim()
+    }))
+    .then(() => {
+      nameEl.value = ''; titleEl.value = ''; descEl.value = ''; roleEl.value = 'citizen';
+    })
+    .catch(err => {
+      errorEl.textContent = err.code === 'permission-denied'
+        ? 'That username is already reserved.'
+        : err.message;
+    });
 };
 
 function adminUpdateMemberRole(id, role) {
@@ -775,11 +1022,155 @@ function adminDeleteUpdate(id) {
   deleteDoc(doc(db, 'updates', id)).catch(err => console.error('Failed to delete update:', err));
 }
 
+/* ── Applicants ── */
+function renderAdminApplicantsList() {
+  const pendingList = document.getElementById('admin-applicants-list');
+  const resolvedList = document.getElementById('admin-applicants-resolved-list');
+  const badge = document.getElementById('admin-applicants-badge');
+  if (badge) {
+    badge.textContent = pendingApplications.length;
+    badge.style.display = pendingApplications.length > 0 ? 'inline-flex' : 'none';
+  }
+  if (!pendingList || !resolvedList) return;
+
+  pendingList.innerHTML = pendingApplications.map(a => `
+    <div class="admin-row admin-applicant-row" data-id="${a.uid}">
+      <div class="admin-applicant-body">
+        <div class="admin-applicant-meta">
+          <span class="admin-row-name">${escapeHtml(a.email)}</span>
+          ${a.message ? `<p class="admin-applicant-message">"${escapeHtml(a.message)}"</p>` : ''}
+        </div>
+        <div class="admin-form-grid">
+          <div class="admin-field">
+            <label class="admin-field-label">In-Game Username</label>
+            <input type="text" class="admin-applicant-name" data-uid="${a.uid}" value="${escapeHtml(a.name)}" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-field-label">Role</label>
+            <select class="admin-applicant-role" data-uid="${a.uid}">
+              <option value="citizen" selected>Citizen</option>
+              <option value="council">Council</option>
+              <option value="archon">Archon</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-field">
+          <label class="admin-field-label">Title <span class="admin-optional">(optional)</span></label>
+          <input type="text" class="admin-applicant-title" data-uid="${a.uid}" placeholder="e.g. Grand Marshal" />
+        </div>
+        <div class="admin-field admin-applicant-decline-field" id="decline-field-${a.uid}" style="display:none;">
+          <label class="admin-field-label">Reason for declining <span class="admin-optional">(required)</span></label>
+          <textarea class="admin-applicant-decline-reason" data-uid="${a.uid}" rows="2" placeholder="Let them know why..."></textarea>
+        </div>
+        <div class="admin-applicant-error" id="applicant-error-${a.uid}"></div>
+        <div class="admin-row-actions">
+          <button class="admin-submit-btn" data-action="approve" data-uid="${a.uid}">✓ Approve</button>
+          <button class="admin-btn-small admin-btn-delete" data-action="decline" data-uid="${a.uid}">Decline</button>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p class="admin-empty">No pending applications.</p>';
+
+  resolvedList.innerHTML = resolvedApplications.slice(0, 20).map(a => `
+    <div class="admin-row">
+      <div class="admin-row-main">
+        <span class="admin-row-name">${escapeHtml(a.name)}</span>
+        <span class="admin-row-role-badge ${a.status === 'approved' ? 'role-archon' : ''}">${capitalize(a.status)}</span>
+      </div>
+      ${a.status === 'declined' && a.declineReason ? `<p class="admin-applicant-message">Reason: ${escapeHtml(a.declineReason)}</p>` : ''}
+    </div>
+  `).join('') || '<p class="admin-empty">No resolved applications yet.</p>';
+
+  pendingList.querySelectorAll('[data-action="approve"]').forEach(btn => {
+    btn.addEventListener('click', () => adminApproveApplication(btn.dataset.uid));
+  });
+  pendingList.querySelectorAll('[data-action="decline"]').forEach(btn => {
+    btn.addEventListener('click', () => adminDeclineApplication(btn.dataset.uid));
+  });
+}
+
+function adminApproveApplication(uid) {
+  const app = pendingApplications.find(a => a.uid === uid);
+  const errorEl = document.getElementById(`applicant-error-${uid}`);
+  if (!app) return;
+
+  const nameInput = document.querySelector(`.admin-applicant-name[data-uid="${uid}"]`);
+  const roleSelect = document.querySelector(`.admin-applicant-role[data-uid="${uid}"]`);
+  const titleInput = document.querySelector(`.admin-applicant-title[data-uid="${uid}"]`);
+  const finalName = nameInput.value.trim();
+  const finalRole = roleSelect.value;
+  const finalTitle = titleInput.value.trim();
+
+  if (!finalName) { errorEl.textContent = 'Name cannot be empty.'; return; }
+  if (nameTakenByExistingMember(finalName)) {
+    errorEl.textContent = 'That name is already used by an existing member.';
+    return;
+  }
+  errorEl.textContent = '';
+
+  const oldKey = usernameKey(app.name);
+  const newKey = usernameKey(finalName);
+  const reservationStep = (oldKey === newKey)
+    ? updateDoc(doc(db, 'usernames', oldKey), { status: 'approved' })
+    : deleteDoc(doc(db, 'usernames', oldKey)).catch(() => {})
+        .then(() => setDoc(doc(db, 'usernames', newKey), { uid, status: 'approved' }));
+
+  reservationStep
+    .then(() => addDoc(collection(db, 'members'), {
+      name: finalName, role: finalRole, title: finalTitle, desc: '', uid
+    }))
+    .then(() => updateDoc(doc(db, 'applications', uid), {
+      status: 'approved', resolvedRole: finalRole, resolvedAt: serverTimestamp()
+    }))
+    .then(() => addDoc(collection(db, 'notifications'), {
+      toUid: uid, type: 'approved',
+      message: `Your application has been approved! You've been granted the role of ${capitalize(finalRole)}.`,
+      read: false, createdAt: serverTimestamp()
+    }))
+    .catch(err => { errorEl.textContent = err.message; });
+}
+
+function adminDeclineApplication(uid) {
+  const field = document.getElementById(`decline-field-${uid}`);
+  const reasonInput = document.querySelector(`.admin-applicant-decline-reason[data-uid="${uid}"]`);
+  const errorEl = document.getElementById(`applicant-error-${uid}`);
+  const app = pendingApplications.find(a => a.uid === uid);
+  if (!app) return;
+
+  // First click just reveals the reason field — the application stays
+  // open until an actual reason is provided, as required.
+  if (field.style.display === 'none') {
+    field.style.display = 'block';
+    reasonInput.focus();
+    return;
+  }
+
+  const reason = reasonInput.value.trim();
+  if (!reason) {
+    errorEl.textContent = 'A reason is required before declining.';
+    return;
+  }
+  errorEl.textContent = '';
+
+  updateDoc(doc(db, 'applications', uid), {
+    status: 'declined', declineReason: reason, resolvedAt: serverTimestamp()
+  })
+    .then(() => deleteDoc(doc(db, 'usernames', usernameKey(app.name))).catch(() => {}))
+    .then(() => addDoc(collection(db, 'notifications'), {
+      toUid: uid, type: 'declined', message: reason, read: false, createdAt: serverTimestamp()
+    }))
+    .catch(err => { errorEl.textContent = err.message; });
+}
+
 window.adminSeedData = function() {
   if (MEMBERS.length > 0 || UPDATES.length > 0) return; // guard against double-seeding
   if (!confirm('Import the original 23 members and 5 updates into Firestore? This only needs to run once.')) return;
 
-  const memberWrites = DEFAULT_SEED_MEMBERS.map(m => addDoc(collection(db, 'members'), m));
+  const memberWrites = DEFAULT_SEED_MEMBERS.map(m =>
+    setDoc(doc(db, 'usernames', usernameKey(m.name)), { uid: null, status: 'approved' })
+      .catch(() => {}) // already reserved somehow — don't block the import over it
+      .then(() => addDoc(collection(db, 'members'), m))
+  );
   const updateWrites = DEFAULT_SEED_UPDATES.map(u => addDoc(collection(db, 'updates'), { ...u, createdAt: serverTimestamp() }));
 
   Promise.all([...memberWrites, ...updateWrites])
@@ -808,8 +1199,10 @@ function renderAccount() {
     setEl('detail-email', user.email);
     setEl('detail-verified', user.emailVerified ? 'Yes' : 'Not yet verified');
     setEl('detail-since', user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : '—');
-    // Determine role
-    const member = MEMBERS.find(m => m.name.toLowerCase() === name.toLowerCase());
+    // Determine role — prefer a direct account link (set when a member
+    // was created via an approved application), fall back to name match
+    // for members added manually by an admin with no linked account.
+    const member = MEMBERS.find(m => m.uid === user.uid) || MEMBERS.find(m => m.name.toLowerCase() === name.toLowerCase());
     setEl('account-role', member ? (member.title || capitalize(member.role)) : 'Citizen');
   } else {
     guest.style.display = '';
@@ -1112,10 +1505,23 @@ completeEmailLinkSignIn();
 onAuthStateChanged(auth, (user) => {
   const loginBtn = document.getElementById('login-btn');
   const userMenu = document.getElementById('user-menu');
+  const notifWrap = document.getElementById('notif-bell-wrap');
+
+  // Always tear down previous listeners first — avoids leaks/duplicates
+  // across login/logout cycles or account switches.
+  if (unsubMyApplication) { unsubMyApplication(); unsubMyApplication = null; }
+  if (unsubAllApplications) { unsubAllApplications(); unsubAllApplications = null; }
+  if (unsubMyNotifications) { unsubMyNotifications(); unsubMyNotifications = null; }
+  myApplication = null;
+  pendingApplications = [];
+  resolvedApplications = [];
+  myNotifications = [];
+
   if (user) {
     user.reload().catch(() => {}).then(() => {
       if (loginBtn) loginBtn.style.display = 'none';
       if (userMenu) userMenu.style.display = 'block';
+      if (notifWrap) notifWrap.style.display = 'block';
       const name = user.displayName || user.email.split('@')[0];
       const initial = getInitial(name);
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -1124,12 +1530,46 @@ onAuthStateChanged(auth, (user) => {
       set('dropdown-name', name);
       set('dropdown-email', user.email);
 
+      // Track this user's own application (works for admins too, in case
+      // they ever have one, though the bell itself prioritizes admin duties)
+      unsubMyApplication = onSnapshot(doc(db, 'applications', user.uid), (snap) => {
+        myApplication = snap.exists() ? { uid: user.uid, ...snap.data() } : null;
+      }, () => {});
+
+      // Track this user's own notifications
+      unsubMyNotifications = onSnapshot(
+        query(collection(db, 'notifications'), where('toUid', '==', user.uid)),
+        (snap) => {
+          myNotifications = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+          updateNotifBadge();
+          const dropdown = document.getElementById('notif-dropdown');
+          if (dropdown && dropdown.style.display !== 'none') renderNotifDropdown();
+        }, () => {}
+      );
+
       getDoc(doc(db, 'admins', user.uid))
         .then(snap => {
           isAdminUser = snap.exists();
           document.querySelectorAll('.admin-only').forEach(el => {
             el.style.display = isAdminUser ? '' : 'none';
           });
+
+          // Admins additionally watch ALL applications, to power the
+          // Applicants tab and the bell's pending-count badge.
+          if (isAdminUser) {
+            unsubAllApplications = onSnapshot(collection(db, 'applications'), (snap) => {
+              const all = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+              pendingApplications = all.filter(a => a.status === 'pending')
+                .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+              resolvedApplications = all.filter(a => a.status !== 'pending')
+                .sort((a, b) => (b.resolvedAt?.toMillis?.() || 0) - (a.resolvedAt?.toMillis?.() || 0));
+              updateNotifBadge();
+              if (currentPage === 'admin') renderAdminApplicantsList();
+            }, () => {});
+          }
+
           if (currentPage === 'admin') renderAdminPage();
         })
         .catch(() => { isAdminUser = false; });
@@ -1140,6 +1580,7 @@ onAuthStateChanged(auth, (user) => {
   } else {
     if (loginBtn) loginBtn.style.display = 'inline-block';
     if (userMenu) userMenu.style.display = 'none';
+    if (notifWrap) notifWrap.style.display = 'none';
     isAdminUser = false;
     document.querySelectorAll('.admin-only').forEach(el => { el.style.display = 'none'; });
     if (currentPage === 'account') renderAccount();
@@ -1156,7 +1597,7 @@ document.addEventListener('keydown', (e) => {
   const overlay = document.getElementById('mobile-nav-overlay');
   if (overlay?.classList.contains('open')) { closeMobileMenu(); return; }
   // Close modals
-  const modals = ['auth-modal', 'email-confirm-modal', 'password-setup-modal', 'reset-password-modal', 'change-password-modal'];
+  const modals = ['auth-modal', 'email-confirm-modal', 'password-setup-modal', 'reset-password-modal', 'change-password-modal', 'join-modal'];
   for (const id of modals) {
     const m = document.getElementById(id);
     if (m && m.style.display === 'flex') {
@@ -1491,6 +1932,15 @@ document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
 /* ═══════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════ */
+function initNotifDropdown() {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#notif-bell-wrap')) {
+      const dropdown = document.getElementById('notif-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initSplash();
   createParticles();
@@ -1499,6 +1949,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBackToTop();
   initMobileMenu();
   initUserMenu();
+  initNotifDropdown();
   handleHash();
   initFirestoreListeners();
 

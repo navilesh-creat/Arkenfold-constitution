@@ -1954,3 +1954,78 @@ body.has-custom-cursor [role="button"] { cursor: none; }
   .admin-row-actions { width: 100%; justify-content: space-between; }
   .admin-submit-btn { width: 100%; justify-content: center; }
 }
+
+/* ================================================
+   NOTIFICATION BELL
+   ================================================ */
+.notif-bell {
+  position: relative; background: none; border: 1px solid var(--border-gold);
+  color: var(--text-gold); width: 40px; height: 40px; border-radius: 12px;
+  font-size: 1.1em; cursor: pointer; transition: all 0.3s;
+  display: flex; align-items: center; justify-content: center;
+}
+.notif-bell:hover { border-color: var(--border-gold-hover); background: rgba(212,175,55,0.06); }
+.notif-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+  padding: 0 4px; background: var(--danger-color); color: #fff;
+  border-radius: 9px; font-size: 0.65em; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; border: 2px solid var(--bg-panel-solid);
+}
+.notif-dropdown {
+  position: absolute; top: 50px; right: 0; width: 320px; max-height: 400px;
+  overflow-y: auto; background: var(--bg-panel-solid); backdrop-filter: blur(30px);
+  border: 1px solid var(--border-gold); border-radius: 16px; padding: 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35); z-index: 200;
+}
+.notif-dropdown-header {
+  font-family: 'Cinzel', serif; font-size: 0.75em; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-gold);
+  padding: 10px 12px 8px;
+}
+.notif-list { display: flex; flex-direction: column; gap: 4px; }
+.notif-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+  border-radius: 10px; font-size: 0.85em; color: var(--text-secondary);
+}
+.notif-item.unread { background: rgba(212,175,55,0.06); color: var(--text-white); }
+.notif-item-icon { color: var(--text-gold); flex-shrink: 0; }
+
+@media (max-width: 480px) {
+  .notif-dropdown { width: 280px; right: -60px; }
+}
+
+/* ================================================
+   JOIN THE DOMINION MODAL
+   ================================================ */
+.join-status-icon {
+  font-size: 2.2em; color: var(--text-gold); margin-bottom: 12px;
+  text-shadow: 0 0 20px rgba(212,175,55,0.3);
+}
+
+/* ================================================
+   APPLICANTS (ADMIN PANEL)
+   ================================================ */
+.admin-tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px;
+  background: var(--danger-color); color: #fff; border-radius: 9px;
+  font-size: 0.7em; font-weight: 700; font-family: 'Cinzel', serif;
+}
+.admin-applicant-row { flex-direction: column; align-items: stretch; }
+.admin-applicant-body { width: 100%; }
+.admin-applicant-meta { margin-bottom: 12px; }
+.admin-applicant-message {
+  color: var(--text-secondary); font-size: 0.85em; font-style: italic;
+  margin: 6px 0 0; line-height: 1.5;
+}
+.admin-applicant-decline-field { margin-top: 6px; }
+.admin-applicant-error {
+  color: var(--danger-color); font-size: 0.82em; min-height: 1.2em; margin: 6px 0;
+}
+.admin-row-view { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; width: 100%; }
+.admin-row-edit { width: 100%; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 768px) {
+  .admin-applicant-row .admin-form-grid { grid-template-columns: 1fr; }
+}
