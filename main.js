@@ -536,7 +536,7 @@ function initFirestoreListeners() {
     MEMBERS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (currentPage === 'council') renderCouncilCards();
     if (currentPage === 'account') renderAccount();
-    if (currentPage === 'admin') renderAdminMembersList();
+    if (currentPage === 'admin') { renderAdminMembersList(); updateAdminStats(); }
   }, (err) => {
     console.error('Members listener failed:', err);
   });
@@ -548,7 +548,7 @@ function initFirestoreListeners() {
       return { id: d.id, ...data, date: ts.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) };
     });
     if (currentPage === 'updates') renderUpdateTimeline();
-    if (currentPage === 'admin') renderAdminUpdatesList();
+    if (currentPage === 'admin') { renderAdminUpdatesList(); updateAdminStats(); }
   }, (err) => {
     console.error('Updates listener failed:', err);
   });
@@ -583,7 +583,17 @@ function renderAdminPage() {
 
   renderAdminMembersList();
   renderAdminUpdatesList();
+  updateAdminStats();
   initAdminTabs();
+}
+
+function updateAdminStats() {
+  const membersEl = document.getElementById('admin-stat-members');
+  const updatesEl = document.getElementById('admin-stat-updates');
+  const rolesEl = document.getElementById('admin-stat-roles');
+  if (membersEl) membersEl.textContent = MEMBERS.length || '0';
+  if (updatesEl) updatesEl.textContent = UPDATES.length || '0';
+  if (rolesEl) rolesEl.textContent = MEMBERS.filter(m => m.role === 'council' || m.role === 'archon').length || '0';
 }
 
 function initAdminTabs() {

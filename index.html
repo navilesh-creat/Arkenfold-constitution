@@ -677,8 +677,7 @@
 
 	<!-- ================================================= -->
 	<!-- PAGE: ADMIN                                        -->
-	<!-- ================================================= -->
-	<section class="page" id="admin">
+	<!-- ================================================= -->	<section class="page" id="admin">
 		<div class="page-inner">
 			<div class="page-header">
 				<h1 class="page-title">Admin Panel</h1>
@@ -688,29 +687,83 @@
 			<div class="admin-gate" id="admin-gate" style="display:none;"></div>
 
 			<div class="admin-panel" id="admin-panel" style="display:none;">
+
+				<!-- Dashboard Overview -->
+				<div class="admin-dashboard">
+					<div class="admin-stat-card">
+						<div class="admin-stat-icon">🛡</div>
+						<div class="admin-stat-info">
+							<div class="admin-stat-value" id="admin-stat-members">—</div>
+							<div class="admin-stat-label">Total Members</div>
+						</div>
+					</div>
+					<div class="admin-stat-card">
+						<div class="admin-stat-icon">📡</div>
+						<div class="admin-stat-info">
+							<div class="admin-stat-value" id="admin-stat-updates">—</div>
+							<div class="admin-stat-label">Decrees Published</div>
+						</div>
+					</div>
+					<div class="admin-stat-card">
+						<div class="admin-stat-icon">⚜</div>
+						<div class="admin-stat-info">
+							<div class="admin-stat-value" id="admin-stat-roles">—</div>
+							<div class="admin-stat-label">Council Members</div>
+						</div>
+					</div>
+				</div>
+
 				<button class="account-action-btn admin-seed-btn" id="admin-seed-btn" onclick="adminSeedData()" style="display:none;">
 					Import existing roster (one-time)
 				</button>
 
+				<!-- Tab Navigation -->
 				<div class="admin-tabs" role="tablist">
-					<button class="admin-tab-btn active" data-tab="members" role="tab">Members</button>
-					<button class="admin-tab-btn" data-tab="updates" role="tab">Updates</button>
+					<button class="admin-tab-btn active" data-tab="members" role="tab">
+						<span class="admin-tab-icon">👥</span> Members
+					</button>
+					<button class="admin-tab-btn" data-tab="updates" role="tab">
+						<span class="admin-tab-icon">📜</span> Updates
+					</button>
 				</div>
 
 				<!-- Members Tab -->
 				<div class="admin-tab-panel active" id="admin-tab-members">
 					<div class="admin-form">
-						<h3 class="admin-form-title">Add Member</h3>
-						<input type="text" id="admin-new-member-name" placeholder="Username" />
-						<select id="admin-new-member-role">
-							<option value="citizen" selected>Citizen</option>
-							<option value="council">Council</option>
-							<option value="archon">Archon</option>
-						</select>
-						<input type="text" id="admin-new-member-title" placeholder="Title (optional)" />
-						<textarea id="admin-new-member-desc" placeholder="Description (optional)" rows="2"></textarea>
+						<div class="admin-form-header">
+							<h3 class="admin-form-title">Add Member</h3>
+							<span class="admin-form-seal">✦</span>
+						</div>
+						<div class="admin-form-grid">
+							<div class="admin-field">
+								<label class="admin-field-label">Username</label>
+								<input type="text" id="admin-new-member-name" placeholder="Enter username" />
+							</div>
+							<div class="admin-field">
+								<label class="admin-field-label">Role</label>
+								<select id="admin-new-member-role">
+									<option value="citizen" selected>Citizen</option>
+									<option value="council">Council</option>
+									<option value="archon">Archon</option>
+								</select>
+							</div>
+						</div>
+						<div class="admin-field">
+							<label class="admin-field-label">Title <span class="admin-optional">(optional)</span></label>
+							<input type="text" id="admin-new-member-title" placeholder="e.g. Grand Marshal" />
+						</div>
+						<div class="admin-field">
+							<label class="admin-field-label">Description <span class="admin-optional">(optional)</span></label>
+							<textarea id="admin-new-member-desc" placeholder="Brief description of the member's role" rows="2"></textarea>
+						</div>
 						<div id="admin-member-error" class="auth-error"></div>
-						<button class="account-action-btn" onclick="adminAddMember()">Add Member</button>
+						<button class="admin-submit-btn" onclick="adminAddMember()">
+							<span class="admin-submit-icon">+</span> Add Member
+						</button>
+					</div>
+
+					<div class="admin-list-header">
+						<span class="admin-list-title">Current Roster</span>
 					</div>
 					<div class="admin-list" id="admin-members-list"></div>
 				</div>
@@ -718,20 +771,43 @@
 				<!-- Updates Tab -->
 				<div class="admin-tab-panel" id="admin-tab-updates">
 					<div class="admin-form">
-						<h3 class="admin-form-title">Add Update</h3>
-						<input type="text" id="admin-new-update-title" placeholder="Title" />
-						<textarea id="admin-new-update-body" placeholder="Body" rows="3"></textarea>
-						<select id="admin-new-update-category">
-							<option value="governance">Governance</option>
-							<option value="community">Community</option>
-							<option value="military">Military</option>
-							<option value="general" selected>General</option>
-						</select>
-						<label class="admin-checkbox-label">
-							<input type="checkbox" id="admin-new-update-pinned" /> Pin this update
-						</label>
+						<div class="admin-form-header">
+							<h3 class="admin-form-title">Add Update</h3>
+							<span class="admin-form-seal">✦</span>
+						</div>
+						<div class="admin-field">
+							<label class="admin-field-label">Title</label>
+							<input type="text" id="admin-new-update-title" placeholder="Enter decree title" />
+						</div>
+						<div class="admin-field">
+							<label class="admin-field-label">Body</label>
+							<textarea id="admin-new-update-body" placeholder="Write the full update body" rows="3"></textarea>
+						</div>
+						<div class="admin-form-grid">
+							<div class="admin-field">
+								<label class="admin-field-label">Category</label>
+								<select id="admin-new-update-category">
+									<option value="governance">Governance</option>
+									<option value="community">Community</option>
+									<option value="military">Military</option>
+									<option value="general" selected>General</option>
+								</select>
+							</div>
+							<div class="admin-field">
+								<label class="admin-field-label">Visibility</label>
+								<label class="admin-checkbox-label">
+									<input type="checkbox" id="admin-new-update-pinned" /> Pin this update to the top
+								</label>
+							</div>
+						</div>
 						<div id="admin-update-error" class="auth-error"></div>
-						<button class="account-action-btn" onclick="adminAddUpdate()">Add Update</button>
+						<button class="admin-submit-btn" onclick="adminAddUpdate()">
+							<span class="admin-submit-icon">+</span> Publish Update
+						</button>
+					</div>
+
+					<div class="admin-list-header">
+						<span class="admin-list-title">Published Decrees</span>
 					</div>
 					<div class="admin-list" id="admin-updates-list"></div>
 				</div>
