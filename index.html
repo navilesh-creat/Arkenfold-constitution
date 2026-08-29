@@ -83,6 +83,9 @@
 							<button class="dropdown-item" role="menuitem" onclick="navigateTo('account')">
 								<span class="dropdown-icon" aria-hidden="true">👤</span> My Account
 							</button>
+							<button class="dropdown-item admin-only" role="menuitem" onclick="navigateTo('admin')" style="display:none;">
+								<span class="dropdown-icon" aria-hidden="true">🛡</span> Admin Panel
+							</button>
 							<button class="dropdown-item" role="menuitem" onclick="openChangePasswordModal()">
 								<span class="dropdown-icon" aria-hidden="true">🔐</span> Change Password
 							</button>
@@ -667,6 +670,70 @@
 					<button class="account-action-btn logout" onclick="logout()">
 						<span aria-hidden="true">⏻</span> Logout
 					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ================================================= -->
+	<!-- PAGE: ADMIN                                        -->
+	<!-- ================================================= -->
+	<section class="page" id="admin">
+		<div class="page-inner">
+			<div class="page-header">
+				<h1 class="page-title">Admin Panel</h1>
+				<p class="page-subtitle">Manage the Dominion's roster and decrees</p>
+			</div>
+
+			<div class="admin-gate" id="admin-gate" style="display:none;"></div>
+
+			<div class="admin-panel" id="admin-panel" style="display:none;">
+				<button class="account-action-btn admin-seed-btn" id="admin-seed-btn" onclick="adminSeedData()" style="display:none;">
+					Import existing roster (one-time)
+				</button>
+
+				<div class="admin-tabs" role="tablist">
+					<button class="admin-tab-btn active" data-tab="members" role="tab">Members</button>
+					<button class="admin-tab-btn" data-tab="updates" role="tab">Updates</button>
+				</div>
+
+				<!-- Members Tab -->
+				<div class="admin-tab-panel active" id="admin-tab-members">
+					<div class="admin-form">
+						<h3 class="admin-form-title">Add Member</h3>
+						<input type="text" id="admin-new-member-name" placeholder="Username" />
+						<select id="admin-new-member-role">
+							<option value="citizen" selected>Citizen</option>
+							<option value="council">Council</option>
+							<option value="archon">Archon</option>
+						</select>
+						<input type="text" id="admin-new-member-title" placeholder="Title (optional)" />
+						<textarea id="admin-new-member-desc" placeholder="Description (optional)" rows="2"></textarea>
+						<div id="admin-member-error" class="auth-error"></div>
+						<button class="account-action-btn" onclick="adminAddMember()">Add Member</button>
+					</div>
+					<div class="admin-list" id="admin-members-list"></div>
+				</div>
+
+				<!-- Updates Tab -->
+				<div class="admin-tab-panel" id="admin-tab-updates">
+					<div class="admin-form">
+						<h3 class="admin-form-title">Add Update</h3>
+						<input type="text" id="admin-new-update-title" placeholder="Title" />
+						<textarea id="admin-new-update-body" placeholder="Body" rows="3"></textarea>
+						<select id="admin-new-update-category">
+							<option value="governance">Governance</option>
+							<option value="community">Community</option>
+							<option value="military">Military</option>
+							<option value="general" selected>General</option>
+						</select>
+						<label class="admin-checkbox-label">
+							<input type="checkbox" id="admin-new-update-pinned" /> Pin this update
+						</label>
+						<div id="admin-update-error" class="auth-error"></div>
+						<button class="account-action-btn" onclick="adminAddUpdate()">Add Update</button>
+					</div>
+					<div class="admin-list" id="admin-updates-list"></div>
 				</div>
 			</div>
 		</div>

@@ -6,6 +6,10 @@ import {
   sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
   reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  getDoc, onSnapshot, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 /* ═══════════════════════════════════════════════
    FIREBASE CONFIG
@@ -21,11 +25,23 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 /* ═══════════════════════════════════════════════
-   DATA — Members, Council, Updates
+   DATA — Members & Updates now live in Firestore.
+   These arrays are populated in real time by
+   initFirestoreListeners() below, and re-render
+   the Council/Updates pages whenever they change —
+   including instantly when an admin edits something.
    ═══════════════════════════════════════════════ */
-const MEMBERS = [
+let MEMBERS = [];
+let UPDATES = [];
+
+// One-time import data — only used by the admin panel's
+// "Import existing roster" button, which only appears
+// when the members collection in Firestore is still empty.
+// This is what your original hardcoded list looked like.
+const DEFAULT_SEED_MEMBERS = [
   { name: "Gamer_sam612", role: "archon", title: "Supreme Archon", desc: "Highest authority of the Dominion" },
   { name: "_navi_49", role: "council", title: "High Command Council", desc: "Advisor and administrator of the Dominion" },
   { name: "Lordwolf2203", role: "council", title: "High Command Council", desc: "Advisor and administrator of the Dominion" },
@@ -51,12 +67,12 @@ const MEMBERS = [
   { name: "7youngstunna7", role: "citizen" }
 ];
 
-const UPDATES = [
-  { id: 1, title: "Constitution Ratified", body: "The foundational Constitution of the Dominion has been formally ratified and enacted by the Supreme Archon. All nine articles are now in effect.", date: "August 28, 2026", category: "governance", pinned: true },
-  { id: 2, title: "Council Formed", body: "The High Command Council has been established. Two founding members have been appointed to advise and assist the Supreme Archon.", date: "August 25, 2026", category: "governance", pinned: false },
-  { id: 3, title: "Arkenfold Opens", body: "The Dominion of Arkenfold officially opens its doors to citizens. All loyal subjects are welcome to join the ranks.", date: "August 20, 2026", category: "community", pinned: false },
-  { id: 4, title: "Community Portal Launched", body: "The official website and community portal of the Dominion is now live. Citizens can explore the Constitution, meet the Council, and stay updated.", date: "August 28, 2026", category: "community", pinned: false },
-  { id: 5, title: "Founding Era Declared", body: "The Supreme Archon has declared the beginning of the Founding Era — the first chapter in the history of the Dominion of Arkenfold.", date: "August 15, 2026", category: "general", pinned: false }
+const DEFAULT_SEED_UPDATES = [
+  { title: "Constitution Ratified", body: "The foundational Constitution of the Dominion has been formally ratified and enacted by the Supreme Archon. All nine articles are now in effect.", category: "governance", pinned: true },
+  { title: "Council Formed", body: "The High Command Council has been established. Two founding members have been appointed to advise and assist the Supreme Archon.", category: "governance", pinned: false },
+  { title: "Arkenfold Opens", body: "The Dominion of Arkenfold officially opens its doors to citizens. All loyal subjects are welcome to join the ranks.", category: "community", pinned: false },
+  { title: "Community Portal Launched", body: "The official website and community portal of the Dominion is now live. Citizens can explore the Constitution, meet the Council, and stay updated.", category: "community", pinned: false },
+  { title: "Founding Era Declared", body: "The Supreme Archon has declared the beginning of the Founding Era — the first chapter in the history of the Dominion of Arkenfold.", category: "general", pinned: false }
 ];
 
 /* ═══════════════════════════════════════════════
@@ -76,8 +92,9 @@ applyTheme(currentTheme);
 /* ═══════════════════════════════════════════════
    HASH ROUTING
    ═══════════════════════════════════════════════ */
-const PAGES = ['home', 'constitution', 'council', 'updates', 'account'];
+const PAGES = ['home', 'constitution', 'council', 'updates', 'account', 'admin'];
 let currentPage = 'home';
+let isAdminUser = false;
 
 window.navigateTo = function(page) {
   if (!PAGES.includes(page)) page = 'home';
@@ -102,6 +119,7 @@ function renderPage(page) {
   if (page === 'council') renderCouncil();
   if (page === 'updates') renderUpdates();
   if (page === 'account') renderAccount();
+  if (page === 'admin') renderAdminPage();
   // Re-init scroll reveals for new page content
   requestAnimationFrame(() => {
     document.querySelectorAll('#' + page + ' .reveal-up, #' + page + ' .reveal-left, #' + page + ' .reveal-right, #' + page + ' .reveal-scale').forEach(el => {
@@ -508,6 +526,204 @@ function initUpdateFilters() {
 }
 
 /* ═══════════════════════════════════════════════
+   FIRESTORE — LIVE DATA LISTENERS
+   Keeps MEMBERS/UPDATES in sync with Firestore in
+   real time. Any admin edit shows up for everyone
+   viewing the site within moments, no refresh needed.
+   ═══════════════════════════════════════════════ */
+function initFirestoreListeners() {
+  onSnapshot(query(collection(db, 'members'), orderBy('name')), (snap) => {
+    MEMBERS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (currentPage === 'council') renderCouncilCards();
+    if (currentPage === 'account') renderAccount();
+    if (currentPage === 'admin') renderAdminMembersList();
+  }, (err) => {
+    console.error('Members listener failed:', err);
+  });
+
+  onSnapshot(query(collection(db, 'updates'), orderBy('createdAt', 'desc')), (snap) => {
+    UPDATES = snap.docs.map(d => {
+      const data = d.data();
+      const ts = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+      return { id: d.id, ...data, date: ts.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) };
+    });
+    if (currentPage === 'updates') renderUpdateTimeline();
+    if (currentPage === 'admin') renderAdminUpdatesList();
+  }, (err) => {
+    console.error('Updates listener failed:', err);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   ADMIN PANEL
+   ═══════════════════════════════════════════════ */
+function renderAdminPage() {
+  const gate = document.getElementById('admin-gate');
+  const panel = document.getElementById('admin-panel');
+  if (!gate || !panel) return;
+
+  if (!auth.currentUser) {
+    gate.style.display = 'block';
+    gate.textContent = 'Please log in to access the Admin Panel.';
+    panel.style.display = 'none';
+    return;
+  }
+  if (!isAdminUser) {
+    gate.style.display = 'block';
+    gate.textContent = 'Your account does not have Admin Panel access.';
+    panel.style.display = 'none';
+    return;
+  }
+
+  gate.style.display = 'none';
+  panel.style.display = 'block';
+
+  const seedBtn = document.getElementById('admin-seed-btn');
+  if (seedBtn) seedBtn.style.display = MEMBERS.length === 0 && UPDATES.length === 0 ? 'inline-block' : 'none';
+
+  renderAdminMembersList();
+  renderAdminUpdatesList();
+  initAdminTabs();
+}
+
+function initAdminTabs() {
+  document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.toggle('active', p.id === 'admin-tab-' + btn.dataset.tab));
+    };
+  });
+}
+
+function renderAdminMembersList() {
+  const list = document.getElementById('admin-members-list');
+  if (!list) return;
+  const roleOrder = { archon: 0, council: 1, citizen: 2 };
+  const sorted = [...MEMBERS].sort((a, b) => (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3) || a.name.localeCompare(b.name));
+
+  list.innerHTML = sorted.map(m => `
+    <div class="admin-row" data-id="${m.id}">
+      <div class="admin-row-main">
+        <span class="admin-row-name">${escapeHtml(m.name)}</span>
+        <span class="admin-row-role-badge role-${m.role}">${capitalize(m.role)}</span>
+      </div>
+      <div class="admin-row-actions">
+        <select class="admin-role-select" data-id="${m.id}">
+          <option value="citizen"${m.role === 'citizen' ? ' selected' : ''}>Citizen</option>
+          <option value="council"${m.role === 'council' ? ' selected' : ''}>Council</option>
+          <option value="archon"${m.role === 'archon' ? ' selected' : ''}>Archon</option>
+        </select>
+        <button class="admin-btn-small admin-btn-delete" data-id="${m.id}" data-action="delete-member">Delete</button>
+      </div>
+    </div>
+  `).join('') || '<p class="admin-empty">No members yet. Use "Import existing roster" or add one below.</p>';
+
+  list.querySelectorAll('.admin-role-select').forEach(sel => {
+    sel.addEventListener('change', () => adminUpdateMemberRole(sel.dataset.id, sel.value));
+  });
+  list.querySelectorAll('[data-action="delete-member"]').forEach(btn => {
+    btn.addEventListener('click', () => adminDeleteMember(btn.dataset.id, btn.closest('.admin-row').querySelector('.admin-row-name').textContent));
+  });
+}
+
+function renderAdminUpdatesList() {
+  const list = document.getElementById('admin-updates-list');
+  if (!list) return;
+
+  list.innerHTML = UPDATES.map(u => `
+    <div class="admin-row admin-row-update" data-id="${u.id}">
+      <div class="admin-row-main">
+        <span class="admin-row-name">${escapeHtml(u.title)}</span>
+        <span class="admin-row-role-badge role-${u.category}">${escapeHtml(u.category)}</span>
+        ${u.pinned ? '<span class="admin-row-pin">📌 Pinned</span>' : ''}
+      </div>
+      <div class="admin-row-actions">
+        <button class="admin-btn-small" data-action="toggle-pin" data-id="${u.id}" data-pinned="${u.pinned}">${u.pinned ? 'Unpin' : 'Pin'}</button>
+        <button class="admin-btn-small admin-btn-delete" data-action="delete-update" data-id="${u.id}">Delete</button>
+      </div>
+    </div>
+  `).join('') || '<p class="admin-empty">No updates yet. Use "Import existing roster" or add one below.</p>';
+
+  list.querySelectorAll('[data-action="toggle-pin"]').forEach(btn => {
+    btn.addEventListener('click', () => adminTogglePinned(btn.dataset.id, btn.dataset.pinned === 'true'));
+  });
+  list.querySelectorAll('[data-action="delete-update"]').forEach(btn => {
+    btn.addEventListener('click', () => adminDeleteUpdate(btn.dataset.id));
+  });
+}
+
+window.adminAddMember = function() {
+  const nameEl = document.getElementById('admin-new-member-name');
+  const roleEl = document.getElementById('admin-new-member-role');
+  const titleEl = document.getElementById('admin-new-member-title');
+  const descEl = document.getElementById('admin-new-member-desc');
+  const errorEl = document.getElementById('admin-member-error');
+  const name = nameEl.value.trim();
+  if (!name) { errorEl.textContent = 'Please enter a name.'; return; }
+  errorEl.textContent = '';
+
+  addDoc(collection(db, 'members'), {
+    name,
+    role: roleEl.value,
+    title: titleEl.value.trim(),
+    desc: descEl.value.trim()
+  }).then(() => {
+    nameEl.value = ''; titleEl.value = ''; descEl.value = ''; roleEl.value = 'citizen';
+  }).catch(err => { errorEl.textContent = err.message; });
+};
+
+function adminUpdateMemberRole(id, role) {
+  updateDoc(doc(db, 'members', id), { role }).catch(err => console.error('Failed to update role:', err));
+}
+
+function adminDeleteMember(id, name) {
+  if (!confirm(`Remove ${name} from the roster?`)) return;
+  deleteDoc(doc(db, 'members', id)).catch(err => console.error('Failed to delete member:', err));
+}
+
+window.adminAddUpdate = function() {
+  const titleEl = document.getElementById('admin-new-update-title');
+  const bodyEl = document.getElementById('admin-new-update-body');
+  const catEl = document.getElementById('admin-new-update-category');
+  const pinEl = document.getElementById('admin-new-update-pinned');
+  const errorEl = document.getElementById('admin-update-error');
+  const title = titleEl.value.trim();
+  const body = bodyEl.value.trim();
+  if (!title || !body) { errorEl.textContent = 'Please fill in both title and body.'; return; }
+  errorEl.textContent = '';
+
+  addDoc(collection(db, 'updates'), {
+    title, body,
+    category: catEl.value,
+    pinned: pinEl.checked,
+    createdAt: serverTimestamp()
+  }).then(() => {
+    titleEl.value = ''; bodyEl.value = ''; catEl.value = 'general'; pinEl.checked = false;
+  }).catch(err => { errorEl.textContent = err.message; });
+};
+
+function adminTogglePinned(id, current) {
+  updateDoc(doc(db, 'updates', id), { pinned: !current }).catch(err => console.error('Failed to toggle pin:', err));
+}
+
+function adminDeleteUpdate(id) {
+  if (!confirm('Delete this update?')) return;
+  deleteDoc(doc(db, 'updates', id)).catch(err => console.error('Failed to delete update:', err));
+}
+
+window.adminSeedData = function() {
+  if (MEMBERS.length > 0 || UPDATES.length > 0) return; // guard against double-seeding
+  if (!confirm('Import the original 23 members and 5 updates into Firestore? This only needs to run once.')) return;
+
+  const memberWrites = DEFAULT_SEED_MEMBERS.map(m => addDoc(collection(db, 'members'), m));
+  const updateWrites = DEFAULT_SEED_UPDATES.map(u => addDoc(collection(db, 'updates'), { ...u, createdAt: serverTimestamp() }));
+
+  Promise.all([...memberWrites, ...updateWrites])
+    .then(() => { alert('Import complete!'); })
+    .catch(err => { alert('Import failed: ' + err.message); });
+};
+
+/* ═══════════════════════════════════════════════
    ACCOUNT PAGE
    ═══════════════════════════════════════════════ */
 function renderAccount() {
@@ -839,13 +1055,27 @@ onAuthStateChanged(auth, (user) => {
       set('dropdown-avatar', initial);
       set('dropdown-name', name);
       set('dropdown-email', user.email);
+
+      getDoc(doc(db, 'admins', user.uid))
+        .then(snap => {
+          isAdminUser = snap.exists();
+          document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = isAdminUser ? '' : 'none';
+          });
+          if (currentPage === 'admin') renderAdminPage();
+        })
+        .catch(() => { isAdminUser = false; });
+
       // Update account page if visible
       if (currentPage === 'account') renderAccount();
     });
   } else {
     if (loginBtn) loginBtn.style.display = 'inline-block';
     if (userMenu) userMenu.style.display = 'none';
+    isAdminUser = false;
+    document.querySelectorAll('.admin-only').forEach(el => { el.style.display = 'none'; });
     if (currentPage === 'account') renderAccount();
+    if (currentPage === 'admin') renderAdminPage();
   }
 });
 
@@ -1202,6 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initUserMenu();
   handleHash();
+  initFirestoreListeners();
 
   // Animation systems
   initCursorTrail();

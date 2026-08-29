@@ -1618,3 +1618,88 @@ body.has-custom-cursor [role="button"] { cursor: none; }
   .constitution-btn { font-size: 1em; padding: 16px 30px; }
   .modal-box { padding: 28px 20px; }
 }
+
+/* ================================================
+   ADMIN PANEL
+   ================================================ */
+.admin-gate {
+  text-align: center; padding: 60px 20px; color: var(--text-secondary);
+  font-size: 1.05em; background: var(--bg-card); border: 1px solid var(--border-gold);
+  border-radius: 14px;
+}
+
+.admin-seed-btn { margin-bottom: 24px; }
+
+.admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+.admin-tab-btn {
+  font-family: 'Cinzel', serif; font-size: 0.8em; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 20px;
+  border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-gold);
+  color: var(--text-secondary); cursor: pointer; transition: all 0.3s;
+}
+.admin-tab-btn:hover { border-color: var(--border-gold-hover); color: var(--text-gold); }
+.admin-tab-btn.active {
+  background: rgba(212, 175, 55, 0.1); color: var(--text-gold); border-color: var(--border-gold-hover);
+}
+.admin-tab-panel { display: none; }
+.admin-tab-panel.active { display: block; }
+
+.admin-form {
+  background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 14px;
+  padding: 24px; margin-bottom: 24px;
+}
+.admin-form-title {
+  font-family: 'Cinzel', serif; font-size: 0.9em; font-weight: 700; color: var(--text-gold);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px;
+}
+.admin-form input, .admin-form select, .admin-form textarea {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border-gold);
+  color: var(--text-white); padding: 11px 14px; margin-bottom: 10px; border-radius: 10px;
+  font-size: 0.9em; font-family: 'Playfair Display', Georgia, serif; transition: all 0.3s;
+  resize: vertical;
+}
+.admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus {
+  outline: none; border-color: var(--border-gold-hover);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.06);
+}
+.admin-checkbox-label {
+  display: flex; align-items: center; gap: 8px; color: var(--text-secondary);
+  font-size: 0.88em; margin-bottom: 12px; cursor: pointer;
+}
+.admin-checkbox-label input { width: auto; margin: 0; }
+
+.admin-list { display: flex; flex-direction: column; gap: 8px; }
+.admin-empty { color: var(--text-muted); font-style: italic; text-align: center; padding: 20px; }
+.admin-row {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 12px;
+  padding: 14px 18px; transition: all 0.3s;
+}
+.admin-row:hover { border-color: var(--border-gold-hover); }
+.admin-row-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.admin-row-name { color: var(--text-white); font-weight: 600; }
+.admin-row-role-badge {
+  font-family: 'Cinzel', serif; font-size: 0.65em; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 6px;
+  background: rgba(212, 175, 55, 0.08); color: var(--text-gold); border: 1px solid var(--border-gold);
+}
+.admin-row-role-badge.role-archon { background: rgba(212, 175, 55, 0.18); border-color: rgba(212, 175, 55, 0.4); }
+.admin-row-pin { font-size: 0.78em; color: var(--text-gold); }
+.admin-row-actions { display: flex; align-items: center; gap: 8px; }
+.admin-role-select {
+  background: var(--bg-input); border: 1px solid var(--border-gold); color: var(--text-white);
+  padding: 6px 10px; border-radius: 8px; font-size: 0.82em; margin: 0;
+}
+.admin-btn-small {
+  font-family: 'Cinzel', serif; font-size: 0.72em; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border-gold);
+  background: var(--bg-card); color: var(--text-gold); cursor: pointer; transition: all 0.3s;
+}
+.admin-btn-small:hover { border-color: var(--border-gold-hover); background: rgba(212, 175, 55, 0.06); }
+.admin-btn-delete { color: var(--danger-color); border-color: rgba(224, 90, 90, 0.25); }
+.admin-btn-delete:hover { border-color: rgba(224, 90, 90, 0.5); background: rgba(224, 90, 90, 0.06); }
+
+@media (max-width: 768px) {
+  .admin-row { flex-direction: column; align-items: flex-start; }
+  .admin-row-actions { width: 100%; justify-content: space-between; }
+}
