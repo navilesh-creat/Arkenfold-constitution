@@ -636,7 +636,7 @@ window.submitJoinApplication = function() {
   const btn = document.getElementById('join-submit-btn');
   const name = nameEl.value.trim();
 
-  if (!name) { errorEl.textContent = 'Please enter your in-game username.'; return; }
+  if (!name) { errorEl.textContent = 'Please enter your in-game name (IGN).'; return; }
   if (nameTakenByExistingMember(name)) {
     errorEl.textContent = 'That username is already used by an existing member.';
     return;
@@ -846,13 +846,18 @@ function initAdminTabs() {
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.toggle('active', p.id === 'admin-tab-' + btn.dataset.tab));
     };
   });
+  const searchEl = document.getElementById('admin-member-search');
+  if (searchEl) searchEl.oninput = () => renderAdminMembersList();
 }
 
 function renderAdminMembersList() {
   const list = document.getElementById('admin-members-list');
   if (!list) return;
   const roleOrder = { archon: 0, council: 1, citizen: 2 };
-  const sorted = [...MEMBERS].sort((a, b) => (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3) || a.name.localeCompare(b.name));
+  const searchEl = document.getElementById('admin-member-search');
+  const term = (searchEl?.value || '').trim().toLowerCase();
+  const filtered = term ? MEMBERS.filter(m => m.name.toLowerCase().includes(term)) : MEMBERS;
+  const sorted = [...filtered].sort((a, b) => (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3) || a.name.localeCompare(b.name));
 
   list.innerHTML = sorted.map(m => `
     <div class="admin-row" data-id="${m.id}">
@@ -893,7 +898,9 @@ function renderAdminMembersList() {
         </div>
       </div>
     </div>
-  `).join('') || '<p class="admin-empty">No members yet. Use "Import existing roster" or add one below.</p>';
+  `).join('') || (term
+    ? `<p class="admin-empty">No members match "${escapeHtml(term)}".</p>`
+    : '<p class="admin-empty">No members yet. Use "Import existing roster" or add one below.</p>');
 
   list.querySelectorAll('.admin-role-select').forEach(sel => {
     sel.addEventListener('change', () => adminUpdateMemberRole(sel.dataset.id, sel.value));
@@ -920,8 +927,24 @@ function renderAdminMembersList() {
       const newTitle = row.querySelector('.edit-member-title').value.trim();
       const newDesc = row.querySelector('.edit-member-desc').value.trim();
       if (!newName) return;
-      updateDoc(doc(db, 'members', btn.dataset.id), { name: newName, title: newTitle, desc: newDesc })
-        .catch(err => console.error('Failed to save member:', err));
+
+      const member = MEMBERS.find(m => m.id === btn.dataset.id);
+      const oldKey = usernameKey(member.name);
+      const newKey = usernameKey(newName);
+
+      let reservationStep = Promise.resolve();
+      if (oldKey !== newKey) {
+        if (nameTakenByExistingMember(newName)) {
+          alert('That name is already used by another member.');
+          return;
+        }
+        reservationStep = deleteDoc(doc(db, 'usernames', oldKey)).catch(() => {})
+          .then(() => setDoc(doc(db, 'usernames', newKey), { uid: member.uid || null, status: 'approved' }));
+      }
+
+      reservationStep
+        .then(() => updateDoc(doc(db, 'members', btn.dataset.id), { name: newName, title: newTitle, desc: newDesc }))
+        .catch(err => alert('Failed to save: ' + err.message));
     });
   });
 }
@@ -988,8 +1011,10 @@ function adminUpdateMemberRole(id, role) {
 }
 
 function adminDeleteMember(id, name) {
-  if (!confirm(`Remove ${name} from the roster?`)) return;
-  deleteDoc(doc(db, 'members', id)).catch(err => console.error('Failed to delete member:', err));
+  if (!confirm(`Remove ${name} from the roster? Their username will also become available for others to use.`)) return;
+  deleteDoc(doc(db, 'members', id))
+    .then(() => deleteDoc(doc(db, 'usernames', usernameKey(name))).catch(() => {}))
+    .catch(err => console.error('Failed to delete member:', err));
 }
 
 window.adminAddUpdate = function() {
@@ -1042,7 +1067,7 @@ function renderAdminApplicantsList() {
         </div>
         <div class="admin-form-grid">
           <div class="admin-field">
-            <label class="admin-field-label">In-Game Username</label>
+            <label class="admin-field-label">In-Game Name (IGN)</label>
             <input type="text" class="admin-applicant-name" data-uid="${a.uid}" value="${escapeHtml(a.name)}" autocomplete="off" />
           </div>
           <div class="admin-field">

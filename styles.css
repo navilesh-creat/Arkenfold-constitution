@@ -2045,3 +2045,16 @@ body.has-custom-cursor [role="button"] { cursor: none; }
   outline: none; border-color: var(--text-gold);
   box-shadow: 0 0 0 3px rgba(212,175,55,0.08), 0 2px 12px rgba(0,0,0,0.2);
 }
+
+/* Roster search bar */
+.admin-search-input {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border-gold);
+  color: var(--text-white); padding: 11px 16px; border-radius: 10px;
+  font-size: 0.88em; font-family: 'Playfair Display', Georgia, serif;
+  margin-bottom: 14px; transition: all 0.3s; box-sizing: border-box;
+}
+.admin-search-input::placeholder { color: var(--text-muted); }
+.admin-search-input:focus {
+  outline: none; border-color: var(--text-gold);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.08);
+}

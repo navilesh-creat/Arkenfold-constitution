@@ -249,7 +249,7 @@
 			<div id="join-state-form">
 				<h2>Join the Dominion</h2>
 				<p class="modal-description">Submit your application to become a citizen of Arkenfold.</p>
-				<input type="text" id="join-name" placeholder="Your in-game username" aria-label="In-game username" autocomplete="off" />
+				<input type="text" id="join-name" placeholder="Your in-game name (IGN)" aria-label="In-game name (IGN)" autocomplete="off" />
 				<textarea id="join-message" placeholder="Why do you want to join? (optional)" rows="3" aria-label="Message" autocomplete="off"></textarea>
 				<div id="join-error" class="auth-error" role="alert"></div>
 				<button id="join-submit-btn" onclick="submitJoinApplication()">
@@ -833,6 +833,7 @@
 					<div class="admin-list-header">
 						<span class="admin-list-title">Current Roster</span>
 					</div>
+					<input type="text" id="admin-member-search" class="admin-search-input" placeholder="Search current roster..." autocomplete="off" />
 					<div class="admin-list" id="admin-members-list"></div>
 				</div>
 
