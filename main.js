@@ -1043,7 +1043,7 @@ function renderAdminApplicantsList() {
         <div class="admin-form-grid">
           <div class="admin-field">
             <label class="admin-field-label">In-Game Username</label>
-            <input type="text" class="admin-applicant-name" data-uid="${a.uid}" value="${escapeHtml(a.name)}" />
+            <input type="text" class="admin-applicant-name" data-uid="${a.uid}" value="${escapeHtml(a.name)}" autocomplete="off" />
           </div>
           <div class="admin-field">
             <label class="admin-field-label">Role</label>
@@ -1056,7 +1056,7 @@ function renderAdminApplicantsList() {
         </div>
         <div class="admin-field">
           <label class="admin-field-label">Title <span class="admin-optional">(optional)</span></label>
-          <input type="text" class="admin-applicant-title" data-uid="${a.uid}" placeholder="e.g. Grand Marshal" />
+          <input type="text" class="admin-applicant-title" data-uid="${a.uid}" placeholder="e.g. Grand Marshal" autocomplete="off" />
         </div>
         <div class="admin-field admin-applicant-decline-field" id="decline-field-${a.uid}" style="display:none;">
           <label class="admin-field-label">Reason for declining <span class="admin-optional">(required)</span></label>
@@ -1555,6 +1555,8 @@ onAuthStateChanged(auth, (user) => {
           document.querySelectorAll('.admin-only').forEach(el => {
             el.style.display = isAdminUser ? '' : 'none';
           });
+          const joinLink = document.getElementById('join-dominion-link');
+          if (joinLink) joinLink.style.display = isAdminUser ? 'none' : '';
 
           // Admins additionally watch ALL applications, to power the
           // Applicants tab and the bell's pending-count badge.

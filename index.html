@@ -92,7 +92,7 @@
 							<button class="dropdown-item" role="menuitem" onclick="navigateTo('account')">
 								<span class="dropdown-icon" aria-hidden="true">👤</span> My Account
 							</button>
-							<button class="dropdown-item" role="menuitem" onclick="openJoinModal()">
+							<button class="dropdown-item" role="menuitem" id="join-dominion-link" onclick="openJoinModal()">
 								<span class="dropdown-icon" aria-hidden="true">🏛</span> Join the Dominion
 							</button>
 							<button class="dropdown-item admin-only" role="menuitem" onclick="navigateTo('admin')" style="display:none;">
@@ -249,8 +249,8 @@
 			<div id="join-state-form">
 				<h2>Join the Dominion</h2>
 				<p class="modal-description">Submit your application to become a citizen of Arkenfold.</p>
-				<input type="text" id="join-name" placeholder="Your in-game username" aria-label="In-game username" />
-				<textarea id="join-message" placeholder="Why do you want to join? (optional)" rows="3" aria-label="Message"></textarea>
+				<input type="text" id="join-name" placeholder="Your in-game username" aria-label="In-game username" autocomplete="off" />
+				<textarea id="join-message" placeholder="Why do you want to join? (optional)" rows="3" aria-label="Message" autocomplete="off"></textarea>
 				<div id="join-error" class="auth-error" role="alert"></div>
 				<button id="join-submit-btn" onclick="submitJoinApplication()">
 					<span class="btn-text">Submit Application</span>

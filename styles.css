@@ -843,13 +843,14 @@ header.scrolled {
   font-family: 'Cinzel', serif; color: var(--text-gold); margin-bottom: 20px;
   letter-spacing: 0.06em; font-size: 1.3em;
 }
-.modal-box input {
+.modal-box input, .modal-box textarea {
   width: 100%; background: var(--bg-input); border: 1px solid var(--border-gold);
   color: var(--text-white); padding: 12px 14px; margin-bottom: 12px;
   border-radius: 10px; font-size: 0.92em; transition: all 0.3s;
+  font-family: 'Playfair Display', Georgia, serif; resize: vertical; box-sizing: border-box;
 }
-.modal-box input::placeholder { color: var(--text-muted); }
-.modal-box input:focus {
+.modal-box input::placeholder, .modal-box textarea::placeholder { color: var(--text-muted); }
+.modal-box input:focus, .modal-box textarea:focus {
   outline: none; border-color: var(--border-gold-hover);
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.06);
 }
@@ -879,7 +880,7 @@ header.scrolled {
 /* Auth submit buttons */
 .modal-box button[type="submit"],
 #auth-submit-btn, #setup-submit-btn, #change-password-submit-btn,
-#reset-submit-btn, #confirm-yes-btn {
+#reset-submit-btn, #confirm-yes-btn, #join-submit-btn {
   width: 100%; background: linear-gradient(135deg, #d4af37, #b8960b);
   color: #0a0a0a; border: none; padding: 13px; border-radius: 10px;
   font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9em;
@@ -888,7 +889,7 @@ header.scrolled {
 }
 .modal-box button[type="submit"]:hover,
 #auth-submit-btn:hover, #setup-submit-btn:hover, #change-password-submit-btn:hover,
-#reset-submit-btn:hover, #confirm-yes-btn:hover {
+#reset-submit-btn:hover, #confirm-yes-btn:hover, #join-submit-btn:hover {
   transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
 }
 #confirm-yes-btn { background: linear-gradient(135deg, #4caf50, #388e3c); color: #fff; }
@@ -2028,4 +2029,19 @@ body.has-custom-cursor [role="button"] { cursor: none; }
 
 @media (max-width: 768px) {
   .admin-applicant-row .admin-form-grid { grid-template-columns: 1fr; }
+}
+
+/* Applicant review fields (were unstyled -- same theme as other admin form fields) */
+.admin-applicant-name, .admin-applicant-title, .admin-applicant-role,
+.admin-applicant-decline-reason {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border-gold);
+  color: var(--text-white); padding: 12px 16px; border-radius: 10px;
+  font-size: 0.9em; font-family: 'Playfair Display', Georgia, serif;
+  transition: all 0.3s; resize: vertical; box-sizing: border-box; cursor: auto;
+}
+.admin-applicant-role { cursor: pointer; }
+.admin-applicant-name:focus, .admin-applicant-title:focus, .admin-applicant-role:focus,
+.admin-applicant-decline-reason:focus {
+  outline: none; border-color: var(--text-gold);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.08), 0 2px 12px rgba(0,0,0,0.2);
 }
